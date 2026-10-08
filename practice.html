@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn luyện trắc nghiệm - Chủ nghĩa xã hội khoa học</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="mode-learn" id="practice-body">
+    <!-- ====================================================================
+         HEADER CHO CHẾ ĐỘ ÔN LUYỆN (mode=learn)
+         ==================================================================== -->
+    <header class="app-header learn-header-view">
+        <div class="header-left" onclick="window.location.href='index.html'" title="Về trang chủ">
+            <div class="logo-icon">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
+                <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <div class="slogan-badge">
+                <i class="fa-solid fa-graduation-cap slogan-icon"></i>
+                <span class="slogan-text">Học đúng trọng tâm &nbsp;–&nbsp; Ôn chắc kiến thức &nbsp;–&nbsp; Vững bước tương lai!</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="btn-pause-learn" onclick="pauseLearnMode()" title="Tạm dừng ôn và lưu tiến trình">
+                <i class="fa-solid fa-circle-pause"></i> <span>Tạm dừng ôn</span>
+            </button>
+            <button class="btn-switch-mode" onclick="switchPracticeMode('test')" title="Chuyển sang làm bài kiểm tra">
+                <i class="fa-solid fa-stopwatch-20"></i> Sang Kiểm Tra
+            </button>
+            <button class="header-icon-btn" title="Thông báo" onclick="openUtilityModal('notifications')">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notification-dot"></span>
+            </button>
+            <div class="user-pill" onclick="pauseLearnMode()" title="Về trang chủ (tự động lưu tiến trình)">
+                <div class="user-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <span class="user-name">Lộc</span>
+                <i class="fa-solid fa-chevron-down user-chevron"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====================================================================
+         HEADER CHO CHẾ ĐỘ KIỂM TRA (mode=test)
+         ==================================================================== -->
+    <header class="practice-header test-header-view">
+        <div class="header-left" onclick="confirmExit()" title="Quay về trang chủ">
+            <div class="logo-icon">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
+                <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <div class="practice-topic-badge">
+                <i class="fa-solid fa-graduation-cap topic-header-icon"></i>
+                <div class="practice-topic-text" id="test-header-topic-title">
+                    Chủ đề 1: Đối tượng, chức năng, phương pháp nghiên cứu<br>của CNXH khoa học
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="timer-pill" id="test-timer-display">
+                <i class="fa-regular fa-clock"></i>
+                <span id="test-timer-text">29:45</span>
+            </div>
+            <button class="btn-exit-exam" onclick="confirmExit()">
+                <i class="fa-solid fa-xmark"></i>
+                <span>Thoát bài</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ====================================================================
+         MAIN WRAPPER: CHẾ ĐỘ ÔN LUYỆN (mode=learn) - BỐ CỤC 2 CỘT
+         ==================================================================== -->
+    <div class="app-layout learn-layout-view" id="learn-layout-container">
+        <!-- Sidebar Menu (Left Column) -->
+        <aside class="sidebar">
+            <a href="index.html" class="btn-home">
+                <i class="fa-solid fa-house"></i>
+                <span>Trang chủ</span>
+            </a>
+
+            <!-- Topic Navigation -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Chủ đề ôn luyện</h3>
+                <nav class="topic-menu" id="learn-topic-nav-menu">
+                    <!-- Injected dynamically -->
+                </nav>
+            </div>
+
+            <!-- Mock Exam Action -->
+            <div class="sidebar-section">
+                <a href="practice.html?topic=mock&mode=test" class="btn-mock-exam">
+                    <i class="fa-solid fa-bullseye"></i>
+                    <span>Thi Mô Phỏng</span>
+                </a>
+            </div>
+
+            <!-- Utilities -->
+            <div class="sidebar-section utilities-section">
+                <h3 class="sidebar-title">Tiện ích</h3>
+                <ul class="utility-menu">
+                    <li>
+                        <button class="utility-item" onclick="openUtilityModal('stats')">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <span>Thống kê kết quả</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="utility-item" onclick="openUtilityModal('history')">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Lịch sử làm bài</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="utility-item" onclick="openUtilityModal('guide')">
+                            <i class="fa-regular fa-circle-question"></i>
+                            <span>Hướng dẫn sử dụng</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="utility-item" onclick="openUtilityModal('contact')">
+                            <i class="fa-regular fa-envelope"></i>
+                            <span>Liên hệ / Góp ý</span>
+                        </button>
+                    </li>
+                    <li id="admin-menu-item" class="admin-menu-item-sync">
+                        <a href="admin.html" class="utility-item">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Quản lý tài khoản</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content (Right Area) -->
+        <main class="main-content">
+            <!-- Topic Info Banner (Mockup 1) -->
+            <section class="topic-info-banner">
+                <div class="tib-left">
+                    <div class="tib-icon-box">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div class="tib-text">
+                        <span class="tib-sublabel" id="learn-banner-sub">Chủ đề 1</span>
+                        <h2 class="tib-title" id="learn-banner-title">Đối tượng, chức năng, phương pháp nghiên cứu của CNXH khoa học</h2>
+                        <p class="tib-quote">“Hiểu đúng bản chất, nắm vững phương pháp, để vận dụng sáng tạo vào thực tiễn.”</p>
+                    </div>
+                </div>
+
+                <!-- 3 Stat Cards on Right -->
+                <div class="tib-stats">
+                    <div class="tib-stat-card">
+                        <i class="fa-regular fa-calendar-check"></i>
+                        <div>
+                            <span class="tib-stat-title">Số câu hỏi</span>
+                            <strong class="tib-stat-val" id="learn-stat-count">20 câu</strong>
+                        </div>
+                    </div>
+                    <div class="tib-stat-card">
+                        <i class="fa-regular fa-clock"></i>
+                        <div>
+                            <span class="tib-stat-title">Thời gian làm bài</span>
+                            <strong class="tib-stat-val">30 phút</strong>
+                        </div>
+                    </div>
+                    <div class="tib-stat-card">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <div>
+                            <span class="tib-stat-title">Hình thức câu hỏi</span>
+                            <strong class="tib-stat-val" style="font-size: 11.5px; line-height: 1.2;">Trắc nghiệm, Kéo thả, Đúng/Sai, Điền từ</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filter Bar: 6 Pill Buttons (Mockup 1) -->
+            <section class="learn-filter-bar" id="learn-filter-bar">
+                <button class="l-filter-pill active" data-filter="all" onclick="applyLearnFilter('all')">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                    <span>Tất cả (<span id="count-filter-all">20</span>)</span>
+                </button>
+                <button class="l-filter-pill" data-filter="single" onclick="applyLearnFilter('single')">
+                    <i class="fa-regular fa-circle-dot"></i>
+                    <span>Trắc nghiệm 1 đáp án (<span id="count-filter-single">10</span>)</span>
+                </button>
+                <button class="l-filter-pill" data-filter="multiple" onclick="applyLearnFilter('multiple')">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Trắc nghiệm nhiều đáp án (<span id="count-filter-multiple">4</span>)</span>
+                </button>
+                <button class="l-filter-pill" data-filter="drag_drop" onclick="applyLearnFilter('drag_drop')">
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i>
+                    <span>Kéo thả (<span id="count-filter-drag">3</span>)</span>
+                </button>
+                <button class="l-filter-pill" data-filter="true_false" onclick="applyLearnFilter('true_false')">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>Đúng / Sai (<span id="count-filter-tf">2</span>)</span>
+                </button>
+                <button class="l-filter-pill" data-filter="fill_blank" onclick="applyLearnFilter('fill_blank')">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Điền từ (<span id="count-filter-fill">1</span>)</span>
+                </button>
+            </section>
+
+            <!-- 2-Column Quiz Area (Mockup 1) -->
+            <section class="learn-workspace-grid">
+                <!-- Cột trái: Danh sách câu hỏi -->
+                <div class="learn-question-list-card">
+                    <h3 class="lql-title">Danh sách câu hỏi</h3>
+                    <div class="lql-items-container" id="learn-questions-list">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Cột phải: Khung làm bài chi tiết với Giải thích -->
+                <div class="learn-detail-card">
+                    <!-- Top bar -->
+                    <div class="detail-top-bar">
+                        <div class="detail-badges-group">
+                            <span class="l-q-counter" id="learn-q-counter">Câu 1 / 20</span>
+                            <div class="l-progress-track">
+                                <div class="l-progress-fill" id="learn-progress-fill" style="width: 5%;"></div>
+                            </div>
+                        </div>
+                        <div class="detail-info-group">
+                            <span class="detail-timer">
+                                <i class="fa-regular fa-clock"></i> Thời gian còn lại: <strong id="learn-timer-text">29:45</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Question Badge -->
+                    <div style="margin-top: 14px;">
+                        <span class="badge-pill-type" id="learn-q-badge-type">
+                            <i class="fa-regular fa-circle-dot"></i> Trắc nghiệm 1 đáp án đúng
+                        </span>
+                    </div>
+
+                    <!-- Question Title -->
+                    <h3 class="learn-question-title" id="learn-question-title">
+                        Theo quan điểm của chủ nghĩa Mác - Lênin, đối tượng nghiên cứu của chủ nghĩa xã hội khoa học là gì?
+                    </h3>
+
+                    <!-- Options list (với chế độ bôi màu Xanh/Đỏ ngay lập tức) -->
+                    <div class="learn-options-list" id="learn-options-list">
+                        <!-- Injected dynamically -->
+                    </div>
+
+                    <!-- Khối Giải Thích (Bắt buộc trong mode=learn) -->
+                    <div class="learn-explanation-box" id="learn-explanation-box">
+                        <div class="explanation-header">
+                            <i class="fa-regular fa-lightbulb"></i>
+                            <span>Giải thích</span>
+                        </div>
+                        <p class="explanation-body" id="learn-explanation-text">
+                            Đối tượng nghiên cứu của chủ nghĩa xã hội khoa học là các quy luật hình thành, phát triển của xã hội cộng sản chủ nghĩa và quá trình chuyển biến từ chủ nghĩa tư bản lên chủ nghĩa xã hội.
+                        </p>
+                    </div>
+
+                    <!-- Bottom bar -->
+                    <div class="detail-bottom-bar" style="margin-top: 24px;">
+                        <button class="btn-nav btn-prev" id="btn-learn-prev" onclick="learnPrevQuestion()">
+                            <i class="fa-solid fa-chevron-left"></i> Câu trước
+                        </button>
+                        <button class="btn-nav btn-pause-outline" onclick="pauseLearnMode()" title="Tạm dừng ôn và lưu tiến trình">
+                            <i class="fa-solid fa-circle-pause"></i> Tạm dừng ôn
+                        </button>
+                        <button class="btn-nav btn-next" id="btn-learn-next" onclick="learnNextQuestion()">
+                            Câu tiếp theo <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ====================================================================
+         MAIN WRAPPER: CHẾ ĐỘ KIỂM TRA (mode=test) - BỐ CỤC 1 CỘT TẬP TRUNG
+         ==================================================================== -->
+    <main class="practice-main-wrapper test-layout-view" id="test-layout-container">
+        <!-- Box 1: Progress & Number Strip Card -->
+        <section class="practice-progress-card">
+            <div class="progress-info-row">
+                <div class="progress-counter-label">
+                    <strong id="test-current-q-num">Câu 1</strong> <span id="test-total-q-num">/ 20</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="test-progress-bar-fill" style="width: 5%;"></div>
+                </div>
+                <div class="progress-percent-label" id="test-progress-percent">5%</div>
+            </div>
+
+            <!-- Dải các hình tròn nhỏ đánh số từ 1 đến N -->
+            <div class="question-number-strip" id="test-question-number-strip">
+                <!-- Injected dynamically -->
+            </div>
+        </section>
+
+        <!-- Box 2: Question Card (1 Cột, Ẩn hoàn toàn giải thích, Không hiện đúng/sai khi chọn) -->
+        <section class="practice-question-card" id="test-question-card">
+            <!-- Question Tags Row -->
+            <div class="question-tags-row" id="test-question-tags-row">
+                <div class="q-type-tag active" id="test-tag-single">
+                    <i class="fa-regular fa-circle-dot"></i>
+                    <span>Trắc nghiệm 1 đáp án đúng</span>
+                </div>
+                <div class="q-type-tag" id="test-tag-multiple">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Nhiều đáp án</span>
+                </div>
+                <div class="q-type-tag" id="test-tag-drag_drop">
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i>
+                    <span>Kéo thả</span>
+                </div>
+                <div class="q-type-tag" id="test-tag-true_false">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Đúng / Sai</span>
+                </div>
+                <div class="q-type-tag" id="test-tag-fill_blank">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Điền từ</span>
+                </div>
+            </div>
+
+            <!-- Tiêu đề câu hỏi -->
+            <h2 class="practice-question-title" id="test-question-title">
+                Đang tải nội dung câu hỏi...
+            </h2>
+
+            <!-- Danh sách đáp án (Chỉ highlight xanh nhạt khi chọn) -->
+            <div class="practice-options-list" id="test-options-list">
+                <!-- Injected dynamically -->
+            </div>
+
+            <!-- Card Bottom Bar: Câu trước, Lưu đáp án, Câu tiếp theo -->
+            <div class="card-bottom-actions">
+                <button class="btn-card-action btn-prev-question" id="btn-test-prev" onclick="testPrevQuestion()">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <span>Câu trước</span>
+                </button>
+                <button class="btn-card-action btn-save-question" id="btn-test-save" onclick="testSaveAnswer()">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span>Lưu đáp án</span>
+                </button>
+                <button class="btn-card-action btn-next-question" id="btn-test-next" onclick="testNextQuestion()">
+                    <span>Câu tiếp theo</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Box 3: Footer Action Card (Đánh dấu câu hỏi & Nộp bài) -->
+        <section class="practice-footer-card">
+            <div class="flag-action-group" onclick="testToggleFlagCurrentQuestion()" title="Bấm để đánh dấu / bỏ đánh dấu câu này">
+                <div class="flag-icon-box" id="test-flag-icon-box">
+                    <i class="fa-regular fa-bookmark" id="test-flag-icon"></i>
+                </div>
+                <div class="flag-text-content">
+                    <div class="flag-title">Đánh dấu câu hỏi</div>
+                    <div class="flag-subtitle">Giúp bạn quay lại làm sau (không tính vào kết quả)</div>
+                </div>
+            </div>
+
+            <button class="btn-submit-test" onclick="openTestSubmitModal()">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Nộp bài</span>
+            </button>
+        </section>
+    </main>
+
+    <!-- Modal Cửa sổ Pop-up (Xác nhận thoát / Nộp bài / Kết quả thi) -->
+    <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-card" id="modal-card">
+            <!-- Injected dynamically -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-message" class="toast-popup hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

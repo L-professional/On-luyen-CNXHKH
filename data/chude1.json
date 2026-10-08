@@ -1,0 +1,591 @@
+[
+    {
+        "id": 1,
+        "type": "single",
+        "question": "Câu 1: Những nhà tư tưởng tiêu biểu của chủ nghĩa xã hội không tưởng phê phán đầu thế kỷ XIX là ai?[cite: 1]",
+        "options": [
+            "A. Xanh Ximông, Giăng Mêliê, Rôbớt Ôoen",
+            "B. Xanh Ximông, Sắclơ Phuriê, Rôbớt Ôoen",
+            "C. Grắccơ Babớp, Xanh Ximông, Sắclơ Phuriê",
+            "D. Xanh Ximông, Sắclơ Phuriê, G. Mably"
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 2,
+        "type": "single",
+        "question": "Câu 2: Tác phẩm nào đánh dấu sự ra đời của chủ nghĩa xã hội khoa học?[cite: 1]",
+        "options": [
+            "A. Tuyên ngôn của Đảng Cộng sản",
+            "B. Tình cảnh nước Anh",
+            "C. Góp phần phê phản triết học pháp quyền của Hêghen – Lời nói đầu",
+            "D. Bộ tư bản"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 3,
+        "type": "single",
+        "question": "Câu 3: Đối tượng nghiên cứu của chủ nghĩa xã hội khoa học là gì?[cite: 1]",
+        "options": [
+            "A. Là những quy luật văn hoá - xã hội.",
+            "B. Là những quy luật và tính quy luật chính trị – xã hội của quá trình phát sinh, hình thành và phát triển của hình thái kinh tế - xã hội cộng sản chủ nghĩa",
+            "C. Là những quy luật kinh tế",
+            "D. Là những quy luật hình thành, phát triển và hoàn thiện của các hình thái kinh tế - xã hội."
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 4,
+        "type": "single",
+        "question": "Câu 4: Phát kiến nào của C.Mác và Ph.Ăngghen chỉ ra sự diệt vong về kinh tế của chủ nghĩa tư bản?[cite: 1]",
+        "options": [
+            "A. Học thuyết về sứ mệnh lịch sử toàn thế giới của giai cấp công nhân",
+            "B. Học thuyết về giá trị thặng dư",
+            "C. Chủ nghĩa duy vật biện chứng",
+            "D. Chủ nghĩa duy vật lịch sử"
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 5,
+        "type": "single",
+        "question": "Câu 5: Ph.Ăngghen đã đánh giá: 'Hai phát hiện vĩ đại này đã đưa chủ nghĩa xã hội trở thành một khoa học'. Hai phát kiến đó là gì?[cite: 1]",
+        "options": [
+            "A. Sứ mệnh lịch sử của giai cấp công nhân – Học thuyết giá trị thặng dư",
+            "B. Sứ mệnh lịch sử của giai cấp công nhân – Chủ nghĩa duy vật lịch sử",
+            "C. Chủ nghĩa duy vật biện chứng và chủ nghĩa duy vật lịch sử",
+            "D. Học thuyết giá trị thặng dư – Chủ nghĩa duy vật lịch sử"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 6,
+        "type": "single",
+        "question": "Câu 6: Phạm trù nào được coi là cơ bản nhất và là xuất phát điểm của chủ nghĩa xã hội khoa học?[cite: 1]",
+        "options": [
+            "A. Giai cấp công nhân",
+            "B. Cách mạng xã hội chủ nghĩa",
+            "C. Chuyên chính vô sản",
+            "D. Sứ mệnh lịch sử của giai cấp công nhân"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 7,
+        "type": "single",
+        "question": "Câu 7: Điền từ còn thiếu vào chỗ trống: Giai cấp công nhân và nhân dân lao động là cơ sở..., cơ sở... của Đảng cộng sản, là nguồn bổ sung lực lượng phong phú cho Đảng.[cite: 1]",
+        "options": [
+            "A. Chính trị - xã hội",
+            "B. Giai cấp – xã hội",
+            "C. Kinh tế - xã hội",
+            "D. Văn hoá - xã hội"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 8,
+        "type": "single",
+        "question": "Câu 8: Giai cấp công nhân Việt Nam ra đời vào thời gian nào?[cite: 1]",
+        "options": [
+            "A. Trong cuộc khai thác thuộc địa lần thứ nhất của thực dân Pháp",
+            "B. Những năm đầu thế kỷ 19.",
+            "C. Trong cuộc khai thác thuộc địa lần thứ hai của thực dân Pháp",
+            "D. Trước khi thực dân Pháp xâm lược Việt Nam."
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 9,
+        "type": "single",
+        "question": "Câu 9: Điền từ còn thiếu vào chỗ trống “Giai cấp công nhân Việt Nam thực hiện lãnh đạo cách mạng thông qua đội tiên phong của nó là (...)”[cite: 1]",
+        "options": [
+            "A. Mặt trận tổ quốc Việt Nam",
+            "B. Tổ chức công đoàn",
+            "C. Tổng liên đoàn lao động Việt Nam",
+            "D. Đảng Cộng sản Việt Nam"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 10,
+        "type": "single",
+        "question": "Câu 10: Hạn chế cơ bản lớn nhất mà giai cấp công nhân Việt Nam hiện nay cần khắc phục là gì?[cite: 1]",
+        "options": [
+            "A. Hiệu quả lao động thấp",
+            "B. Tâm lý tiểu nông",
+            "C. Số lượng còn ít",
+            "D. Trình độ khoa học kỹ thuật chưa cao"
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 11,
+        "type": "single",
+        "question": "Câu 11: Điểm then chốt để giúp giai cấp công nhân Việt Nam hiện nay thực hiện thành công sứ mệnh lịch sử của mình là:[cite: 1]",
+        "options": [
+            "A. Coi trọng công tác xây dựng, chỉnh đốn Đảng",
+            "B. Phát triển giai cấp công nhân cả về số lượng và chất lượng",
+            "C. Trí thức hoá giai cấp công nhân",
+            "D. Xây dựng khối liên minh công – nông"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 12,
+        "type": "single",
+        "question": "Câu 12: Theo Ph. Ắngghen: “Thực hiện nhiệm vụ giải phóng thế giới ấy, đó là sứ mệnh lịch sử của........” Hãy chọn đáp án đúng điền vào chỗ trống?[cite: 1]",
+        "options": [
+            "A. Giai cấp tư sản",
+            "B. Giai cấp tiểu tư sản",
+            "C. Giai cấp nông dân",
+            "D. Giai cấp vô sản"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 13,
+        "type": "multiple",
+        "question": "Câu 13: Điều kiện chủ quan để giai cấp công nhân thực hiện được sứ mệnh lịch sử của mình là: (Chọn 2 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Không cần liên minh với các giai cấp, tầng lớp khác",
+            "B. Đảng Cộng sản",
+            "C. Sự phát triển của bản thân giai cấp công nhân cả về số lượng và chất lượng",
+            "D. Sở hữu toàn bộ tư liệu sản xuất trong xã hội"
+        ],
+        "correctAnswers": [
+            1,
+            2
+        ]
+    },
+    {
+        "id": 14,
+        "type": "multiple",
+        "question": "Câu 14: Đặc điểm nào sau đây thể hiện đúng bản chất của giai cấp công nhân? (Chọn 2 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Không sở hữu tư liệu sản xuất, sống bằng lao động làm thuê",
+            "B. Có trình độ học vấn thấp, chủ yếu làm việc tay chân",
+            "C. Luôn gắn bó với giai cấp địa chủ và tiểu thương",
+            "D. Có tính tổ chức và kỷ luật cao trong lao động sản xuất"
+        ],
+        "correctAnswers": [
+            0,
+            3
+        ]
+    },
+    {
+        "id": 15,
+        "type": "multiple",
+        "question": "Câu 15: Giai cấp công nhân Việt Nam có đặc điểm gì khác với giai cấp công nhân ở các nước tư bản? (Chọn 2 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Không có sự gắn kết với các giai cấp, tầng lớp khác",
+            "B. Xuất thân từ nông dân là chủ yếu",
+            "C. Chịu sự bóc lót của thực dân và phong kiến",
+            "D. Sở hữu tư liệu sản xuất trong xã hội"
+        ],
+        "correctAnswers": [
+            1,
+            2
+        ]
+    },
+    {
+        "id": 16,
+        "type": "single",
+        "question": "Câu 16: Phát kiến nào của C.Mác và Ph.Ăngghen chỉ ra những hạn chế có tính lịch sử của chủ nghĩa xã hội không tưởng?[cite: 1]",
+        "options": [
+            "A. Học thuyết về sứ mệnh lịch sử toàn thế giới của giai cấp công nhân",
+            "B. Học thuyết về giá trị thặng dư",
+            "C. Chủ nghĩa duy vật biện chứng",
+            "D. Chủ nghĩa duy vật lịch sử"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 17,
+        "type": "single",
+        "question": "Câu 17: Đâu là nhân tố chủ quan quan trọng nhất để giai cấp công nhân thực hiện thắng lợi sứ mệnh lịch sử của mình?[cite: 1]",
+        "options": [
+            "A. Liên minh giai cấp công nhân với giai cấp nông dân",
+            "B. Sự phát triển của giai cấp công nhân về số lượng",
+            "C. Sự phát triển của giai cấp công nhân về chất lượng",
+            "D. Đảng Cộng sản"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 18,
+        "type": "single",
+        "question": "Câu 18: Tìm ý đúng để hoàn thiện luận điểm sau: Cùng với sự phát triển của khoa học và công nghệ ngày càng hiện đại, giai cấp công nhân:[cite: 1]",
+        "options": [
+            "A. Tăng về số lượng và giảm về chất lượng",
+            "B. Giảm về số lượng và có trình độ sản xuất ngày càng cao",
+            "C. Tăng về số lượng và nâng cao về chất lượng",
+            "D. Giảm về số lượng và nâng cao về chất lượng."
+        ],
+        "correctAnswers": [
+            2
+        ]
+    },
+    {
+        "id": 19,
+        "type": "single",
+        "question": "Câu 19: Dấu hiệu đánh dấu sự trưởng thành vượt bậc của giai cấp công nhân với tư cách là giai cấp cách mạng là:[cite: 1]",
+        "options": [
+            "A. Sự trưởng thành về trình độ kỹ thuật",
+            "B. Sự trưởng thành về ý thức chính trị",
+            "C. Sự trưởng thành về trình độ nhận thức",
+            "D. Sự ra đời của Đảng Cộng sản"
+        ],
+        "correctAnswers": [
+            3
+        ]
+    },
+    {
+        "id": 20,
+        "type": "single",
+        "question": "Câu 20: Trong các nội dung sau đây thì nội dung nào thuộc về giải pháp xây dựng giai cấp công nhân Việt Nam hiện nay?[cite: 1]",
+        "options": [
+            "A. Xây dựng giai cấp công nhân tăng về số lượng và chất lượng",
+            "B. Coi trọng và giữ vững bản chất giai cấp công nhân và nguyên tắc sinh hoạt Đảng",
+            "C. Xây dựng giai cấp công nhân lớn mạnh, có giác ngộ giai cấp và chính trị vững vàng",
+            "D. Nâng cao nhận thức, kiên định quan điểm giai cấp công nhân là giai cấp lãnh đạo cách mạng thông qua đội tiền phong là Đảng Cộng sản Việt Nam"
+        ],
+        "correctAnswers": [
+            2
+        ]
+    },
+    {
+        "id": 21,
+        "type": "single",
+        "question": "Câu 21: Vấn đề nổi bật nhất đối với việc thực hiện sứ mệnh lịch sử của giai cấp công nhân Việt Nam hiện nay là gì?[cite: 1]",
+        "options": [
+            "A. Tham gia xây dựng nền kinh tế thị trường định hướng xã hội chủ nghĩa",
+            "B. Lực lượng chủ đạo trong lao động",
+            "C. Phát huy vai trò và trách nhiệm của lực lượng đi đầu trong sự nghiệp đẩy mạnh công nghiệp hoá, hiện đại hoá đất nước",
+            "D. Nắm vững khoa học và công nghệ"
+        ],
+        "correctAnswers": [
+            2
+        ]
+    },
+    {
+        "id": 22,
+        "type": "multiple",
+        "question": "Câu 22: Theo C.Mác và Ph.Ăngghen thì đặc điểm nổi bật của giai cấp công nhân là: (Chọn 2 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Giai cấp cách mạng và có tinh thần cách mạng triệt để",
+            "B. Lao động bằng phương thức công nghiệp",
+            "C. Có quyền sở hữu toàn bộ tư liệu sản xuất",
+            "D. Làm việc trong nông nghiệp, sử dụng công cụ thủ công"
+        ],
+        "correctAnswers": [
+            0,
+            1
+        ]
+    },
+    {
+        "id": 23,
+        "type": "single",
+        "question": "Câu 23: Xét về phương thức lao động, phương thức sản xuất, giai cấp công nhân mang thuộc tính cơ bản nào?[cite: 1]",
+        "options": [
+            "A. Là giai cấp trực tiếp hay gián tiếp vận hành máy móc có tính chất công nghiệp ngày càng hiện đại",
+            "B. Là giai cấp tạo ra của cải vật chất làm giàu cho xã hội",
+            "C. Có số lượng đông nhất trong dân cư.",
+            "D. Giai cấp có tư liệu sản xuất nhiều nhất"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 24,
+        "type": "single",
+        "question": "Câu 24: Đặc điểm sứ mệnh lịch sử của giai cấp công nhân là:[cite: 1]",
+        "options": [
+            "A. Thay thế chế độ sở hữu tư nhân này bằng một chế độ sở hữu tư nhân khác",
+            "B. Thay thế chế độ công hữu này bằng một chế độ công hữu khác",
+            "C. Xóa bỏ triệt để chế độ tư hữu về tư liệu sản xuất",
+            "D. Thay thế chế độ chiếm hữu nô lệ bằng chế độ xã hội chủ nghĩa"
+        ],
+        "correctAnswers": [
+            2
+        ]
+    },
+    {
+        "id": 25,
+        "type": "single",
+        "question": "Câu 25: Nội dung trực tiếp về văn hoá tư tưởng thể hiện sứ mệnh lịch sử của giai cấp công nhân Việt Nam là:[cite: 1]",
+        "options": [
+            "A. Xây dựng hệ giá trị và con người Việt Nam",
+            "B. Xây dựng con người mới xã hội chủ nghĩa",
+            "C. Xây dựng nền giáo dục hiện đại",
+            "D. Xây dựng nền văn hoá Việt Nam tiên tiến, đậm đà bản sắc dân tộc"
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 26,
+        "type": "single",
+        "question": "Câu 26: Trong các nội dung sau đây thì nội dung nào thuộc về giải pháp xây dựng giai cấp công nhân Việt Nam hiện nay?[cite: 1]",
+        "options": [
+            "A. Thực hiện tốt chính sách và pháp luật đối với công nhân và người lao động.",
+            "B. Xây dựng giai cấp công nhân lớn mạnh, có giác ngộ giai cấp và chính trị vững vàng",
+            "C. Thực hiện chiến lược xây dựng giai cấp công nhân lớn mạnh, gắn kết chặt chẽ với chiến lược phát triển kinh tế - xã hội, công nghiệp hoá, hiện đại hoá đất nước, hội nhập quốc tế",
+            "D. Coi trọng và giữ vững bản chất giai cấp công nhân và nguyên tắc sinh hoạt Đảng"
+        ],
+        "correctAnswers": [
+            2
+        ]
+    },
+    {
+        "id": 27,
+        "type": "multiple",
+        "question": "Câu 27: Giai cấp công nhân Việt Nam chủ yếu xuất thân từ tầng lớp nào? (Chọn 2 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Giai cấp nông dân bị tước đoạt hết ruộng đất",
+            "B. Tầng lớp địa chủ phong kiến",
+            "C. Thợ thủ công bị phá sản",
+            "D. Tầng lớp tư sản dân tộc"
+        ],
+        "correctAnswers": [
+            0,
+            2
+        ]
+    },
+    {
+        "id": 28,
+        "type": "single",
+        "question": "Câu 28: Xét trong quan hệ sản xuất tư bản chủ nghĩa giai cấp công nhân là:[cite: 1]",
+        "options": [
+            "A. Giai cấp nghèo khổ nhất",
+            "B. Giai cấp không có tư liệu sản xuất, đi làm thuê cho nhà tư bản, bị nhà tư bản bóc lột giá trị thặng dư",
+            "C. Giai cấp tạo ra của cải cho xã hội",
+            "D. Giai cấp có số lượng đông trong dân cư"
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 29,
+        "type": "multiple",
+        "question": "Câu 29: Trong thời kỳ thuộc địa, giai cấp công nhân Việt Nam chủ yếu làm việc trong: (Chọn 2 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Xí nghiệp thủ công truyền thống",
+            "B. Hợp tác xã nông nghiệp",
+            "C. Đồn điền cao su",
+            "D. Nhà máy, hầm mỏ do thực dân Pháp xây dựng"
+        ],
+        "correctAnswers": [
+            2,
+            3
+        ]
+    },
+    {
+        "id": 30,
+        "type": "multiple",
+        "question": "Câu 30. Chủ nghĩa xã hội khoa học ra đời dựa trên cơ sở của những tiền đề nào? (Chọn 2 phương án đúng nhất)[cite: 1]",
+        "options": [
+            "A. Tiền đề khoa học tự nhiên",
+            "B. Tiền đề khoa học lịch sử",
+            "C. Tiền đề tư tưởng lý luận",
+            "D. Tiền đề khoa học xã hội"
+        ],
+        "correctAnswers": [
+            0,
+            2
+        ]
+    },
+    {
+        "id": 31,
+        "type": "multiple",
+        "question": "Câu 31. Nội dung sứ mệnh lịch sử của giai cấp công nhân Việt Nam hiện nay bao gồm: (Chọn 3 đáp án đúng)[cite: 1]",
+        "options": [
+            "A. Nội dung chính trị - xã hội",
+            "B. Nội dung lý luận",
+            "C. Nội dung kinh tế",
+            "D. Nội dung văn hóa, tư tưởng"
+        ],
+        "correctAnswers": [
+            0,
+            2,
+            3
+        ]
+    },
+    {
+        "id": 32,
+        "type": "single",
+        "question": "Câu 32. Câu nói sau đây được viết trong tác phẩm nào: \"Giai cấp tư sản, trong quá trình thống trị giai cấp chưa đầy một thế kỷ, đã tạo ra những lực lượng sản xuất nhiều hơn và đồ sộ hơn...\"?[cite: 1]",
+        "options": [
+            "A. Chống Đuyrinh",
+            "B. Bộ Tư bản",
+            "C. Tuyên ngôn của Đảng Cộng sản",
+            "D. Ba nguồn gốc và ba bộ phận cấu thành của chủ nghĩa Mác"
+        ],
+        "correctAnswers": [
+            2
+        ]
+    },
+    {
+        "id": 331,
+        "type": "true_false",
+        "question": "Câu 33.1: Giai cấp công nhân đại diện cho phương thức sản xuất tiên tiến và lực lượng sản xuất hiện đại.[cite: 1]",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 332,
+        "type": "true_false",
+        "question": "Câu 33.2: Giai cấp công nhân Việt Nam hiện nay đã tăng cả về số lượng và chất lượng.[cite: 1]",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 333,
+        "type": "true_false",
+        "question": "Câu 33.3: Đảng Cộng sản là nhân tố khách quan quan trọng nhất để giai cấp công nhân thực hiện thắng lợi sứ mệnh lịch sử của mình.[cite: 1]",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            1
+        ]
+    },
+    {
+        "id": 334,
+        "type": "true_false",
+        "question": "Câu 33.4: Sự trưởng thành của Đảng Cộng sản – Hạt nhân chính trị quan trọng của giai cấp công nhân.[cite: 1]",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            0
+        ]
+    },
+    {
+        "id": 38,
+        "type": "drag_drop",
+        "question": "Câu 38: Kéo thả các yếu tố sau đây vào cột tương ứng:[cite: 1]",
+        "pairs": [
+            {
+                "dropZone": "Điều kiện khách quan quy định sứ mệnh lịch sử của giai cấp công nhân",
+                "dragItem": "Địa vị kinh tế của giai cấp công nhân"
+            },
+            {
+                "dropZone": "Điều kiện khách quan quy định sứ mệnh lịch sử của giai cấp công nhân",
+                "dragItem": "Địa vị chính trị - xã hội của giai cấp công nhân"
+            },
+            {
+                "dropZone": "Điều kiện chủ quan để giai cấp công nhân thực hiện được sứ mệnh lịch sử",
+                "dragItem": "Sự phát triển của bản thân giai cấp công nhân cả về số lượng và chất lượng"
+            },
+            {
+                "dropZone": "Điều kiện chủ quan để giai cấp công nhân thực hiện được sứ mệnh lịch sử",
+                "dragItem": "Đảng Cộng sản"
+            }
+        ]
+    },
+    {
+        "id": 39,
+        "type": "drag_drop",
+        "question": "Câu 39: Kéo thả các đáp án khớp với các phát biểu từ 1 – 3 về trái dưới đây:[cite: 1]",
+        "pairs": [
+            {
+                "dropZone": "Giai cấp công nhân Việt Nam là lực lượng nòng cốt của ____ Việt Nam",
+                "dragItem": "Đảng Cộng Sản"
+            },
+            {
+                "dropZone": "Giai cấp công nhân Việt Nam gắn bó mật thiết với các ____ trong xã hội",
+                "dragItem": "tầng lớp nhân dân"
+            },
+            {
+                "dropZone": "Giai cấp công nhân Việt Nam có mối quan hệ mật thiết với giai cấp nông dân và _____",
+                "dragItem": "tầng lớp tri thức"
+            }
+        ]
+    },
+    {
+        "id": 40,
+        "type": "drag_drop",
+        "question": "Câu 40: Kéo thả các đáp án khớp với các phát biểu từ 1 – 4 về trái dưới đây:[cite: 1]",
+        "pairs": [
+            {
+                "dropZone": "Đảng Cộng sản là _____ quan trọng nhất để giai cấp công nhân thực hiện thắng lợi sứ mệnh lịch sử của mình.",
+                "dragItem": "nhân tố chủ quan"
+            },
+            {
+                "dropZone": "Giai cấp công nhân là ___ của quá trình sản xuất vật chất hiện đại.",
+                "dragItem": "chủ thể"
+            },
+            {
+                "dropZone": "Giai cấp công nhân đại diện cho ____ tiên tiến.",
+                "dragItem": "phương thức sản xuất"
+            },
+            {
+                "dropZone": "Giai cấp công nhân đại diện cho ___ hiện đại.",
+                "dragItem": "lực lượng sản xuất"
+            }
+        ]
+    },
+    {
+        "id": 41,
+        "type": "drag_drop",
+        "question": "Câu 41: Kéo thả các đáp án khớp với các phát biểu từ 1 - 3 vế trái dưới đây:[cite: 1]",
+        "pairs": [
+            {
+                "dropZone": "Giai cấp công nhân là ____ và có tinh thần cách mạng triệt để",
+                "dragItem": "giai cấp cách mạng"
+            },
+            {
+                "dropZone": "Sứ mệnh lịch sử của giai cấp công nhân là_____ khỏi áp bức, bất công, bóc lột",
+                "dragItem": "giải phóng con người"
+            },
+            {
+                "dropZone": "Thực hiện sự nghiệp giải phóng thế giới ấy, đó là sứ mệnh lịch sử của ____ hiện đại",
+                "dragItem": "giai cấp vô sản"
+            }
+        ]
+    }
+]

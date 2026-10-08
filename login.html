@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Ôn luyện trắc nghiệm Chủ nghĩa xã hội khoa học</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="login-body">
+    <div class="login-card-container">
+        <!-- Cột trái: Banner hình ảnh & thông điệp tri thức -->
+        <div class="login-left-banner">
+            <div class="llb-content">
+                <div class="llb-header">
+                    <div class="llb-logo-icon">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <h1 class="llb-app-title">Ôn luyện trắc nghiệm</h1>
+                        <p class="llb-app-subtitle">Chủ nghĩa xã hội khoa học</p>
+                    </div>
+                </div>
+
+                <div class="llb-quote-box">
+                    <p style="font-weight: 600; margin-bottom: 4px;">Học đúng trọng tâm &nbsp;–&nbsp; Ôn chắc kiến thức &nbsp;–&nbsp; Vững bước tương lai!</p>
+                    <p style="font-style: italic; opacity: 0.92; font-size: 13px;">“Kiến thức là sức mạnh của bạn!”</p>
+                </div>
+            </div>
+
+            <!-- 3 Badges phía dưới -->
+            <div class="llb-badges">
+                <div class="llb-badge-item">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Hệ thống câu hỏi đa dạng</span>
+                </div>
+                <div class="llb-badge-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Theo dõi tiến độ học tập</span>
+                </div>
+                <div class="llb-badge-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Hiệu quả và tiện lợi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Khung đăng nhập -->
+        <div class="login-right-area">
+            <div class="login-form-header">
+                <div class="login-icon-book">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <h2 class="login-heading">Đăng nhập</h2>
+                <p class="login-subheading">Chào mừng bạn quay trở lại!<br>Hãy đăng nhập để tiếp tục ôn luyện và chinh phục môn Chủ nghĩa xã hội khoa học.</p>
+            </div>
+
+            <form id="login-form" class="login-form" onsubmit="handleLogin(event)">
+                <!-- Input Tên đăng nhập -->
+                <div class="login-input-group">
+                    <i class="fa-regular fa-user login-input-icon"></i>
+                    <input type="text" id="login-username" class="login-input" placeholder="Tên đăng nhập hoặc Email" required autocomplete="username">
+                </div>
+
+                <!-- Input Mật khẩu -->
+                <div class="login-input-group">
+                    <i class="fa-solid fa-lock login-input-icon"></i>
+                    <input type="password" id="login-password" class="login-input" placeholder="Mật khẩu" required autocomplete="current-password">
+                    <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('login-password', this)">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+
+                <!-- Checkbox Ghi nhớ & Quên mật khẩu -->
+                <div class="login-row-options">
+                    <label class="remember-label">
+                        <input type="checkbox" id="remember-me" checked>
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+                    <a href="javascript:void(0)" class="forgot-link" onclick="handleForgotPassword()">Quên mật khẩu?</a>
+                </div>
+
+                <!-- Nút Đăng nhập -->
+                <button type="submit" class="btn-login-submit">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span>Đăng nhập</span>
+                </button>
+
+                <!-- Divider -->
+                <div class="login-divider">
+                    <span>Hoặc đăng nhập bằng</span>
+                </div>
+
+                <!-- Social login -->
+                <div class="social-login-grid">
+                    <button type="button" class="btn-social" onclick="handleSocialLogin('Google')">
+                        <i class="fa-brands fa-google" style="color: #ea4335;"></i> Google
+                    </button>
+                    <button type="button" class="btn-social" onclick="handleSocialLogin('Microsoft')">
+                        <i class="fa-brands fa-microsoft" style="color: #00a4ef;"></i> Microsoft
+                    </button>
+                    <button type="button" class="btn-social" onclick="handleSocialLogin('Khác')">
+                        <i class="fa-solid fa-user-lock" style="color: #64748b;"></i> Khác
+                    </button>
+                </div>
+
+                <!-- Quick demo pill for instant testing -->
+                <div class="quick-demo-pill">
+                    <span>Đăng nhập nhanh:</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" class="btn-demo-acc" onclick="quickFillAccount('Admin', 'Loclsct2006')">
+                            <i class="fa-solid fa-shield-halved"></i> Admin
+                        </button>
+                        <button type="button" class="btn-demo-acc" onclick="quickFillAccount('Loc', '123')" style="background: #ecfdf5; color: #16a34a; border-color: #bbf7d0;">
+                            <i class="fa-solid fa-user"></i> User
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer đăng ký -->
+                <div style="text-align: center; margin-top: 14px; font-size: 13px; color: #64748b;">
+                    Chưa có tài khoản? <a href="javascript:void(0)" onclick="handleRegister()" style="color: #2563eb; font-weight: 600; text-decoration: none;">Đăng ký ngay</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-message" class="toast-box hidden">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Thông báo</span>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+
+</html>
