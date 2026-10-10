@@ -5,6 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ôn luyện trắc nghiệm - Chủ nghĩa xã hội khoa học</title>
+    <!-- Auth Guard: Bắt buộc đăng nhập trước khi vào trang chủ ôn luyện -->
+    <script>
+        (function() {
+            try {
+                const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+                if (!userStr) {
+                    window.location.replace('login.html');
+                    return;
+                }
+                const user = JSON.parse(userStr);
+                if (!user || !user.username || !user.loginAt) {
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    window.location.replace('login.html');
+                }
+            } catch (e) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,13 +37,18 @@
 <body class="dashboard-body">
     <!-- Top Header Bar -->
     <header class="app-header">
-        <div class="header-left" onclick="window.location.href='index.html'">
-            <div class="logo-icon">
-                <i class="fa-solid fa-book-open"></i>
-            </div>
-            <div class="logo-text">
-                <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
-                <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="header-brand-wrap" onclick="window.location.href='index.html'" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div class="logo-text">
+                    <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
+                    <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+                </div>
             </div>
         </div>
 
@@ -35,14 +60,15 @@
         </div>
 
         <div class="header-right">
-            <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="openUtilityModal('notifications')">
-                <i class="fa-solid fa-bell"></i>
-                <span class="notification-dot"></span>
-            </button>
+            <div class="notification-wrap" id="notification-wrap">
+                <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notification-dot" id="notification-dot" style="display: none;"></span>
+                </button>
+                <div class="notification-dropdown hidden" id="notification-dropdown"></div>
+            </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
-                <div class="user-avatar">
-                    <i class="fa-solid fa-user"></i>
-                </div>
+                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">L</div>
                 <span class="user-name" id="header-user-name">Lộc</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -51,8 +77,19 @@
 
     <!-- Main Application Layout -->
     <div class="app-layout">
-        <!-- Sidebar Menu (Cột trái cố định) -->
-        <aside class="sidebar">
+        <!-- Sidebar Menu (Cột trái cố định trên PC, Drawer trượt trên điện thoại) -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Header menu trên điện thoại -->
+            <div class="sidebar-mobile-header">
+                <div class="smh-brand">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Menu Ôn Luyện</span>
+                </div>
+                <button type="button" class="btn-close-sidebar" onclick="closeMobileSidebar()" aria-label="Đóng menu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
             <a href="index.html" class="btn-home active" id="btn-home">
                 <i class="fa-solid fa-house"></i>
                 <span>Trang chủ</span>
@@ -134,6 +171,9 @@
                 </ul>
             </div>
         </aside>
+
+        <!-- Lớp phủ mờ khi mở Drawer menu trên mobile -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Phần nội dung chính) -->
         <main class="main-content">
@@ -364,6 +404,32 @@
             <!-- Modal Header, Body, Footer injected dynamically by app.js -->
         </div>
     </div>
+
+    <!-- Mobile Bottom Navigation Bar (Thanh điều hướng dưới đáy màn hình) -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+        <a href="index.html" class="mb-nav-item active">
+            <i class="fa-solid fa-house"></i>
+            <span>Trang chủ</span>
+        </a>
+        <button type="button" class="mb-nav-item" onclick="toggleMobileSidebar()">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Chủ đề</span>
+        </button>
+        <a href="practice.html?topic=mock&mode=test" class="mb-nav-item mb-nav-special" title="Làm bài thi thử mô phỏng">
+            <div class="mb-nav-icon-circle">
+                <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <span>Thi thử</span>
+        </a>
+        <button type="button" class="mb-nav-item" onclick="openUtilityModal('stats')">
+            <i class="fa-solid fa-chart-simple"></i>
+            <span>Thống kê</span>
+        </button>
+        <button type="button" class="mb-nav-item" onclick="openUserMenuModal()">
+            <i class="fa-solid fa-user"></i>
+            <span>Tài khoản</span>
+        </button>
+    </nav>
 
     <script src="app.js"></script>
 </body>

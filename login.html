@@ -11,133 +11,702 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-dark: #1e3a8a;
+            --text-color: #374151;
+            --text-muted: #6b7280;
+            --text-light: #9ca3af;
+            --border-color: #e5e7eb;
+            --bg-right: #f4f7fe;
+            --card-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-right);
+            color: var(--text-color);
+        }
+
+        /* 1. Container chính */
+        .main-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 2. Nửa bên trái (Left Panel) - 55% */
+        .left-panel {
+            width: 55%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Lớp nền hình ảnh (.bg-image) */
+        .bg-image {
+            position: absolute;
+            inset: 0;
+            background: url('login-clean-bg.jpg') no-repeat left center;
+            background-size: cover;
+            z-index: 1;
+        }
+
+        /* 3. Nửa bên phải (Right Panel) - 45% */
+        .right-panel {
+            width: 45%;
+            height: 100%;
+            background-color: var(--bg-right);
+            background-image: linear-gradient(135deg, #ffffff 0%, var(--bg-right) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Họa tiết hoa sen mờ góc dưới bên phải */
+        .lotus-watermark {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 320px;
+            height: 320px;
+            opacity: 0.28;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Họa tiết dải lượn sóng góc trên bên phải */
+        .wave-watermark {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 280px;
+            height: 200px;
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Login Card */
+        .login-card {
+            background: var(--card-bg);
+            width: 85%;
+            max-width: 480px;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.08);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header trong Login Card */
+        .card-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .card-icon-book {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .card-heading {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+
+        .card-welcome {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        /* Form & Inputs */
+        .input-group {
+            position: relative;
+            width: 100%;
+            height: 48px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 16px;
+            color: var(--text-light);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-color);
+            padding-left: 45px;
+            padding-right: 16px;
+        }
+
+        .input-field::placeholder {
+            color: var(--text-light);
+            font-size: 13.5px;
+        }
+
+        .input-icon-right {
+            position: absolute;
+            right: 16px;
+            color: var(--text-light);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .input-icon-right:hover {
+            color: var(--text-color);
+        }
+
+        /* Sub-actions (Ghi nhớ & Quên mật khẩu) */
+        .sub-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+
+        .remember-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            color: var(--text-color);
+        }
+
+        .custom-checkbox {
+            accent-color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .forgot-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+            color: var(--primary-hover);
+        }
+
+        /* Nút Submit */
+        .btn-submit {
+            width: 100%;
+            height: 50px;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Nút Submit Đăng ký (Màu xanh lá chuyên biệt) */
+        .btn-register {
+            background-color: #059669;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
+        }
+
+        .btn-register:hover {
+            background-color: #047857;
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38);
+            transform: translateY(-1px);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        /* Animation chuyển đổi giữa 2 Form */
+        .auth-view {
+            transition: all 0.25s ease;
+        }
+
+        .auth-view.animate-fade-in {
+            animation: authFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes authFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Icon Badge Đăng ký */
+        .register-icon-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .register-tip {
+            font-size: 12px;
+            color: #166534;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 9px 13px;
+            border-radius: 8px;
+            line-height: 1.45;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 22px 0;
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        .divider span {
+            padding: 0 12px;
+        }
+
+        /* Social Login Buttons */
+        .social-login-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 24px;
+        }
+
+        .social-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 8px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .social-btn:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        /* Footer */
+        .card-footer {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .register-link {
+            color: var(--primary-color);
+            font-weight: 700;
+            text-decoration: none;
+            margin-left: 4px;
+            transition: color 0.2s;
+        }
+
+        .register-link:hover {
+            text-decoration: underline;
+            color: var(--primary-hover);
+        }
+
+        /* Responsive Media Query */
+        @media (max-width: 992px) {
+            body {
+                overflow: auto;
+            }
+
+            .main-container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .left-panel {
+                width: 100%;
+                min-height: 380px;
+            }
+
+            .right-panel {
+                width: 100%;
+                padding: 40px 20px;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 440px;
+                padding: 40px 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .left-panel {
+                display: none !important;
+            }
+
+            .right-panel {
+                width: 100%;
+                min-height: 100vh;
+                min-height: 100dvh;
+                padding: 24px 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 420px;
+                padding: 28px 20px;
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            }
+
+            .card-heading {
+                font-size: 20px;
+            }
+
+            .card-desc {
+                font-size: 12.5px;
+            }
+
+            .input-field {
+                font-size: 16px; /* Tránh tự động phóng to trên iOS Safari */
+                height: 48px;
+            }
+
+            .social-btn {
+                padding: 10px 6px;
+                font-size: 11.5px;
+            }
+
+            .btn-submit {
+                height: 48px;
+                font-size: 15px;
+            }
+        }
+    </style>
 </head>
 
-<body class="login-body">
-    <div class="login-card-container">
-        <!-- Cột trái: Banner hình ảnh & thông điệp tri thức -->
-        <div class="login-left-banner">
-            <div class="llb-content">
-                <div class="llb-header">
-                    <div class="llb-logo-icon">
-                        <i class="fa-solid fa-book-open"></i>
-                    </div>
-                    <div>
-                        <h1 class="llb-app-title">Ôn luyện trắc nghiệm</h1>
-                        <p class="llb-app-subtitle">Chủ nghĩa xã hội khoa học</p>
-                    </div>
-                </div>
+<body>
+    <!-- Container chính (bọc toàn bộ trang) -->
+    <div class="main-container">
 
-                <div class="llb-quote-box">
-                    <p style="font-weight: 600; margin-bottom: 4px;">Học đúng trọng tâm &nbsp;–&nbsp; Ôn chắc kiến thức &nbsp;–&nbsp; Vững bước tương lai!</p>
-                    <p style="font-style: italic; opacity: 0.92; font-size: 13px;">“Kiến thức là sức mạnh của bạn!”</p>
-                </div>
-            </div>
-
-            <!-- 3 Badges phía dưới -->
-            <div class="llb-badges">
-                <div class="llb-badge-item">
-                    <i class="fa-solid fa-brain"></i>
-                    <span>Hệ thống câu hỏi đa dạng</span>
-                </div>
-                <div class="llb-badge-item">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Theo dõi tiến độ học tập</span>
-                </div>
-                <div class="llb-badge-item">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span>Hiệu quả và tiện lợi</span>
-                </div>
-            </div>
+        <!-- 2. Nửa bên trái (Left Panel) - 55% -->
+        <div class="left-panel">
+            <div class="bg-image"></div>
         </div>
 
-        <!-- Cột phải: Khung đăng nhập -->
-        <div class="login-right-area">
-            <div class="login-form-header">
-                <div class="login-icon-book">
-                    <i class="fa-solid fa-book-open"></i>
+        <!-- 3. Nửa bên phải (Right Panel) - 45% -->
+        <div class="right-panel">
+
+            <!-- Họa tiết dải sóng mờ góc trên bên phải -->
+            <svg class="wave-watermark" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M40 0C110 50 180 30 280 120V0H40Z" fill="url(#wave-grad)"/>
+                <path d="M0 0C90 70 190 60 280 180V0H0Z" fill="url(#wave-grad-2)" opacity="0.5"/>
+                <defs>
+                    <linearGradient id="wave-grad" x1="40" y1="0" x2="280" y2="120" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#93c5fd" stop-opacity="0.3"/>
+                        <stop offset="1" stop-color="#bfdbfe" stop-opacity="0.1"/>
+                    </linearGradient>
+                    <linearGradient id="wave-grad-2" x1="0" y1="0" x2="280" y2="180" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#60a5fa" stop-opacity="0.2"/>
+                        <stop offset="1" stop-color="#dbeafe" stop-opacity="0.05"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+
+            <!-- Họa tiết hoa sen mờ góc dưới bên phải -->
+            <svg class="lotus-watermark" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cánh sen trung tâm -->
+                <path d="M220 280 C200 210, 220 160, 240 120 C260 160, 280 210, 260 280 Z" stroke="#60a5fa" stroke-width="1.8" fill="none"/>
+                <!-- Cánh sen trái -->
+                <path d="M220 280 C170 230, 160 180, 180 135 C205 170, 220 220, 220 280 Z" stroke="#93c5fd" stroke-width="1.8" fill="none"/>
+                <!-- Cánh sen phải -->
+                <path d="M260 280 C310 230, 320 180, 300 135 C275 170, 260 220, 260 280 Z" stroke="#93c5fd" stroke-width="1.8" fill="none"/>
+                <!-- Cánh sen xòe ngoài trái -->
+                <path d="M200 290 C130 250, 120 200, 130 160 C160 200, 190 250, 200 290 Z" stroke="#bfdbfe" stroke-width="1.6" fill="none"/>
+                <!-- Cánh sen xòe ngoài phải -->
+                <path d="M280 290 C350 250, 360 200, 350 160 C320 200, 290 250, 280 290 Z" stroke="#bfdbfe" stroke-width="1.6" fill="none"/>
+                <!-- Lá sen & đài sen uốn lượn -->
+                <path d="M140 310 C180 290, 280 290, 320 310" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/>
+                <path d="M170 300 C210 285, 270 285, 300 300" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M100 270 C150 260, 200 280, 220 310" stroke="#bfdbfe" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <path d="M270 310 C290 280, 340 260, 390 270" stroke="#bfdbfe" stroke-width="1.5" stroke-dasharray="3 3"/>
+            </svg>
+
+            <!-- Login Card (Khung trắng chứa Form) -->
+            <div class="login-card">
+
+                <!-- ==================== KHỐI 1: FORM ĐĂNG NHẬP (Mặc định hiển thị) ==================== -->
+                <div id="login-view" class="auth-view">
+                    <!-- Header Login Card -->
+                    <div class="card-header">
+                        <div class="card-icon-book">
+                            <svg width="48" height="38" viewBox="0 0 46 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Bìa sách trái -->
+                                <path d="M22 6.5C16.5 4.5 9 5 4 7C2.9 7.4 2 8.5 2 9.8V29.5C2 31.2 3.5 32.5 5.2 32C9.5 30.5 16 30 22 32.5V6.5Z" fill="#1e73e8"/>
+                                <!-- Bìa sách phải -->
+                                <path d="M24 6.5C29.5 4.5 37 5 42 7C43.1 7.4 44 8.5 44 9.8V29.5C44 31.2 42.5 32.5 40.8 32C36.5 30.5 30 30 24 32.5V6.5Z" fill="#1e73e8"/>
+                                <!-- Đường gân trang sách trái -->
+                                <path d="M7 13.5H17M7 18H17M7 22.5H17" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                                <!-- Đường gân trang sách phải -->
+                                <path d="M29 13.5H39M29 18H39M29 22.5H39" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h2 class="card-heading">Đăng nhập</h2>
+                        <p class="card-welcome">Chào mừng bạn quay trở lại!</p>
+                        <p class="card-desc">Hãy đăng nhập để tiếp tục ôn luyện và chinh phục môn Chủ nghĩa xã hội khoa học.</p>
+                    </div>
+
+                    <!-- Form đăng nhập -->
+                    <form id="login-form" action="#" method="POST">
+
+                        <!-- Trường 1: Tên đăng nhập hoặc Email -->
+                        <div class="input-group">
+                            <i class="fa-regular fa-user input-icon-left"></i>
+                            <input type="text" id="login-username" class="input-field" placeholder="Tên đăng nhập hoặc Email" required autocomplete="username">
+                        </div>
+
+                        <!-- Trường 2: Mật khẩu -->
+                        <div class="input-group">
+                            <i class="fa-solid fa-lock input-icon-left"></i>
+                            <input type="password" id="login-password" class="input-field" placeholder="Mật khẩu" required autocomplete="current-password" style="padding-right: 45px;">
+                            <span class="input-icon-right" onclick="togglePasswordVisibility('login-password', this)" title="Ẩn/Hiện mật khẩu">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </span>
+                        </div>
+
+                        <!-- Sub-actions: Ghi nhớ & Quên mật khẩu -->
+                        <div class="sub-actions">
+                            <label class="remember-group">
+                                <input type="checkbox" id="remember-me" class="custom-checkbox" checked>
+                                <span>Ghi nhớ đăng nhập</span>
+                            </label>
+                            <a href="#" class="forgot-link">Quên mật khẩu?</a>
+                        </div>
+
+                        <!-- Nút Submit Đăng nhập -->
+                        <button type="submit" class="btn-submit">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            <span>Đăng nhập</span>
+                        </button>
+
+                        <!-- Divider -->
+                        <div class="divider">
+                            <span>Hoặc đăng nhập bằng</span>
+                        </div>
+
+                        <!-- Social Login (3 nút: Google, Microsoft, Tài khoản khác) -->
+                        <div class="social-login-group">
+                            <button type="button" class="social-btn">
+                                <svg width="16" height="16" viewBox="0 0 18 18">
+                                    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                                    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                                    <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+                                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                                </svg>
+                                <span>Google</span>
+                            </button>
+
+                            <button type="button" class="social-btn">
+                                <svg width="15" height="15" viewBox="0 0 21 21">
+                                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                                </svg>
+                                <span>Microsoft</span>
+                            </button>
+
+                            <button type="button" class="social-btn">
+                                <i class="fa-solid fa-user" style="color: #64748b; font-size: 13px;"></i>
+                                <span>Tài khoản khác</span>
+                            </button>
+                        </div>
+
+                        <!-- Footer: Đăng ký ngay -->
+                        <div class="card-footer">
+                            Chưa có tài khoản? <a href="javascript:void(0)" class="register-link" id="link-to-register" onclick="showRegisterForm(event)">Đăng ký ngay</a>
+                        </div>
+
+                    </form>
                 </div>
-                <h2 class="login-heading">Đăng nhập</h2>
-                <p class="login-subheading">Chào mừng bạn quay trở lại!<br>Hãy đăng nhập để tiếp tục ôn luyện và chinh phục môn Chủ nghĩa xã hội khoa học.</p>
+
+                <!-- ==================== KHỐI 2: FORM ĐĂNG KÝ (Mặc định ẩn) ==================== -->
+                <div id="register-view" class="auth-view" style="display: none;">
+                    <!-- Header Register Card -->
+                    <div class="card-header">
+                        <div class="card-icon-book">
+                            <div class="register-icon-badge">
+                                <i class="fa-solid fa-user-plus"></i>
+                            </div>
+                        </div>
+                        <h2 class="card-heading">Đăng ký tài khoản mới</h2>
+                        <p class="card-welcome">Bắt đầu hành trình ôn luyện!</p>
+                        <p class="card-desc">Tạo tài khoản học viên để lưu tiến trình, tích lũy EXP và thăng cấp cảnh giới.</p>
+                    </div>
+
+                    <!-- Form Đăng ký -->
+                    <form id="register-form" action="#" method="POST" onsubmit="handleRegister(event)">
+                        <!-- Ô 1: Tên đăng nhập -->
+                        <div class="input-group">
+                            <i class="fa-regular fa-user input-icon-left"></i>
+                            <input type="text" id="reg-username" class="input-field" placeholder="Tên đăng nhập (không chứa khoảng trắng)" required autocomplete="username">
+                        </div>
+
+                        <!-- Ô 2: Mật khẩu -->
+                        <div class="input-group">
+                            <i class="fa-solid fa-lock input-icon-left"></i>
+                            <input type="password" id="reg-password" class="input-field" placeholder="Mật khẩu (tối thiểu 4 ký tự)" required autocomplete="new-password" style="padding-right: 45px;">
+                            <span class="input-icon-right" onclick="togglePasswordVisibility('reg-password', this)" title="Ẩn/Hiện mật khẩu">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </span>
+                        </div>
+
+                        <!-- Ô 3: Nhập lại mật khẩu -->
+                        <div class="input-group">
+                            <i class="fa-solid fa-shield-halved input-icon-left"></i>
+                            <input type="password" id="reg-confirm-password" class="input-field" placeholder="Nhập lại mật khẩu" required autocomplete="new-password" style="padding-right: 45px;">
+                            <span class="input-icon-right" onclick="togglePasswordVisibility('reg-confirm-password', this)" title="Ẩn/Hiện mật khẩu">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </span>
+                        </div>
+
+                        <!-- Gợi ý bảo mật & Vai trò mặc định -->
+                        <div class="register-tip">
+                            <i class="fa-solid fa-circle-check" style="font-size: 14px; color: #16a34a;"></i>
+                            <span>Tài khoản tạo mới mặc định có vai trò là <strong>Học viên (User)</strong>.</span>
+                        </div>
+
+                        <!-- Nút Submit Đăng ký -->
+                        <button type="submit" class="btn-submit btn-register" id="btn-submit-register">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Đăng ký</span>
+                        </button>
+
+                        <!-- Footer: Quay lại Đăng nhập -->
+                        <div class="card-footer" style="margin-top: 24px;">
+                            Đã có tài khoản? <a href="javascript:void(0)" class="register-link" id="link-to-login" onclick="showLoginForm(event)">Đăng nhập</a>
+                        </div>
+                    </form>
+                </div>
+
             </div>
 
-            <form id="login-form" class="login-form" onsubmit="handleLogin(event)">
-                <!-- Input Tên đăng nhập -->
-                <div class="login-input-group">
-                    <i class="fa-regular fa-user login-input-icon"></i>
-                    <input type="text" id="login-username" class="login-input" placeholder="Tên đăng nhập hoặc Email" required autocomplete="username">
-                </div>
-
-                <!-- Input Mật khẩu -->
-                <div class="login-input-group">
-                    <i class="fa-solid fa-lock login-input-icon"></i>
-                    <input type="password" id="login-password" class="login-input" placeholder="Mật khẩu" required autocomplete="current-password">
-                    <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('login-password', this)">
-                        <i class="fa-regular fa-eye"></i>
-                    </button>
-                </div>
-
-                <!-- Checkbox Ghi nhớ & Quên mật khẩu -->
-                <div class="login-row-options">
-                    <label class="remember-label">
-                        <input type="checkbox" id="remember-me" checked>
-                        <span>Ghi nhớ đăng nhập</span>
-                    </label>
-                    <a href="javascript:void(0)" class="forgot-link" onclick="handleForgotPassword()">Quên mật khẩu?</a>
-                </div>
-
-                <!-- Nút Đăng nhập -->
-                <button type="submit" class="btn-login-submit">
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                    <span>Đăng nhập</span>
-                </button>
-
-                <!-- Divider -->
-                <div class="login-divider">
-                    <span>Hoặc đăng nhập bằng</span>
-                </div>
-
-                <!-- Social login -->
-                <div class="social-login-grid">
-                    <button type="button" class="btn-social" onclick="handleSocialLogin('Google')">
-                        <i class="fa-brands fa-google" style="color: #ea4335;"></i> Google
-                    </button>
-                    <button type="button" class="btn-social" onclick="handleSocialLogin('Microsoft')">
-                        <i class="fa-brands fa-microsoft" style="color: #00a4ef;"></i> Microsoft
-                    </button>
-                    <button type="button" class="btn-social" onclick="handleSocialLogin('Khác')">
-                        <i class="fa-solid fa-user-lock" style="color: #64748b;"></i> Khác
-                    </button>
-                </div>
-
-                <!-- Quick demo pill for instant testing -->
-                <div class="quick-demo-pill">
-                    <span>Đăng nhập nhanh:</span>
-                    <div style="display: flex; gap: 6px;">
-                        <button type="button" class="btn-demo-acc" onclick="quickFillAccount('Admin', 'Loclsct2006')">
-                            <i class="fa-solid fa-shield-halved"></i> Admin
-                        </button>
-                        <button type="button" class="btn-demo-acc" onclick="quickFillAccount('Loc', '123')" style="background: #ecfdf5; color: #16a34a; border-color: #bbf7d0;">
-                            <i class="fa-solid fa-user"></i> User
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Footer đăng ký -->
-                <div style="text-align: center; margin-top: 14px; font-size: 13px; color: #64748b;">
-                    Chưa có tài khoản? <a href="javascript:void(0)" onclick="handleRegister()" style="color: #2563eb; font-weight: 600; text-decoration: none;">Đăng ký ngay</a>
-                </div>
-            </form>
         </div>
+
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast-message" class="toast-box hidden">
-        <i class="fa-solid fa-circle-check"></i>
-        <span>Thông báo</span>
-    </div>
-
+    <!-- Script xử lý đăng nhập & logic phiên làm việc -->
     <script src="login.js"></script>
 </body>
 

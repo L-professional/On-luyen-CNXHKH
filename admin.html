@@ -5,6 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý tài khoản - Ôn luyện trắc nghiệm CNXHKH</title>
+    <!-- Auth Guard: Bắt buộc đăng nhập với quyền Admin mới được vào trang này -->
+    <script>
+        (function() {
+            try {
+                const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+                if (!userStr) {
+                    window.location.replace('login.html');
+                    return;
+                }
+                const user = JSON.parse(userStr);
+                if (!user || !user.username || !user.loginAt) {
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    window.location.replace('login.html');
+                    return;
+                }
+                if (user.role !== 'admin') {
+                    alert('Bạn không có quyền truy cập trang Quản lý tài khoản! Đang quay lại trang chủ...');
+                    window.location.replace('index.html');
+                }
+            } catch (e) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,13 +42,18 @@
 <body class="dashboard-body">
     <!-- Top Header Bar -->
     <header class="app-header">
-        <div class="header-left" onclick="window.location.href='index.html'" title="Về trang chủ">
-            <div class="logo-icon">
-                <i class="fa-solid fa-book-open"></i>
-            </div>
-            <div class="logo-text">
-                <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
-                <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobile-menu-btn-admin" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="header-brand-wrap" onclick="window.location.href='index.html'" title="Về trang chủ" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div class="logo-text">
+                    <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
+                    <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+                </div>
             </div>
         </div>
 
@@ -40,9 +70,7 @@
                 <span class="notification-dot"></span>
             </button>
             <div class="user-pill" id="user-pill" onclick="openAdminUserMenu()" title="Tài khoản Quản trị">
-                <div class="user-avatar" style="background: linear-gradient(135deg, #2563eb, #1e40af);">
-                    <i class="fa-solid fa-user-shield"></i>
-                </div>
+                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">A</div>
                 <span class="user-name" id="admin-user-display-name">Admin</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -52,7 +80,18 @@
     <!-- Main Layout -->
     <div class="app-layout">
         <!-- Sidebar Menu -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="admin-sidebar">
+            <!-- Header menu trên điện thoại -->
+            <div class="sidebar-mobile-header">
+                <div class="smh-brand">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Menu Quản Trị</span>
+                </div>
+                <button type="button" class="btn-close-sidebar" onclick="closeMobileSidebar()" aria-label="Đóng menu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
             <a href="index.html" class="btn-home" style="background: #f1f5f9; color: #475569; box-shadow: none;">
                 <i class="fa-solid fa-house" style="color: #64748b;"></i>
                 <span>Trang chủ</span>
@@ -102,136 +141,231 @@
                 <h3 class="sidebar-title">TIỆN ÍCH</h3>
                 <ul class="utility-menu">
                     <li>
-                        <a href="index.html" class="utility-item">
+                        <a href="utilities.html?tab=stats" class="utility-item">
                             <i class="fa-solid fa-chart-simple"></i>
                             <span>Thống kê kết quả</span>
                         </a>
                     </li>
                     <li>
-                        <a href="index.html" class="utility-item">
+                        <a href="utilities.html?tab=history" class="utility-item">
                             <i class="fa-solid fa-clock-rotate-left"></i>
                             <span>Lịch sử làm bài</span>
                         </a>
                     </li>
                     <li>
-                        <a href="index.html" class="utility-item">
+                        <a href="utilities.html?tab=guide" class="utility-item">
                             <i class="fa-regular fa-circle-question"></i>
                             <span>Hướng dẫn sử dụng</span>
                         </a>
                     </li>
                     <li>
-                        <a href="index.html" class="utility-item">
+                        <a href="utilities.html?tab=feedback" class="utility-item">
                             <i class="fa-regular fa-envelope"></i>
                             <span>Liên hệ / Góp ý</span>
                         </a>
                     </li>
                     <!-- Mục Quản lý tài khoản ACTIVE -->
                     <li>
-                        <a href="admin.html" class="utility-item active" style="background-color: #eff6ff; color: #2563eb; font-weight: 700;">
+                        <a href="admin.html?tab=users" class="utility-item active" id="sidebar-admin-users-item" style="background-color: #eff6ff; color: #2563eb; font-weight: 700;">
                             <i class="fas fa-users-cog" style="color: #2563eb;"></i>
                             <span>Quản lý tài khoản</span>
+                        </a>
+                    </li>
+                    <!-- Mục Hòm thư góp ý Admin -->
+                    <li>
+                        <a href="admin.html?tab=feedbacks" class="utility-item" id="sidebar-admin-feedbacks-item">
+                            <i class="fa-solid fa-inbox"></i>
+                            <span>Hòm thư Góp ý</span>
                         </a>
                     </li>
                 </ul>
             </div>
         </aside>
 
-        <!-- Main Content (Dashboard Quản lý tài khoản) -->
+        <!-- Lớp phủ mờ khi mở Drawer menu trên mobile -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
+        <!-- Main Content (Dashboard Quản lý tài khoản & Hòm thư Góp ý) -->
         <main class="main-content admin-main-content">
             <!-- Header Thông tin trang -->
             <div class="admin-header-box">
                 <div class="admin-header-info">
-                    <div class="admin-icon-circle">
+                    <div class="admin-icon-circle" id="admin-header-icon">
                         <i class="fas fa-users-cog"></i>
                     </div>
                     <div>
-                        <h2 class="admin-page-title">Quản lý tài khoản người dùng</h2>
-                        <p class="admin-page-subtitle">Thêm mới, phân quyền và quản lý tài khoản người dùng trong hệ thống.</p>
+                        <h2 class="admin-page-title" id="admin-main-page-title">Quản lý tài khoản người dùng</h2>
+                        <p class="admin-page-subtitle" id="admin-main-page-desc">Thêm mới, phân quyền và quản lý tài khoản người dùng trong hệ thống.</p>
                     </div>
                 </div>
-                <div class="admin-stats-badge">
+                <div class="admin-stats-badge" id="admin-header-stat-badge">
                     <i class="fa-solid fa-users"></i>
                     <span>Tổng số: <strong id="total-users-count">2</strong> tài khoản</span>
                 </div>
             </div>
 
-            <!-- Khối 1: Thêm tài khoản mới (Create Account) -->
-            <section class="admin-card">
-                <div class="admin-card-header">
-                    <div class="ach-icon-box">
-                        <i class="fa-solid fa-user-plus"></i>
-                    </div>
-                    <div>
-                        <h3 class="ach-title">Thêm tài khoản mới</h3>
-                        <p class="ach-desc">Khởi tạo tài khoản mới cho học viên hoặc quản trị viên hệ thống.</p>
-                    </div>
-                </div>
+            <!-- Thanh Tab Chuyển Đổi Quản Trị: Tài khoản vs Hòm thư Góp ý -->
+            <nav class="admin-tab-nav" aria-label="Điều hướng tính năng Quản trị">
+                <button type="button" class="admin-tab-btn active" id="btn-admin-tab-users" onclick="switchAdminMainTab('users')">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Tài khoản người dùng</span>
+                    <span class="admin-tab-badge" id="badge-users-count">2</span>
+                </button>
+                <button type="button" class="admin-tab-btn" id="btn-admin-tab-feedbacks" onclick="switchAdminMainTab('feedbacks')">
+                    <i class="fa-regular fa-envelope"></i>
+                    <span>Hòm thư Góp ý & Báo lỗi</span>
+                    <span class="admin-tab-badge badge-unread" id="badge-feedbacks-count">0</span>
+                </button>
+            </nav>
 
-                <form id="create-user-form" class="create-user-form" onsubmit="handleCreateUser(event)">
-                    <div class="form-group">
-                        <label for="new-username"><i class="fa-regular fa-user"></i> Tên đăng nhập</label>
-                        <input type="text" id="new-username" placeholder="Nhập tên đăng nhập..." required autocomplete="off">
+            <!-- TAB PANE 1: QUẢN LÝ TÀI KHOẢN -->
+            <div id="admin-pane-users" class="admin-pane active">
+                <!-- Khối 1: Thêm tài khoản mới (Create Account) -->
+                <section class="admin-card">
+                    <div class="admin-card-header">
+                        <div class="ach-icon-box">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h3 class="ach-title">Thêm tài khoản mới</h3>
+                            <p class="ach-desc">Khởi tạo tài khoản mới cho học viên hoặc quản trị viên hệ thống.</p>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="new-password"><i class="fa-solid fa-key"></i> Mật khẩu</label>
-                        <div class="password-input-wrapper">
-                            <input type="password" id="new-password" placeholder="Nhập mật khẩu..." required>
-                            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('new-password', this)">
-                                <i class="fa-regular fa-eye"></i>
+
+                    <form id="create-user-form" class="create-user-form" onsubmit="handleCreateUser(event)">
+                        <div class="form-group">
+                            <label for="new-username"><i class="fa-regular fa-user"></i> Tên đăng nhập</label>
+                            <input type="text" id="new-username" placeholder="Nhập tên đăng nhập..." required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password"><i class="fa-solid fa-key"></i> Mật khẩu</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="new-password" placeholder="Nhập mật khẩu..." required>
+                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('new-password', this)">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-role"><i class="fa-solid fa-shield-halved"></i> Vai trò</label>
+                            <select id="new-role" required>
+                                <option value="user">User (Học viên)</option>
+                                <option value="admin">Admin (Quản trị viên)</option>
+                            </select>
+                        </div>
+                        <div class="form-group form-action-group">
+                            <button type="submit" class="btn-create-account">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Tạo tài khoản</span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Khối 2: Danh sách tài khoản (User List) -->
+                <section class="admin-card">
+                    <div class="admin-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="ach-icon-box" style="background: #eff6ff; color: #2563eb;">
+                                <i class="fa-solid fa-address-book"></i>
+                            </div>
+                            <div>
+                                <h3 class="ach-title">Danh sách tài khoản</h3>
+                                <p class="ach-desc">Danh sách tài khoản đã được cấp quyền truy cập hệ thống.</p>
+                            </div>
+                        </div>
+                        <div class="table-search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="user-search-input" placeholder="Tìm kiếm tài khoản..." oninput="filterUserTable()">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">STT</th>
+                                    <th>Tên đăng nhập</th>
+                                    <th style="width: 170px;">Mật khẩu</th>
+                                    <th style="width: 140px;">Vai trò</th>
+                                    <th style="width: 130px;">Ngày tạo</th>
+                                    <th style="width: 200px; text-align: center;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body">
+                                <!-- Injected dynamically by admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB PANE 2: HÒM THƯ GÓP Ý & BÁO LỖI (BONUS) -->
+            <div id="admin-pane-feedbacks" class="admin-pane hidden">
+                <section class="admin-card">
+                    <div class="admin-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="ach-icon-box" style="background: #ecfdf5; color: #059669;">
+                                <i class="fa-solid fa-inbox"></i>
+                            </div>
+                            <div>
+                                <h3 class="ach-title">Hòm thư Góp ý & Báo lỗi</h3>
+                                <p class="ach-desc">Ý kiến đóng góp, thắc mắc và báo lỗi câu hỏi từ học viên gửi đến ban quản trị.</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div class="table-search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="feedback-search-input" placeholder="Tìm theo tiêu đề, người gửi..." oninput="filterFeedbackTable()">
+                            </div>
+                            <select id="feedback-filter-status" onchange="filterFeedbackTable()" style="padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 13.5px; background: #fff; font-weight: 600; color: #334155; cursor: pointer;">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="Chờ duyệt">Chờ duyệt</option>
+                                <option value="Đã xử lý">Đã xử lý</option>
+                            </select>
+                            <button type="button" class="btn-action" onclick="clearResolvedFeedbacks()" title="Dọn dẹp các phản hồi đã xử lý" style="padding: 8px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <i class="fa-solid fa-broom"></i>
+                                <span>Dọn đã xử lý</span>
                             </button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="new-role"><i class="fa-solid fa-shield-halved"></i> Vai trò</label>
-                        <select id="new-role" required>
-                            <option value="user">User (Học viên)</option>
-                            <option value="admin">Admin (Quản trị viên)</option>
-                        </select>
-                    </div>
-                    <div class="form-group form-action-group">
-                        <button type="submit" class="btn-create-account">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>Tạo tài khoản</span>
-                        </button>
-                    </div>
-                </form>
-            </section>
 
-            <!-- Khối 2: Danh sách tài khoản (User List) -->
-            <section class="admin-card">
-                <div class="admin-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="ach-icon-box" style="background: #eff6ff; color: #2563eb;">
-                            <i class="fa-solid fa-address-book"></i>
+                    <!-- Thống kê nhỏ của Hòm thư -->
+                    <div class="admin-fb-stats-bar">
+                        <div class="fb-stat-pill">
+                            <span class="fb-sp-label">Tổng phản hồi:</span>
+                            <strong class="fb-sp-val" id="fb-stat-total">0</strong>
                         </div>
-                        <div>
-                            <h3 class="ach-title">Danh sách tài khoản</h3>
-                            <p class="ach-desc">Danh sách tài khoản đã được cấp quyền truy cập hệ thống.</p>
+                        <div class="fb-stat-pill pending">
+                            <span class="fb-sp-label">Chờ duyệt:</span>
+                            <strong class="fb-sp-val" id="fb-stat-pending">0</strong>
+                        </div>
+                        <div class="fb-stat-pill resolved">
+                            <span class="fb-sp-label">Đã xử lý:</span>
+                            <strong class="fb-sp-val" id="fb-stat-resolved">0</strong>
                         </div>
                     </div>
-                    <div class="table-search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="user-search-input" placeholder="Tìm kiếm tài khoản..." oninput="filterUserTable()">
-                    </div>
-                </div>
 
-                <div class="table-responsive">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px; text-align: center;">STT</th>
-                                <th>Tên đăng nhập</th>
-                                <th style="width: 150px;">Vai trò</th>
-                                <th style="width: 140px;">Ngày tạo</th>
-                                <th style="width: 210px; text-align: center;">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-table-body">
-                            <!-- Injected dynamically by admin.js -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">STT</th>
+                                    <th style="width: 140px;">Người gửi</th>
+                                    <th style="width: 140px;">Thời gian</th>
+                                    <th style="width: 150px;">Phân loại</th>
+                                    <th>Tiêu đề & Nội dung</th>
+                                    <th style="width: 130px; text-align: center;">Trạng thái</th>
+                                    <th style="width: 160px; text-align: center;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feedback-table-body">
+                                <!-- Injected dynamically by admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 
@@ -247,6 +381,26 @@
         <i class="fa-solid fa-circle-check"></i>
         <span>Thông báo hệ thống</span>
     </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav" id="admin-mobile-bottom-nav">
+        <a href="index.html" class="mb-nav-item">
+            <i class="fa-solid fa-house"></i>
+            <span>Trang chủ</span>
+        </a>
+        <button type="button" class="mb-nav-item active" id="mb-nav-btn-users" onclick="switchAdminMainTab('users')" title="Quản lý tài khoản">
+            <i class="fa-solid fa-users"></i>
+            <span>Tài khoản</span>
+        </button>
+        <button type="button" class="mb-nav-item" id="mb-nav-btn-feedbacks" onclick="switchAdminMainTab('feedbacks')" title="Hòm thư góp ý">
+            <i class="fa-regular fa-envelope"></i>
+            <span>Hòm thư</span>
+        </button>
+        <button type="button" class="mb-nav-item" onclick="toggleMobileSidebar()">
+            <i class="fa-solid fa-bars"></i>
+            <span>Menu</span>
+        </button>
+    </nav>
 
     <script src="admin.js"></script>
 </body>

@@ -5,6 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ôn luyện trắc nghiệm - Chủ nghĩa xã hội khoa học</title>
+    <!-- Auth Guard: Bắt buộc đăng nhập mới được vào ôn luyện -->
+    <script>
+        (function() {
+            try {
+                const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+                if (!userStr) {
+                    window.location.replace('login.html');
+                    return;
+                }
+                const user = JSON.parse(userStr);
+                if (!user || !user.username || !user.loginAt) {
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    window.location.replace('login.html');
+                }
+            } catch (e) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,13 +39,18 @@
          HEADER CHO CHẾ ĐỘ ÔN LUYỆN (mode=learn)
          ==================================================================== -->
     <header class="app-header learn-header-view">
-        <div class="header-left" onclick="window.location.href='index.html'" title="Về trang chủ">
-            <div class="logo-icon">
-                <i class="fa-solid fa-book-open"></i>
-            </div>
-            <div class="logo-text">
-                <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
-                <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+        <div class="header-left">
+            <button class="mobile-menu-btn" id="mobile-menu-btn-learn" aria-label="Mở menu" onclick="toggleMobileSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="header-brand-wrap" onclick="window.location.href='index.html'" title="Về trang chủ" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div class="logo-text">
+                    <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
+                    <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+                </div>
             </div>
         </div>
 
@@ -38,20 +63,21 @@
 
         <div class="header-right">
             <button class="btn-pause-learn" onclick="pauseLearnMode()" title="Tạm dừng ôn và lưu tiến trình">
-                <i class="fa-solid fa-circle-pause"></i> <span>Tạm dừng ôn</span>
+                <i class="fa-solid fa-circle-pause"></i> <span>Tạm dừng</span>
             </button>
             <button class="btn-switch-mode" onclick="switchPracticeMode('test')" title="Chuyển sang làm bài kiểm tra">
-                <i class="fa-solid fa-stopwatch-20"></i> Sang Kiểm Tra
+                <i class="fa-solid fa-stopwatch-20"></i> <span>Kiểm tra</span>
             </button>
-            <button class="header-icon-btn" title="Thông báo" onclick="openUtilityModal('notifications')">
-                <i class="fa-solid fa-bell"></i>
-                <span class="notification-dot"></span>
-            </button>
-            <div class="user-pill" onclick="pauseLearnMode()" title="Về trang chủ (tự động lưu tiến trình)">
-                <div class="user-avatar">
-                    <i class="fa-solid fa-user"></i>
-                </div>
-                <span class="user-name">Lộc</span>
+            <div class="notification-wrap" id="notification-wrap">
+                <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notification-dot" id="notification-dot" style="display: none;"></span>
+                </button>
+                <div class="notification-dropdown hidden" id="notification-dropdown"></div>
+            </div>
+            <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
+                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">L</div>
+                <span class="user-name" id="header-user-name">Khách</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
         </div>
@@ -87,7 +113,7 @@
             </div>
             <button class="btn-exit-exam" onclick="confirmExit()">
                 <i class="fa-solid fa-xmark"></i>
-                <span>Thoát bài</span>
+                <span>Thoát</span>
             </button>
         </div>
     </header>
@@ -96,8 +122,19 @@
          MAIN WRAPPER: CHẾ ĐỘ ÔN LUYỆN (mode=learn) - BỐ CỤC 2 CỘT
          ==================================================================== -->
     <div class="app-layout learn-layout-view" id="learn-layout-container">
-        <!-- Sidebar Menu (Left Column) -->
-        <aside class="sidebar">
+        <!-- Sidebar Menu (Cột trái cố định trên PC, Drawer trên mobile) -->
+        <aside class="sidebar" id="learn-sidebar">
+            <!-- Header menu trên điện thoại -->
+            <div class="sidebar-mobile-header">
+                <div class="smh-brand">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Menu Ôn Luyện</span>
+                </div>
+                <button type="button" class="btn-close-sidebar" onclick="closeMobileSidebar()" aria-label="Đóng menu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
             <a href="index.html" class="btn-home">
                 <i class="fa-solid fa-house"></i>
                 <span>Trang chủ</span>
@@ -156,6 +193,9 @@
                 </ul>
             </div>
         </aside>
+
+        <!-- Lớp phủ mờ khi mở Drawer menu trên mobile -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Right Area) -->
         <main class="main-content">
@@ -229,8 +269,13 @@
             <!-- 2-Column Quiz Area (Mockup 1) -->
             <section class="learn-workspace-grid">
                 <!-- Cột trái: Danh sách câu hỏi -->
-                <div class="learn-question-list-card">
-                    <h3 class="lql-title">Danh sách câu hỏi</h3>
+                <div class="learn-question-list-card" id="learn-question-list-card">
+                    <div class="lql-title-row">
+                        <h3 class="lql-title">Danh sách câu hỏi</h3>
+                        <button type="button" class="btn-toggle-q-sheet" onclick="toggleMobileQuestionSheet()" aria-label="Đóng danh sách">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
                     <div class="lql-items-container" id="learn-questions-list">
                         <!-- Injected dynamically -->
                     </div>
@@ -238,6 +283,18 @@
 
                 <!-- Cột phải: Khung làm bài chi tiết với Giải thích -->
                 <div class="learn-detail-card">
+                    <!-- Mobile Quick Question Navigation Strip (Hiển thị trên điện thoại) -->
+                    <div class="learn-mobile-quick-nav">
+                        <button type="button" class="btn-open-q-list" onclick="toggleMobileQuestionSheet()" title="Xem danh sách câu hỏi">
+                            <i class="fa-solid fa-list-ol"></i>
+                            <span id="learn-mobile-q-pill-text">Câu 1 / 20</span>
+                            <i class="fa-solid fa-chevron-down" style="font-size: 11px;"></i>
+                        </button>
+                        <div class="mobile-q-scroll-strip" id="learn-mobile-q-strip">
+                            <!-- Injected dynamically: [1] [2] [3]... -->
+                        </div>
+                    </div>
+
                     <!-- Top bar -->
                     <div class="detail-top-bar">
                         <div class="detail-badges-group">
@@ -401,6 +458,32 @@
 
     <!-- Toast Notification -->
     <div id="toast-message" class="toast-popup hidden"></div>
+
+    <!-- Mobile Bottom Navigation Bar (Hiển thị trong chế độ Ôn luyện) -->
+    <nav class="mobile-bottom-nav" id="practice-mobile-bottom-nav">
+        <a href="index.html" class="mb-nav-item">
+            <i class="fa-solid fa-house"></i>
+            <span>Trang chủ</span>
+        </a>
+        <button type="button" class="mb-nav-item" onclick="toggleMobileQuestionSheet()">
+            <i class="fa-solid fa-list-ol"></i>
+            <span>Câu hỏi</span>
+        </button>
+        <button type="button" class="mb-nav-item mb-nav-special" onclick="switchPracticeMode('test')" title="Chuyển sang làm bài kiểm tra">
+            <div class="mb-nav-icon-circle">
+                <i class="fa-solid fa-stopwatch-20"></i>
+            </div>
+            <span>Kiểm tra</span>
+        </button>
+        <button type="button" class="mb-nav-item" onclick="pauseLearnMode()">
+            <i class="fa-solid fa-circle-pause"></i>
+            <span>Tạm dừng</span>
+        </button>
+        <button type="button" class="mb-nav-item" onclick="toggleMobileSidebar()">
+            <i class="fa-solid fa-bars"></i>
+            <span>Menu</span>
+        </button>
+    </nav>
 
     <script src="app.js"></script>
 </body>
