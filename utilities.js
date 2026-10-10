@@ -264,16 +264,39 @@ function openAvatarShowcaseModal() {
         document.body.appendChild(backdrop);
     }
 
-    const user = getCurrentUser();
-    const stats = getUserStats();
-    const currentRank = getRankByExp(stats.exp);
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const stats = typeof getUserStats === 'function' ? getUserStats() : { exp: 0 };
+    const currentRank = typeof getRankByExp === 'function' ? getRankByExp(stats.exp) : { level: 1 };
 
     const cardsHtml = (typeof RANK_LEVELS !== 'undefined' ? RANK_LEVELS : []).map(r => {
         const isCurrent = r.level === currentRank.level;
+        const isUnlocked = stats.exp >= r.minExp;
         const cardClass = isCurrent ? 'avatar-showcase-card current-user-rank' : 'avatar-showcase-card';
+        const expLabel = r.maxExp === Infinity ? '> 1.500 EXP' : `${r.minExp.toLocaleString('vi-VN')} - ${r.maxExp.toLocaleString('vi-VN')} EXP`;
+
+        let statusBadge = '';
+        if (isCurrent) {
+            statusBadge = `<span class="asc-tag current"><i class="fa-solid fa-circle-check"></i> Đang trang bị</span>`;
+        } else if (isUnlocked) {
+            statusBadge = `<span class="asc-tag unlocked"><i class="fa-solid fa-unlock"></i> Đã mở khóa</span>`;
+        } else {
+            statusBadge = `<span class="asc-tag locked"><i class="fa-solid fa-lock"></i> Cần mở khóa</span>`;
+        }
+
         return `
             <div class="${cardClass}">
-                ${renderRankContainerHtml(r.level, user ? user.username : 'User', { showExp: true })}
+                <div class="asc-avatar-slot">
+                    ${renderRankContainerHtml(r.level, user ? user.username : 'User', { showExp: true })}
+                </div>
+                <div class="asc-info">
+                    <div class="asc-rank-title" style="color: ${r.color || '#ffffff'};">
+                        <i class="${r.icon}"></i>
+                        <span>${r.name}</span>
+                    </div>
+                    <div class="asc-level-pill">CẤP ${r.level}</div>
+                    <div class="asc-exp-needed"><i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 11px;"></i> ${expLabel}</div>
+                    <div class="asc-status-wrap">${statusBadge}</div>
+                </div>
             </div>
         `;
     }).join('');
@@ -301,6 +324,14 @@ function openAvatarShowcaseModal() {
     requestAnimationFrame(() => {
         backdrop.classList.add('active');
     });
+
+    const handleKeydown = (e) => {
+        if (e.key === 'Escape') {
+            closeAvatarShowcaseModal();
+            document.removeEventListener('keydown', handleKeydown);
+        }
+    };
+    document.addEventListener('keydown', handleKeydown);
 }
 
 /**
@@ -314,7 +345,7 @@ function closeAvatarShowcaseModal() {
             if (backdrop && !backdrop.classList.contains('active')) {
                 backdrop.remove();
             }
-        }, 300);
+        }, 250);
     }
 }
 

@@ -6495,3 +6495,276 @@ body.sidebar-open .sidebar-backdrop {
     transform: scale(1.06);
 }
 
+/* ==========================================================================
+   5. MODAL BỘ SƯU TẬP KHUNG AVATAR MOBA / ESPORTS 6 CẤP ĐỘ
+   ========================================================================== */
+
+.avatar-showcase-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 15, 29, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10005;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.avatar-showcase-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.avatar-showcase-dialog {
+    background: linear-gradient(150deg, #0b1120 0%, #111827 50%, #0d1527 100%);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 880px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    padding: 32px 36px 36px;
+    box-sizing: border-box;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px rgba(59, 130, 246, 0.2);
+    transform: scale(0.94);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.avatar-showcase-backdrop.active .avatar-showcase-dialog {
+    transform: scale(1);
+}
+
+/* Nút đóng modal */
+.avatar-showcase-close {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.avatar-showcase-close:hover {
+    background: rgba(239, 68, 68, 0.85);
+    color: #ffffff;
+    border-color: #ef4444;
+    transform: rotate(90deg);
+}
+
+/* Header showcase */
+.avatar-showcase-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding: 0 36px;
+}
+
+.avatar-showcase-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 21px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #f8fafc;
+}
+
+.avatar-showcase-title span {
+    background: linear-gradient(135deg, #60a5fa 0%, #c084fc 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.avatar-showcase-sub {
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: #94a3b8;
+    line-height: 1.5;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Grid danh sách 6 khung */
+.avatar-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* Thẻ khung avatar */
+.avatar-showcase-card {
+    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: visible;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-showcase-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(99, 102, 241, 0.2);
+}
+
+/* Card cấp bậc hiện tại của người dùng */
+.avatar-showcase-card.current-user-rank {
+    border: 2px solid #38bdf8;
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.18) 0%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.32), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Khu vực hiển thị avatar */
+.asc-avatar-slot {
+    width: 100%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+/* Thông tin cấp bậc */
+.asc-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.asc-rank-title {
+    font-size: 15px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.asc-level-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    letter-spacing: 0.5px;
+}
+
+.asc-exp-needed {
+    font-size: 12.5px;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.asc-status-wrap {
+    margin-top: 6px;
+}
+
+/* Nhãn trạng thái */
+.asc-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.asc-tag.current {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.asc-tag.unlocked {
+    background: rgba(34, 197, 94, 0.18);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.asc-tag.locked {
+    background: rgba(148, 163, 184, 0.1);
+    color: #64748b;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Custom thanh cuộn dialog */
+.avatar-showcase-dialog::-webkit-scrollbar {
+    width: 6px;
+}
+.avatar-showcase-dialog::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 8px;
+}
+.avatar-showcase-dialog::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 8px;
+}
+.avatar-showcase-dialog::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .avatar-showcase-dialog {
+        padding: 24px 20px 24px;
+        max-width: 95%;
+    }
+    .avatar-showcase-title {
+        font-size: 18px;
+    }
+    .avatar-showcase-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+}
+
+@media (max-width: 520px) {
+    .avatar-showcase-header {
+        padding: 0 10px;
+    }
+    .avatar-showcase-title {
+        font-size: 16px;
+    }
+    .avatar-showcase-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
