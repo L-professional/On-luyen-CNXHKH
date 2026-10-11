@@ -171,6 +171,93 @@ function clearProgress(topicId) {
 }
 
 /**
+ * Trả về Storage Key cho TIẾN ĐỘ CAO NHẤT (Max Progress):
+ * max_progress_topic{topicId}_{currentUser.username}
+ */
+function getMaxProgressStorageKey(topicId) {
+    const user = getCurrentUser();
+    const username = (user && user.username) ? user.username : 'guest';
+    return `max_progress_topic${topicId}_${username}`;
+}
+
+/**
+ * Đọc TIẾN ĐỘ CAO NHẤT (Max Progress) từ localStorage
+ */
+function getMaxProgress(topicId) {
+    if (!topicId || topicId === 'mock') return 0;
+    const user = getCurrentUser();
+    if (!user || !user.username) return 0;
+    try {
+        const key = getMaxProgressStorageKey(topicId);
+        let val = localStorage.getItem(key);
+        if (val === null) {
+            val = localStorage.getItem(`max_progress_topic_${topicId}_${user.username}`);
+        }
+        if (val !== null && val !== undefined) {
+            return Math.min(100, Math.max(0, parseInt(val, 10) || 0));
+        }
+        return 0;
+    } catch (e) {
+        return 0;
+    }
+}
+
+/**
+ * Cập nhật TIẾN ĐỘ CAO NHẤT (Max Progress) vào localStorage nếu % hiện tại lớn hơn max đã lưu
+ */
+function saveMaxProgress(topicId, percent) {
+    if (!topicId || topicId === 'mock') return 0;
+    const user = getCurrentUser();
+    if (!user || !user.username) return 0;
+    try {
+        const currentMax = getMaxProgress(topicId);
+        const newPercent = Math.min(100, Math.max(0, Math.round(percent) || 0));
+        if (newPercent > currentMax || localStorage.getItem(getMaxProgressStorageKey(topicId)) === null) {
+            const key = getMaxProgressStorageKey(topicId);
+            localStorage.setItem(key, newPercent.toString());
+            return Math.max(currentMax, newPercent);
+        }
+        return currentMax;
+    } catch (e) {
+        console.warn('Lỗi khi lưu max progress:', e);
+        return 0;
+    }
+}
+
+/**
+ * Lấy danh sách index các đáp án đúng của câu hỏi (hỗ trợ cả correctAnswers và correct)
+ */
+function getQuestionCorrectAnswers(q) {
+    if (!q) return [0];
+    if (Array.isArray(q.correctAnswers)) return q.correctAnswers;
+    if (Array.isArray(q.correct)) return q.correct;
+    if (typeof q.correctAnswers === 'number') return [q.correctAnswers];
+    if (typeof q.correct === 'number') return [q.correct];
+    return [0];
+}
+
+/**
+ * Kiểm tra xem câu hỏi đã được trả lời / chấm điểm hoàn tất hay chưa
+ */
+function isQuestionGraded(q, userAns) {
+    if (userAns === undefined || userAns === null) return false;
+    const correctList = getQuestionCorrectAnswers(q);
+    const qInfo = detectQuestionType(q);
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        return Object.keys(userAns).length >= q.subQuestions.length;
+    }
+    if (qInfo.id === 'multiple' || correctList.length > 1) {
+        return Array.isArray(userAns) && userAns.length >= correctList.length;
+    }
+    if (qInfo.id === 'drag_drop' && q.pairs) {
+        if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        return Object.keys(userAns).length === q.pairs.length;
+    }
+    return true;
+}
+
+/**
  * Đếm số lượng câu đã trả lời trong object answeredQuestions
  */
 function countAnsweredQuestions(answeredQuestions) {
@@ -211,6 +298,18 @@ function saveCurrentLearnProgress() {
         currentIndex: targetIndex,
         answeredQuestions: appState.userAnswers
     });
+
+    // Tính % hiện tại và cập nhật Max Progress nếu lớn hơn
+    if (Array.isArray(appState.allQuestions) && appState.allQuestions.length > 0) {
+        let gradedCount = 0;
+        appState.allQuestions.forEach(item => {
+            if (isQuestionGraded(item, appState.userAnswers[item.id])) {
+                gradedCount++;
+            }
+        });
+        const currentPercent = Math.min(100, Math.round((gradedCount / appState.allQuestions.length) * 100));
+        saveMaxProgress(appState.topicId, currentPercent);
+    }
 }
 
 /**
@@ -407,19 +506,34 @@ const RANK_LEVELS = [
 
 /**
  * Đọc thông tin cấp độ và EXP của tài khoản hiện tại từ localStorage
- * Ràng buộc: userStats_${currentUser.username}
+ * Kiểm tra kỹ: const savedExp = localStorage.getItem('exp_' + currentUser.username)
  */
 function getUserStats() {
     const user = getCurrentUser();
     if (!user || !user.username) {
         return { exp: 0, level: 1, rankId: 'gamo' };
     }
-    const key = 'userStats_' + user.username;
     try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return { exp: 0, level: 1, rankId: 'gamo' };
-        const data = JSON.parse(raw);
-        const exp = Math.max(0, parseInt(data.exp, 10) || 0);
+        const savedExp = localStorage.getItem('exp_' + user.username);
+        let exp;
+        if (savedExp !== null && savedExp !== undefined) {
+            exp = Math.max(0, parseInt(savedExp, 10) || 0);
+        } else {
+            // Fallback sang userStats_${user.username} nếu chưa có exp_ key
+            const key = 'userStats_' + user.username;
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
+                    exp = Math.max(0, parseInt(data.exp, 10) || 0);
+                    localStorage.setItem('exp_' + user.username, exp.toString());
+                }
+            }
+        }
+        // CHỈ set bằng 0 khi savedExp là null hoặc undefined
+        if (typeof exp === 'undefined' || isNaN(exp)) {
+            exp = 0;
+        }
         const rank = getRankByExp(exp);
         return {
             exp: exp,
@@ -432,6 +546,38 @@ function getUserStats() {
 }
 
 /**
+ * Khởi tạo/Đồng bộ EXP khi load trang:
+ * Kiểm tra kỹ const savedExp = localStorage.getItem('exp_' + currentUser.username)
+ * Nếu có savedExp, parse ra số và dùng nó. CHỈ set bằng 0 khi savedExp là null hoặc undefined.
+ */
+function initExp() {
+    const user = getCurrentUser();
+    if (!user || !user.username) return;
+    const savedExp = localStorage.getItem('exp_' + user.username);
+    let exp;
+    if (savedExp !== null && savedExp !== undefined) {
+        exp = Math.max(0, parseInt(savedExp, 10) || 0);
+    } else {
+        const raw = localStorage.getItem('userStats_' + user.username);
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
+                    exp = Math.max(0, parseInt(data.exp, 10) || 0);
+                }
+            } catch (e) {}
+        }
+    }
+    // CHỈ set bằng 0 khi savedExp là null hoặc undefined
+    if (typeof exp === 'undefined' || isNaN(exp)) {
+        exp = 0;
+    }
+    localStorage.setItem('exp_' + user.username, exp.toString());
+    const rank = getRankByExp(exp);
+    saveUserStats({ exp: exp, level: rank.level, rankId: rank.id });
+}
+
+/**
  * Lưu thông tin cấp độ và EXP vào localStorage
  */
 function saveUserStats(stats) {
@@ -440,6 +586,9 @@ function saveUserStats(stats) {
     const key = 'userStats_' + user.username;
     try {
         localStorage.setItem(key, JSON.stringify(stats));
+        if (typeof stats.exp !== 'undefined' && stats.exp !== null) {
+            localStorage.setItem('exp_' + user.username, stats.exp.toString());
+        }
     } catch (e) {
         console.error('Lỗi khi lưu userStats:', e);
     }
@@ -508,6 +657,8 @@ function addExp(points) {
     stats.level = newRank.level;
     stats.rankId = newRank.id;
 
+    // Đảm bảo sau khi cộng điểm, phải lập tức gọi localStorage.setItem('exp_' + currentUser.username, newExp)
+    localStorage.setItem('exp_' + user.username, newExp.toString());
     saveUserStats(stats);
 
     // Cập nhật ngay huy hiệu trên Header
@@ -971,6 +1122,16 @@ function updateNotificationBellUI() {
         badge.textContent = unreadCount;
         badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
     }
+}
+
+function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 function renderNotificationDropdownHtml() {
@@ -1454,6 +1615,7 @@ setInterval(() => {
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     initUserStorage();
+    initExp();
     cleanupLegacySharedProgress();
 
     // Bắt buộc phải đăng nhập mới được ôn luyện và sử dụng hệ thống
@@ -1507,11 +1669,61 @@ async function initDashboardPage() {
 }
 
 /**
+ * Thuật toán gom nhóm dữ liệu câu hỏi Đúng / Sai (Data Pre-processing):
+ * Tự động gom các ý nhỏ rời rạc (Ví dụ: "Câu 33.1", "Câu 33.2", "Câu 33.3", "Câu 33.4")
+ * thành 1 câu hỏi duy nhất có type: "grouped_true_false" chứa mảng subQuestions.
+ * Đảm bảo bộ đếm tổng số câu hiển thị đúng chuẩn và giao diện hiển thị trọn vẹn cả 4 ý trên 1 trang.
+ */
+function groupQuestions(rawQuestions) {
+    if (!Array.isArray(rawQuestions)) return [];
+
+    const result = [];
+    const groupedMap = new Map();
+
+    for (const q of rawQuestions) {
+        if (q.type === 'true_false' || /Câu\s*\d+[a-z]?\s*\.\s*\d+/i.test(q.question || '')) {
+            const match = (q.question || '').match(/Câu\s*(\d+[a-z]?)/i);
+            if (match) {
+                const prefixNum = match[1];
+                const groupKey = 'gtf_' + prefixNum.toLowerCase();
+
+                if (!groupedMap.has(groupKey)) {
+                    const groupedQ = {
+                        id: groupKey,
+                        type: 'grouped_true_false',
+                        groupPrefix: `Câu ${prefixNum}`,
+                        question: `Câu ${prefixNum}: Xác định tính Đúng hoặc Sai cho mỗi nhận định sau:`,
+                        subQuestions: []
+                    };
+                    groupedMap.set(groupKey, groupedQ);
+                    result.push(groupedQ);
+                }
+
+                const groupObj = groupedMap.get(groupKey);
+                const subCleanText = (q.question || '')
+                    .replace(/\[cite:\s*\d+\]/gi, '')
+                    .replace(/^Câu\s*\d+[a-z]?\s*\.\s*\d+\s*:\s*/i, '')
+                    .trim();
+
+                groupObj.subQuestions.push({
+                    ...q,
+                    cleanText: subCleanText,
+                    correctAnswer: Array.isArray(q.correctAnswers) ? q.correctAnswers[0] : (q.correctAnswer ?? 0)
+                });
+                continue;
+            }
+        }
+        result.push(q);
+    }
+
+    return result;
+}
+
+/**
  * Đồng bộ dữ liệu ra Dashboard:
- * - Dùng fetch() đọc qua 6 file JSON trong thư mục data/ (từ chude1 đến chude6) để lấy length
- * - Thay thế con số tĩnh "10 câu hỏi" bằng tổng số câu thực tế
- * - Đọc dữ liệu từ localStorage, tính % hoàn thành: (Số câu đã trả lời / Tổng số câu) * 100
- * - Cập nhật số % và thay đổi độ dài (width) thanh Progress bar
+ * - Dùng fetch() đọc qua 6 file JSON trong thư mục data/ (từ chude1 đến chude6)
+ * - Gom nhóm câu hỏi Đúng/Sai qua groupQuestions() để lấy tổng số câu chuẩn xác
+ * - Cập nhật số lượng câu thực tế và tiến độ Max Progress
  */
 async function syncDashboardProgress() {
     const topicIds = [1, 2, 3, 4, 5, 6];
@@ -1522,7 +1734,8 @@ async function syncDashboardProgress() {
             const res = await fetch(`./data/chude${id}.json`);
             if (!res.ok) throw new Error(`HTTP error ${res.status}`);
             const data = await res.json();
-            return { id, total: data.length };
+            const grouped = groupQuestions(data);
+            return { id, total: grouped.length };
         } catch (e) {
             console.warn(`Lỗi fetch chude${id}.json:`, e);
             return { id, total: 0 };
@@ -1539,12 +1752,17 @@ async function syncDashboardProgress() {
             countEl.textContent = `${total} câu hỏi`;
         }
 
-        // Đọc localStorage tương ứng
+        // LUÔN đọc từ TIẾN ĐỘ CAO NHẤT (Max Progress): max_progress_topicX_${currentUser.username}
+        let percent = getMaxProgress(id);
+
+        // Fallback: nếu chưa có max_progress nhưng có resume progress cũ thì cập nhật sang max_progress
         const progress = loadProgress(id);
         const answeredCount = progress ? countAnsweredQuestions(progress.answeredQuestions) : 0;
-
-        // Tính % hoàn thành: (Số câu đã trả lời / Tổng số câu) * 100
-        const percent = total > 0 ? Math.min(100, Math.round((answeredCount / total) * 100)) : 0;
+        const resumePercent = total > 0 ? Math.min(100, Math.round((answeredCount / total) * 100)) : 0;
+        if (resumePercent > percent) {
+            percent = resumePercent;
+            saveMaxProgress(id, percent);
+        }
 
         // Cập nhật con số %
         const percentEl = document.getElementById(`topic-percent-${id}`);
@@ -1624,9 +1842,10 @@ async function loadTopicData(topicId) {
         const res = await fetch(`./data/chude${topicId}.json`);
         if (!res.ok) throw new Error(`HTTP status: ${res.status}`);
         const data = await res.json();
+        const grouped = groupQuestions(data);
 
-        appState.allQuestions = data;
-        appState.filteredQuestions = data;
+        appState.allQuestions = grouped;
+        appState.filteredQuestions = grouped;
         appState.activeFilter = 'all';
         appState.timerSeconds = 30 * 60;
         appState.isSubmitted = false;
@@ -1640,9 +1859,25 @@ async function loadTopicData(topicId) {
             if (saved) {
                 appState.userAnswers = saved.answeredQuestions || saved.userAnswers || {};
 
+                // Migration: chuyển các câu trả lời phân mảnh cũ (331, 332...) sang câu grouped_true_false
+                appState.allQuestions.forEach(item => {
+                    if ((item.type === 'grouped_true_false' || item.subQuestions) && !appState.userAnswers[item.id]) {
+                        let migrated = null;
+                        item.subQuestions.forEach((sq, idx) => {
+                            if (appState.userAnswers[sq.id] !== undefined) {
+                                if (!migrated) migrated = {};
+                                migrated[idx] = appState.userAnswers[sq.id];
+                            }
+                        });
+                        if (migrated) {
+                            appState.userAnswers[item.id] = migrated;
+                        }
+                    }
+                });
+
                 // Tự động nhảy đến đúng câu hỏi (currentIndex) đang làm dở lần trước
                 let savedIndex = parseInt(saved.currentIndex, 10);
-                if (!isNaN(savedIndex) && savedIndex >= 0 && savedIndex < data.length) {
+                if (!isNaN(savedIndex) && savedIndex >= 0 && savedIndex < grouped.length) {
                     appState.currentIndex = savedIndex;
                 } else {
                     appState.currentIndex = 0;
@@ -1690,7 +1925,7 @@ async function loadMockExamData() {
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
-                allQuestions = allQuestions.concat(data);
+                allQuestions = allQuestions.concat(groupQuestions(data));
             }
         } catch (e) {
             console.warn(`Lỗi đọc file ${url}:`, e);
@@ -1830,7 +2065,7 @@ function renderLearnQuestionsList() {
         const qInfo = detectQuestionType(q);
         const isActive = idx === appState.currentIndex;
         const userAns = appState.userAnswers[q.id];
-        const isAnswered = userAns !== undefined;
+        const isAnswered = isQuestionGraded(q, userAns);
 
         let badgeClass = 'single';
         if (qInfo.id === 'multiple') badgeClass = 'multiple';
@@ -1861,8 +2096,13 @@ function renderLearnCurrentQuestionDetail() {
 
     const qInfo = detectQuestionType(q);
     const total = appState.filteredQuestions.length;
-    const answeredCount = Object.keys(appState.userAnswers).length;
-    const percent = Math.round((answeredCount / (appState.allQuestions.length || 1)) * 100);
+    let answeredCount = 0;
+    appState.allQuestions.forEach(item => {
+        if (isQuestionGraded(item, appState.userAnswers[item.id])) {
+            answeredCount++;
+        }
+    });
+    const percent = Math.min(100, Math.round((answeredCount / (appState.allQuestions.length || 1)) * 100));
 
     // Header counter & progress
     const counterEl = document.getElementById('learn-q-counter');
@@ -1870,13 +2110,22 @@ function renderLearnCurrentQuestionDetail() {
     if (counterEl) counterEl.textContent = `Câu ${appState.currentIndex + 1} / ${total}`;
     if (fillEl) fillEl.style.width = `${percent}%`;
 
+    // Cập nhật Max Progress
+    saveMaxProgress(appState.topicId, percent);
+
     // Badge loại câu hỏi
     const badgeEl = document.getElementById('learn-q-badge-type');
     if (badgeEl) badgeEl.innerHTML = `<i class="fa-regular fa-circle-dot"></i> ${qInfo.fullLabel}`;
 
     // Tiêu đề câu hỏi
     const titleEl = document.getElementById('learn-question-title');
-    if (titleEl) titleEl.textContent = cleanQuestionText(q.question);
+    if (titleEl) {
+        if (q.type === 'grouped_true_false') {
+            titleEl.innerHTML = `<span style="color: var(--primary); font-weight: 700;">${escapeHtml(q.groupPrefix || 'Câu')}:</span> Xác định tính Đúng hoặc Sai cho mỗi nhận định sau:`;
+        } else {
+            titleEl.textContent = cleanQuestionText(q.question);
+        }
+    }
 
     // Danh sách đáp án
     const optionsContainer = document.getElementById('learn-options-list');
@@ -1884,12 +2133,21 @@ function renderLearnCurrentQuestionDetail() {
         optionsContainer.innerHTML = renderLearnOptionsHtml(q, qInfo);
     }
 
-    // Khối Giải Thích (luôn hiển thị trong mode=learn)
+    // Khối Giải Thích (Chỉ hiển thị KHI VÀ CHỈ KHI câu hỏi đã được chấm điểm hoàn tất)
     const expBox = document.getElementById('learn-explanation-box');
     const expText = document.getElementById('learn-explanation-text');
-    if (expBox && expText) {
-        expBox.style.display = 'block';
-        expText.textContent = getQuestionExplanation(q);
+    const isCurrentGraded = isQuestionGraded(q, appState.userAnswers[q.id]);
+    if (isCurrentGraded) {
+        if (!appState._dragGradedCache) appState._dragGradedCache = {};
+        appState._dragGradedCache[q.id] = true;
+    }
+    if (expBox) {
+        if (isCurrentGraded) {
+            expBox.style.display = 'block';
+            if (expText) expText.textContent = getQuestionExplanation(q);
+        } else {
+            expBox.style.display = 'none';
+        }
     }
 
     // Nút trước / sau
@@ -1909,7 +2167,7 @@ function renderLearnCurrentQuestionDetail() {
             const isActive = i === appState.currentIndex;
             const uAns = appState.userAnswers[item.id];
             let statusClass = '';
-            if (uAns !== undefined) {
+            if (isQuestionGraded(item, uAns)) {
                 const isCorr = isAnswerCorrectForQuestion(item, uAns);
                 statusClass = isCorr ? 'answered-correct' : 'answered-wrong';
             }
@@ -1926,70 +2184,682 @@ function renderLearnCurrentQuestionDetail() {
     }
 }
 
+// ==========================================================================
+// THÀNH PHẦN KÉO THẢ GHÉP CẶP / SẮP XẾP (HTML5 DRAG & DROP API)
+// ==========================================================================
+
+// Biến toàn cục lưu trữ dữ liệu phần tử đang được kéo
+let currentDragData = null;
+
+/**
+ * Trộn thứ tự các từ khóa trong Kho từ khóa một cách tất định (deterministic) theo id câu hỏi.
+ * Đảm bảo các từ khóa không bị lộ ngay theo thứ tự ban đầu, nhưng không bị nhảy vị trí lung tung khi re-render.
+ */
+function getShuffledPillOrder(q) {
+    if (!q || !q.pairs) return [];
+    const count = q.pairs.length;
+    const indices = [];
+    for (let i = 0; i < count; i++) indices.push(i);
+
+    let seed = ((typeof q.id === 'number' ? q.id : 42) * 16807 + 7) % 2147483647;
+    for (let i = count - 1; i > 0; i--) {
+        seed = (seed * 16807) % 2147483647;
+        const j = Math.floor((seed / 2147483647) * (i + 1));
+        const temp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = temp;
+    }
+
+    let isIdentical = true;
+    for (let i = 0; i < count; i++) {
+        if (indices[i] !== i) {
+            isIdentical = false;
+            break;
+        }
+    }
+    if (isIdentical && count > 1) {
+        indices.push(indices.shift());
+    }
+    return indices;
+}
+
+/**
+ * Render giao diện câu hỏi Kéo Thả (HTML5 Drag & Drop) chuẩn 2 khu vực:
+ * Khu vực 1 - Kho từ khóa (Draggable Items): Flexbox các thẻ bài từ khóa draggable="true"
+ * Khu vực 2 - Các câu hỏi & Ô trống đích (Drop Zones): Danh sách Card vế trái kèm Ô trống nhận thả
+ */
+function renderDragDropHtml(q, savedAnswer, isReview = false) {
+    if (!q || !q.pairs) return '';
+
+    const isLearn = appState.mode === 'learn';
+    const isGraded = isReview || (isLearn && isQuestionGraded(q, savedAnswer));
+    const userMatches = (savedAnswer && typeof savedAnswer === 'object' && !Array.isArray(savedAnswer)) ? savedAnswer : {};
+
+    // 1. Tạo danh sách toàn bộ pills
+    const allPills = q.pairs.map((p, idx) => ({
+        id: `drag-pill-${q.id}-${idx}`,
+        text: p.dropZone,
+        origIdx: idx
+    }));
+
+    // Sắp xếp thứ tự hiển thị trong kho
+    const pillOrder = getShuffledPillOrder(q);
+    const orderedPills = pillOrder.map(i => allPills[i]);
+
+    // 2. Phân loại: Pill nào đã nằm ở Ô trống đích?
+    const assignedZonePill = {};
+    const usedPillIds = new Set();
+
+    for (let zIdx = 0; zIdx < q.pairs.length; zIdx++) {
+        const savedText = userMatches[zIdx];
+        if (savedText !== undefined && savedText !== null && savedText !== '') {
+            const matchedPill = orderedPills.find(p => p.text === savedText && !usedPillIds.has(p.id));
+            if (matchedPill) {
+                assignedZonePill[zIdx] = matchedPill;
+                usedPillIds.add(matchedPill.id);
+            } else {
+                assignedZonePill[zIdx] = {
+                    id: `drag-pill-${q.id}-z${zIdx}`,
+                    text: savedText,
+                    origIdx: zIdx
+                };
+            }
+        }
+    }
+
+    // 3. Những pills còn lại nằm ở Kho từ khóa
+    const poolPills = orderedPills.filter(p => !usedPillIds.has(p.id));
+
+    // Render Khu vực 1: Kho từ khóa (Draggable Items)
+    const poolHtml = `
+        <div class="drag-pool-wrapper">
+            <div class="drag-pool-header">
+                <i class="fa-solid fa-shapes"></i>
+                <span>Kéo thả các yếu tố sau đây vào cột tương ứng:</span>
+            </div>
+            <div class="drag-items-pool" id="drag-items-pool-${q.id}"
+                 ${!isGraded ? `ondragover="handleDragOverPool(event)" ondragleave="handleDragLeavePool(event)" ondrop="handleDropToPool(event, '${q.id}')"` : ''}>
+                ${poolPills.length > 0 ? poolPills.map(pill => `
+                    <div class="drag-pill"
+                         id="${pill.id}"
+                         draggable="${!isGraded ? 'true' : 'false'}"
+                         data-id="${pill.id}"
+                         data-text="${escapeHtml(pill.text)}"
+                         ${!isGraded ? `ondragstart="handleDragStart(event, '${pill.id}', '${q.id}', 'pool')" ondragend="handleDragEnd(event)" onclick="handlePoolPillClick('${pill.id}', '${q.id}')"` : ''}
+                         title="${!isGraded ? 'Kéo thả hoặc bấm để đưa vào ô trống' : ''}">
+                        <i class="fa-solid fa-grip-vertical drag-grip-icon"></i>
+                        <span>${escapeHtml(pill.text)}</span>
+                    </div>
+                `).join('') : `
+                    <div class="drag-pool-empty">
+                        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                        <span>Đã phân loại hết tất cả từ khóa vào các ô bên dưới!</span>
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
+
+    // Render Khu vực 2: Các câu hỏi & Ô trống đích (Drop Zones)
+    const cardsHtml = `
+        <div class="drag-cards-list">
+            <div class="drag-instruction-text">
+                <i class="fa-solid fa-circle-arrow-down"></i>
+                <span>Kéo thả các yếu tố sau đây vào ô tương ứng:</span>
+            </div>
+            ${q.pairs.map((pair, pIdx) => {
+                const assignedPill = assignedZonePill[pIdx];
+                const hasPill = !!assignedPill;
+                const isCorrect = hasPill && assignedPill.text === pair.dropZone;
+
+                let cardClass = '';
+                let zoneClass = '';
+                let pillClass = '';
+
+                if (isGraded) {
+                    if (isCorrect) {
+                        cardClass = 'card-correct';
+                        zoneClass = 'is-correct filled';
+                        pillClass = 'pill-correct';
+                    } else {
+                        cardClass = 'card-wrong';
+                        zoneClass = 'is-wrong' + (hasPill ? ' filled' : '');
+                        pillClass = 'pill-wrong';
+                    }
+                } else if (hasPill) {
+                    zoneClass = 'filled';
+                }
+
+                return `
+                    <div class="drag-card-item ${cardClass}" id="drag-card-${q.id}-${pIdx}">
+                        <div class="drag-target-label">
+                            <span class="drag-bullet">•</span>
+                            <span class="drag-text">${cleanOptionText(pair.dragItem)}</span>
+                        </div>
+                        <div class="drag-drop-zone ${zoneClass}"
+                             id="drop-zone-${q.id}-${pIdx}"
+                             data-zone-idx="${pIdx}"
+                             data-q-id="${q.id}"
+                             ${!isGraded ? `ondragover="handleDragOverZone(event)" ondragleave="handleDragLeaveZone(event)" ondrop="handleDropToZone(event, ${pIdx}, '${q.id}')"` : ''}>
+                            ${hasPill ? `
+                                <div class="drag-pill drag-zone-pill ${pillClass}"
+                                     id="${assignedPill.id}"
+                                     draggable="${!isGraded ? 'true' : 'false'}"
+                                     data-id="${assignedPill.id}"
+                                     data-text="${escapeHtml(assignedPill.text)}"
+                                     ${!isGraded ? `ondragstart="handleDragStart(event, '${assignedPill.id}', '${q.id}', '${pIdx}')" ondragend="handleDragEnd(event)" onclick="handleZonePillClick(${pIdx}, '${q.id}')"` : ''}
+                                     title="${!isGraded ? 'Bấm để trả về Kho từ khóa hoặc kéo sang ô khác' : ''}">
+                                    <i class="fa-solid fa-grip-vertical drag-grip-icon"></i>
+                                    <span>${escapeHtml(assignedPill.text)}</span>
+                                    ${!isGraded ? '<i class="fa-solid fa-xmark pill-remove-icon" title="Gỡ từ khóa"></i>' : ''}
+                                </div>
+                            ` : `
+                                <div class="drop-zone-placeholder">
+                                    <i class="fa-regular fa-square-plus"></i>
+                                    <span>Kéo thả từ khóa vào đây (hoặc click từ kho)</span>
+                                </div>
+                            `}
+                        </div>
+                        ${isGraded ? `
+                            <div class="drag-feedback-badge ${isCorrect ? 'correct' : 'wrong'}">
+                                <i class="fa-solid ${isCorrect ? 'fa-check' : 'fa-xmark'}"></i>
+                                <span>${isCorrect ? 'Chính xác' : 'Đáp án đúng: ' + escapeHtml(pair.dropZone)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    // Nếu ở chế độ Xem lại bài thi (Test Review Mode), render thêm khối Giải thích
+    const reviewExplanationHtml = (isReview) ? `
+        <div class="learn-explanation-box" style="margin-top: 16px; display: block;">
+            <div class="explanation-header"><i class="fa-regular fa-lightbulb"></i> <span>Giải thích</span></div>
+            <p class="explanation-body">${getQuestionExplanation(q)}</p>
+        </div>
+    ` : '';
+
+    return `
+        <div class="drag-drop-container" id="drag-drop-container-${q.id}">
+            ${poolHtml}
+            ${cardsHtml}
+            ${reviewExplanationHtml}
+        </div>
+    `;
+}
+
+// ==========================================================================
+// CÁC SỰ KIỆN HTML5 DRAG & DROP VÀ TƯƠNG TÁC CLICK
+// ==========================================================================
+
+function handleDragStart(e, pillId, qId, from) {
+    const target = e.currentTarget;
+    const text = target.getAttribute('data-text') || '';
+    currentDragData = { pillId, qId, from, text };
+
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        try {
+            e.dataTransfer.setData('text/plain', JSON.stringify(currentDragData));
+        } catch (err) {
+            e.dataTransfer.setData('text', text);
+        }
+    }
+
+    target.classList.add('dragging');
+}
+
+function handleDragEnd(e) {
+    if (e && e.currentTarget) {
+        e.currentTarget.classList.remove('dragging');
+    }
+    document.querySelectorAll('.drag-pill.dragging').forEach(el => el.classList.remove('dragging'));
+    document.querySelectorAll('.dragover').forEach(el => el.classList.remove('dragover'));
+    currentDragData = null;
+}
+
+function handleDragOverZone(e) {
+    e.preventDefault();
+    if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
+    }
+    const zone = e.currentTarget;
+    if (zone && !zone.classList.contains('dragover')) {
+        zone.classList.add('dragover');
+    }
+}
+
+function handleDragLeaveZone(e) {
+    const zone = e.currentTarget;
+    if (zone) {
+        zone.classList.remove('dragover');
+    }
+}
+
+function handleDragOverPool(e) {
+    e.preventDefault();
+    if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
+    }
+    const pool = e.currentTarget;
+    if (pool && !pool.classList.contains('dragover')) {
+        pool.classList.add('dragover');
+    }
+}
+
+function handleDragLeavePool(e) {
+    const pool = e.currentTarget;
+    if (pool) {
+        pool.classList.remove('dragover');
+    }
+}
+
+function handleDropToZone(e, targetZoneIdx, qId) {
+    e.preventDefault();
+    const zone = e.currentTarget;
+    if (zone) zone.classList.remove('dragover');
+
+    let dragData = currentDragData;
+    if (!dragData && e.dataTransfer) {
+        try {
+            const raw = e.dataTransfer.getData('text/plain');
+            if (raw) dragData = JSON.parse(raw);
+        } catch (err) {}
+    }
+    if (!dragData || String(dragData.qId) !== String(qId)) return;
+
+    const list = (appState.mode === 'learn') ? appState.filteredQuestions : appState.allQuestions;
+    const q = list.find(item => String(item.id) === String(qId)) || list[appState.currentIndex];
+    if (!q || !q.pairs) return;
+
+    if (appState.mode === 'learn' && isQuestionGraded(q, appState.userAnswers[q.id])) return;
+    if (appState.isReviewMode) return;
+
+    let userMatches = appState.userAnswers[q.id] || {};
+    if (typeof userMatches !== 'object' || Array.isArray(userMatches)) {
+        userMatches = {};
+    } else {
+        userMatches = { ...userMatches };
+    }
+
+    const { from, text } = dragData;
+
+    // Nếu kéo từ một ô trống khác sang (chuyển ô)
+    if (from !== 'pool' && from !== undefined && from !== null) {
+        const fromIdx = parseInt(from, 10);
+        if (!isNaN(fromIdx)) {
+            delete userMatches[fromIdx];
+        }
+    }
+
+    // Đặt vào ô trống đích (nếu ô trống đã có sẵn một từ khóa, từ khóa cũ tự động được thay thế và quay lại kho)
+    userMatches[targetZoneIdx] = text;
+    appState.userAnswers[q.id] = userMatches;
+
+    handleDragEnd(e);
+    onDragDropAnswerUpdated(q);
+}
+
+function handleDropToPool(e, qId) {
+    e.preventDefault();
+    const pool = e.currentTarget;
+    if (pool) pool.classList.remove('dragover');
+
+    let dragData = currentDragData;
+    if (!dragData && e.dataTransfer) {
+        try {
+            const raw = e.dataTransfer.getData('text/plain');
+            if (raw) dragData = JSON.parse(raw);
+        } catch (err) {}
+    }
+    if (!dragData || String(dragData.qId) !== String(qId)) return;
+
+    const list = (appState.mode === 'learn') ? appState.filteredQuestions : appState.allQuestions;
+    const q = list.find(item => String(item.id) === String(qId)) || list[appState.currentIndex];
+    if (!q || !q.pairs) return;
+
+    if (appState.mode === 'learn' && isQuestionGraded(q, appState.userAnswers[q.id])) return;
+    if (appState.isReviewMode) return;
+
+    const { from } = dragData;
+    if (from !== 'pool' && from !== undefined && from !== null) {
+        const fromIdx = parseInt(from, 10);
+        if (!isNaN(fromIdx) && appState.userAnswers[q.id]) {
+            let userMatches = { ...appState.userAnswers[q.id] };
+            delete userMatches[fromIdx];
+            if (Object.keys(userMatches).length === 0) {
+                delete appState.userAnswers[q.id];
+            } else {
+                appState.userAnswers[q.id] = userMatches;
+            }
+            handleDragEnd(e);
+            onDragDropAnswerUpdated(q);
+        }
+    }
+}
+
+function handleZonePillClick(zoneIdx, qId) {
+    const list = (appState.mode === 'learn') ? appState.filteredQuestions : appState.allQuestions;
+    const q = list.find(item => String(item.id) === String(qId)) || list[appState.currentIndex];
+    if (!q || !q.pairs) return;
+
+    if (appState.mode === 'learn' && isQuestionGraded(q, appState.userAnswers[q.id])) return;
+    if (appState.isReviewMode) return;
+
+    let userMatches = appState.userAnswers[q.id];
+    if (userMatches && typeof userMatches === 'object') {
+        userMatches = { ...userMatches };
+        delete userMatches[zoneIdx];
+        if (Object.keys(userMatches).length === 0) {
+            delete appState.userAnswers[q.id];
+        } else {
+            appState.userAnswers[q.id] = userMatches;
+        }
+        onDragDropAnswerUpdated(q);
+    }
+}
+
+function handlePoolPillClick(pillId, qId) {
+    const list = (appState.mode === 'learn') ? appState.filteredQuestions : appState.allQuestions;
+    const q = list.find(item => String(item.id) === String(qId)) || list[appState.currentIndex];
+    if (!q || !q.pairs) return;
+
+    if (appState.mode === 'learn' && isQuestionGraded(q, appState.userAnswers[q.id])) return;
+    if (appState.isReviewMode) return;
+
+    const allPills = q.pairs.map((p, idx) => ({ id: `drag-pill-${q.id}-${idx}`, text: p.dropZone, origIdx: idx }));
+    const targetPill = allPills.find(p => p.id === pillId);
+    if (!targetPill) return;
+
+    let userMatches = appState.userAnswers[q.id] || {};
+    if (typeof userMatches !== 'object' || Array.isArray(userMatches)) {
+        userMatches = {};
+    } else {
+        userMatches = { ...userMatches };
+    }
+
+    // Tìm ô trống đích đầu tiên chưa có từ khóa
+    let emptyZoneIdx = -1;
+    for (let i = 0; i < q.pairs.length; i++) {
+        if (!userMatches[i]) {
+            emptyZoneIdx = i;
+            break;
+        }
+    }
+
+    if (emptyZoneIdx !== -1) {
+        userMatches[emptyZoneIdx] = targetPill.text;
+        appState.userAnswers[q.id] = userMatches;
+        onDragDropAnswerUpdated(q);
+    }
+}
+
+function onDragDropAnswerUpdated(q) {
+    if (appState.mode === 'learn') {
+        const wasGradedBefore = appState._dragGradedCache && appState._dragGradedCache[q.id];
+        const isGradedNow = isQuestionGraded(q, appState.userAnswers[q.id]);
+
+        saveCurrentLearnProgress();
+        renderLearnWorkspace();
+
+        if (isGradedNow && !wasGradedBefore) {
+            if (!appState._dragGradedCache) appState._dragGradedCache = {};
+            appState._dragGradedCache[q.id] = true;
+
+            const expResult = addExp(2);
+            showFloatingExpBadge(2);
+            if (expResult.leveledUp) {
+                showLevelUpModal(expResult.newRank, expResult.oldRank);
+            }
+        }
+    } else {
+        renderTestProgressSection();
+        renderTestQuestionCard();
+    }
+}
+
+// ==========================================================================
+// THÀNH PHẦN CÂU HỎI ĐÚNG / SAI 4 Ý (GROUPED TRUE/FALSE COMPONENT)
+// ==========================================================================
+
+/**
+ * Render giao diện câu hỏi Đúng / Sai 4 ý (Grouped True/False):
+ * - Tiêu đề hướng dẫn chung
+ * - Render 4 hàng dọc (List), mỗi hàng là 1 ý nhỏ kèm 2 nút chọn: [ Đúng ] và [ Sai ]
+ * - Hiển thị phản hồi chi tiết cho từng ý khi đã hoàn thành hoặc ở chế độ xem lại
+ */
+function renderGroupedTrueFalseHtml(q, savedAnswer, isReview = false) {
+    if (!q || !q.subQuestions) return '';
+
+    const isLearn = appState.mode === 'learn';
+    const isGraded = isReview || (isLearn && isQuestionGraded(q, savedAnswer));
+    const userChoices = (savedAnswer && typeof savedAnswer === 'object' && !Array.isArray(savedAnswer)) ? savedAnswer : {};
+    const subLabels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+    const rowsHtml = q.subQuestions.map((subQ, sIdx) => {
+        const statementText = subQ.cleanText || (subQ.question || '')
+            .replace(/\[cite:\s*\d+\]/gi, '')
+            .replace(/^Câu\s*\d+[a-z]?\s*\.\s*\d+\s*:\s*/i, '')
+            .trim();
+
+        const userChoice = userChoices[sIdx]; // 0 (Đúng) hoặc 1 (Sai) hoặc undefined
+        const isAnswered = userChoice !== undefined && userChoice !== null;
+        const correctChoice = Array.isArray(subQ.correctAnswers) ? subQ.correctAnswers[0] : (subQ.correctAnswer ?? 0);
+        const isCorrect = isAnswered && userChoice === correctChoice;
+
+        let rowCardClass = '';
+        if (isGraded) {
+            rowCardClass = isCorrect ? 'row-correct' : 'row-wrong';
+        }
+
+        // 2 nút chọn: [0: Đúng], [1: Sai]
+        const choiceOptions = [
+            { label: 'Đúng', val: 0 },
+            { label: 'Sai', val: 1 }
+        ];
+
+        const buttonsHtml = choiceOptions.map(opt => {
+            const isSelected = isAnswered && userChoice === opt.val;
+            let btnClass = '';
+            let iconHtml = '';
+
+            if (isGraded) {
+                if (isSelected) {
+                    btnClass = (opt.val === correctChoice) ? 'is-correct' : 'is-wrong';
+                    iconHtml = (opt.val === correctChoice) 
+                        ? '<i class="fa-solid fa-check"></i>' 
+                        : '<i class="fa-solid fa-xmark"></i>';
+                } else if (opt.val === correctChoice) {
+                    btnClass = 'is-revealed-correct';
+                    iconHtml = '<i class="fa-solid fa-check"></i>';
+                } else {
+                    btnClass = '';
+                    iconHtml = '';
+                }
+            } else {
+                if (isSelected) {
+                    btnClass = 'selected';
+                    iconHtml = '<div class="gtf-btn-radio-indicator"><i class="fa-solid fa-circle" style="font-size: 7px;"></i></div>';
+                } else {
+                    btnClass = '';
+                    iconHtml = '<div class="gtf-btn-radio-indicator"></div>';
+                }
+            }
+
+            const clickHandler = !isGraded ? `onclick="handleSelectGroupedTfAnswer('${q.id}', ${sIdx}, ${opt.val})"` : '';
+            const titleTooltip = isGraded ? '' : `Chọn: ${opt.label}`;
+
+            return `
+                <button type="button" 
+                        class="gtf-btn-choice ${btnClass}" 
+                        ${clickHandler} 
+                        title="${titleTooltip}"
+                        ${isGraded ? 'disabled' : ''}>
+                    ${iconHtml}
+                    <span>${opt.label}</span>
+                </button>
+            `;
+        }).join('');
+
+        // Phản hồi Đúng/Sai và giải thích dưới từng hàng
+        let feedbackHtml = '';
+        if (isGraded) {
+            const actualText = correctChoice === 0 ? 'Đúng' : 'Sai';
+            feedbackHtml = `
+                <div class="gtf-row-feedback ${isCorrect ? 'correct' : 'wrong'}">
+                    <i class="fa-solid ${isCorrect ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                    <span>${isCorrect ? 'Chính xác' : 'Đáp án đúng'}: Khẳng định trên là <strong>${actualText}</strong>.</span>
+                </div>
+            `;
+        }
+
+        const labelBadge = subLabels[sIdx] || `${sIdx + 1}`;
+
+        return `
+            <div class="gtf-row-card ${rowCardClass}" id="gtf-row-${q.id}-${sIdx}">
+                <div class="gtf-row-main">
+                    <div class="gtf-statement-col">
+                        <span class="gtf-sub-badge">${labelBadge})</span>
+                        <div class="gtf-statement-text">${escapeHtml(statementText)}</div>
+                    </div>
+                    <div class="gtf-buttons-col">
+                        ${buttonsHtml}
+                    </div>
+                </div>
+                ${feedbackHtml}
+            </div>
+        `;
+    }).join('');
+
+    const explanationHtml = isReview ? `
+        <div class="learn-explanation-box" style="margin-top: 16px; display: block;">
+            <div class="explanation-header"><i class="fa-regular fa-lightbulb"></i> <span>Giải thích tổng quan</span></div>
+            <p class="explanation-body">${getQuestionExplanation(q)}</p>
+        </div>
+    ` : '';
+
+    return `
+        <div class="gtf-container" id="gtf-container-${q.id}">
+            <div class="gtf-instruction-card">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Hãy chọn Đúng hoặc Sai cho từng khẳng định bên dưới (cần chọn đủ cả 4 ý):</span>
+            </div>
+            <div class="gtf-rows-list">
+                ${rowsHtml}
+            </div>
+            ${explanationHtml}
+        </div>
+    `;
+}
+
+function handleSelectGroupedTfAnswer(qId, subIdx, choiceVal) {
+    if (appState.isReviewMode) return;
+
+    const list = (appState.mode === 'learn') ? appState.filteredQuestions : appState.allQuestions;
+    const q = list.find(item => String(item.id) === String(qId)) || list[appState.currentIndex];
+    if (!q || !q.subQuestions) return;
+
+    // Nếu đã hoàn thành trong mode=learn thì không cho chọn tiếp
+    if (appState.mode === 'learn' && isQuestionGraded(q, appState.userAnswers[q.id])) {
+        return;
+    }
+
+    let userChoices = appState.userAnswers[q.id] || {};
+    if (typeof userChoices !== 'object' || Array.isArray(userChoices)) {
+        userChoices = {};
+    } else {
+        userChoices = { ...userChoices };
+    }
+
+    userChoices[subIdx] = choiceVal;
+    appState.userAnswers[q.id] = userChoices;
+
+    if (appState.mode === 'learn') {
+        const wasGradedBefore = appState._dragGradedCache && appState._dragGradedCache[q.id];
+        const isGradedNow = isQuestionGraded(q, appState.userAnswers[q.id]);
+
+        saveCurrentLearnProgress();
+        renderLearnWorkspace();
+
+        // CHỈ kích hoạt chấm điểm và cộng EXP khi và chỉ khi user đã tick đủ số lượng đáp án yêu cầu (cả 4 ý)
+        if (isGradedNow && !wasGradedBefore) {
+            if (!appState._dragGradedCache) appState._dragGradedCache = {};
+            appState._dragGradedCache[q.id] = true;
+
+            const expResult = addExp(2);
+            showFloatingExpBadge(2);
+            if (expResult.leveledUp) {
+                showLevelUpModal(expResult.newRank, expResult.oldRank);
+            }
+        }
+    } else {
+        renderTestProgressSection();
+        renderTestQuestionCard();
+    }
+}
+
 function renderLearnOptionsHtml(q, qInfo) {
     const savedAnswer = appState.userAnswers[q.id];
     const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [0];
+    const correctAnswers = getQuestionCorrectAnswers(q);
 
-    // Dạng kéo thả
+    // Dạng câu hỏi Đúng / Sai 4 ý (Grouped True/False)
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        return renderGroupedTrueFalseHtml(q, savedAnswer, false);
+    }
+
+    // Dạng kéo thả ghép cặp (HTML5 Drag & Drop)
     if (qInfo.id === 'drag_drop' && q.pairs) {
-        const dropZones = [...new Set(q.pairs.map(p => p.dropZone))];
-        const userMatches = savedAnswer || {};
-
-        return `
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <p style="font-size: 13.5px; color: #64748b;">Chọn nhóm phù hợp cho từng mục bên dưới:</p>
-                ${q.pairs.map((pair, pIdx) => {
-                    const currentSelected = userMatches[pIdx] || '';
-                    const isCorrect = currentSelected === pair.dropZone;
-                    const isAnswered = currentSelected !== '';
-                    return `
-                        <div style="background: ${isAnswered ? (isCorrect ? '#ecfdf5' : '#fef2f2') : '#f8fafc'}; border: 1.5px solid ${isAnswered ? (isCorrect ? '#10b981' : '#ef4444') : '#e2e8f0'}; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">
-                            <span style="font-size: 14px; font-weight: 600; color: #1e293b;">• ${pair.dragItem}</span>
-                            <select style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; background: #ffffff; color: #1e293b;" onchange="handleSelectAnswer(${pIdx}, this.value, true)">
-                                <option value="">-- Chọn nhóm tương ứng --</option>
-                                ${dropZones.map(zone => `
-                                    <option value="${zone}" ${currentSelected === zone ? 'selected' : ''}>${zone}</option>
-                                `).join('')}
-                            </select>
-                            ${isAnswered ? `<span style="font-size: 12px; font-weight: 600; color: ${isCorrect ? '#059669' : '#dc2626'};">${isCorrect ? '✓ Đúng' : '✗ Đáp án đúng: ' + pair.dropZone}</span>` : ''}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
+        return renderDragDropHtml(q, savedAnswer, false);
     }
 
     // Các dạng trắc nghiệm / Đúng Sai / Điền từ
     const options = (qInfo.id === 'true_false') ? ((q.options && q.options.length >= 2) ? q.options : ['Đúng', 'Sai']) : (q.options || []);
+    const isGraded = isQuestionGraded(q, savedAnswer);
 
     return options.map((opt, oIdx) => {
-        const isUserSelected = (savedAnswer !== undefined) && (
+        const isUserSelected = (savedAnswer !== undefined && savedAnswer !== null) && (
             Array.isArray(savedAnswer) ? savedAnswer.includes(oIdx) : savedAnswer === oIdx
         );
         const isActuallyCorrect = correctAnswers.includes(oIdx);
 
         let stateClass = '';
-        if (savedAnswer !== undefined) {
+        let customStyle = '';
+        let ringStyle = '';
+        let ringContent = '';
+
+        if (isGraded) {
+            // ĐÃ CHẤM ĐIỂM: Đổi màu xanh/đỏ và hiện đáp án đúng
             if (isUserSelected) {
                 stateClass = isActuallyCorrect ? 'is-correct' : 'is-wrong';
             } else if (isActuallyCorrect) {
                 // Làm nổi bật đáp án đúng khi người dùng chọn sai
                 stateClass = 'is-revealed-correct';
             }
+
+            ringContent = (stateClass === 'is-correct' || stateClass === 'is-revealed-correct')
+                ? '<i class="fa-solid fa-check" style="font-size: 11px;"></i>'
+                : (stateClass === 'is-wrong'
+                    ? '<i class="fa-solid fa-xmark" style="font-size: 12px;"></i>'
+                    : '');
+        } else {
+            // CHƯA CHẤM ĐIỂM (đang tick chọn dở các checkbox):
+            if (isUserSelected) {
+                stateClass = 'selected';
+                customStyle = 'background-color: #eff6ff; border-color: #3b82f6; color: #1e40af;';
+                ringStyle = 'background-color: #3b82f6; border-color: #3b82f6; color: #ffffff;';
+                ringContent = '<i class="fa-solid fa-check" style="font-size: 11px;"></i>';
+            }
         }
 
         return `
-            <div class="l-option-box ${stateClass}" onclick="handleSelectAnswer(${oIdx})">
-                <div class="l-option-ring">
-                    ${(stateClass === 'is-correct' || stateClass === 'is-revealed-correct') 
-                        ? '<i class="fa-solid fa-check" style="font-size: 11px;"></i>' 
-                        : (stateClass === 'is-wrong' 
-                            ? '<i class="fa-solid fa-xmark" style="font-size: 12px;"></i>' 
-                            : '')}
+            <div class="l-option-box ${stateClass}" ${customStyle ? `style="${customStyle}"` : ''} onclick="handleSelectAnswer(${oIdx})">
+                <div class="l-option-ring" ${ringStyle ? `style="${ringStyle}"` : ''}>
+                    ${ringContent}
                 </div>
-                <span class="l-option-prefix">${letters[oIdx]}.</span>
-                <span class="l-option-text">${cleanOptionText(opt)}</span>
+                <span class="l-option-prefix" ${isUserSelected && !isGraded ? 'style="color: #1e40af;"' : ''}>${letters[oIdx]}.</span>
+                <span class="l-option-text" ${isUserSelected && !isGraded ? 'style="color: #1e40af; font-weight: 500;"' : ''}>${cleanOptionText(opt)}</span>
             </div>
         `;
     }).join('');
@@ -2111,7 +2981,13 @@ function renderTestQuestionCard() {
 
     // Tiêu đề
     const titleEl = document.getElementById('test-question-title');
-    if (titleEl) titleEl.textContent = cleanQuestionText(q.question);
+    if (titleEl) {
+        if (q.type === 'grouped_true_false') {
+            titleEl.innerHTML = `<span style="color: var(--primary); font-weight: 700;">${escapeHtml(q.groupPrefix || 'Câu')}:</span> Xác định tính Đúng hoặc Sai cho mỗi nhận định sau:`;
+        } else {
+            titleEl.textContent = cleanQuestionText(q.question);
+        }
+    }
 
     // Đáp án (CHỈ HIGHLIGHT XANH NHẠT KHI CHỌN - KHÔNG HIỆN ĐÚNG/SAI)
     const optionsContainer = document.getElementById('test-options-list');
@@ -2135,6 +3011,16 @@ function renderTestOptionsHtml(q, qInfo) {
     const savedAnswer = appState.userAnswers[q.id];
     const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
     const correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [0];
+
+    // Dạng câu hỏi Đúng / Sai 4 ý trong chế độ kiểm tra (Grouped True/False)
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        return renderGroupedTrueFalseHtml(q, savedAnswer, appState.isReviewMode);
+    }
+
+    // Dạng kéo thả ghép cặp trong chế độ kiểm tra (HTML5 Drag & Drop)
+    if (qInfo.id === 'drag_drop' && q.pairs) {
+        return renderDragDropHtml(q, savedAnswer, appState.isReviewMode);
+    }
 
     // Sau khi nộp bài và đang ở chế độ Xem lại đáp án (Review Mode)
     if (appState.isReviewMode) {
@@ -2273,29 +3159,72 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
     if (!q) return;
 
     const qInfo = detectQuestionType(q);
+    const correctList = getQuestionCorrectAnswers(q);
+    const isMultiple = (qInfo.id === 'multiple') || (correctList.length > 1);
 
-    if (isDrag) {
-        let matches = appState.userAnswers[q.id] || {};
-        if (customVal) matches[optionIndex] = customVal;
-        else delete matches[optionIndex];
-        appState.userAnswers[q.id] = matches;
-    } else if (qInfo.id === 'multiple') {
-        let cur = appState.userAnswers[q.id] || [];
-        if (!Array.isArray(cur)) cur = [];
-        if (cur.includes(optionIndex)) {
-            cur = cur.filter(x => x !== optionIndex);
-        } else {
-            cur.push(optionIndex);
-        }
-        if (cur.length === 0) delete appState.userAnswers[q.id];
-        else appState.userAnswers[q.id] = cur;
-    } else {
-        // Single choice / true_false / fill_blank
-        appState.userAnswers[q.id] = optionIndex;
-    }
-
-    // Re-render UI theo mode
     if (appState.mode === 'learn') {
+        if (isDrag) {
+            let matches = appState.userAnswers[q.id] || {};
+            if (customVal) matches[optionIndex] = customVal;
+            else delete matches[optionIndex];
+            appState.userAnswers[q.id] = matches;
+
+            saveCurrentLearnProgress();
+            renderLearnWorkspace();
+
+            if (isQuestionGraded(q, appState.userAnswers[q.id])) {
+                const expResult = addExp(2);
+                showFloatingExpBadge(2);
+                if (expResult.leveledUp) {
+                    showLevelUpModal(expResult.newRank, expResult.oldRank);
+                }
+            }
+            return;
+        }
+
+        if (isMultiple) {
+            const requiredCount = correctList.length;
+            let selectedAnswers = appState.userAnswers[q.id] || [];
+            if (!Array.isArray(selectedAnswers)) selectedAnswers = [];
+
+            // Nếu câu này đã được chấm điểm hoàn tất (đã chọn đủ số đáp án yêu cầu), không cho chọn tiếp
+            if (selectedAnswers.length >= requiredCount) {
+                return;
+            }
+
+            // Ghi nhận đáp án user vừa tick (toggle: click lại để bỏ chọn)
+            if (selectedAnswers.includes(optionIndex)) {
+                selectedAnswers = selectedAnswers.filter(x => x !== optionIndex);
+            } else {
+                selectedAnswers.push(optionIndex);
+            }
+
+            if (selectedAnswers.length === 0) {
+                delete appState.userAnswers[q.id];
+            } else {
+                appState.userAnswers[q.id] = selectedAnswers;
+            }
+
+            // Lưu tiến trình dở dang
+            saveCurrentLearnProgress();
+            // Re-render UI
+            renderLearnWorkspace();
+
+            // CHỈ KÍCH HOẠT HÀM CHẤM ĐIỂM KHI VÀ CHỈ KHI user đã tick đủ số lượng đáp án yêu cầu
+            if (selectedAnswers.length >= requiredCount) {
+                const expResult = addExp(2);
+                showFloatingExpBadge(2);
+
+                if (expResult.leveledUp) {
+                    showLevelUpModal(expResult.newRank, expResult.oldRank);
+                }
+            }
+            return;
+        }
+
+        // Single choice / true_false / fill_blank: Click là chấm điểm ngay (giữ nguyên logic cũ)
+        appState.userAnswers[q.id] = optionIndex;
+
         saveCurrentLearnProgress();
         renderLearnWorkspace();
 
@@ -2307,6 +3236,26 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
             showLevelUpModal(expResult.newRank, expResult.oldRank);
         }
     } else {
+        // Mode = 'test': Không chấm điểm ngay, chỉ lưu lựa chọn
+        if (isDrag) {
+            let matches = appState.userAnswers[q.id] || {};
+            if (customVal) matches[optionIndex] = customVal;
+            else delete matches[optionIndex];
+            appState.userAnswers[q.id] = matches;
+        } else if (isMultiple) {
+            let cur = appState.userAnswers[q.id] || [];
+            if (!Array.isArray(cur)) cur = [];
+            if (cur.includes(optionIndex)) {
+                cur = cur.filter(x => x !== optionIndex);
+            } else {
+                cur.push(optionIndex);
+            }
+            if (cur.length === 0) delete appState.userAnswers[q.id];
+            else appState.userAnswers[q.id] = cur;
+        } else {
+            appState.userAnswers[q.id] = optionIndex;
+        }
+
         renderTestProgressSection();
         renderTestQuestionCard();
     }
@@ -2363,7 +3312,19 @@ function submitTest() {
         const userAns = appState.userAnswers[q.id];
         if (userAns === undefined) return;
 
-        if (q.type === 'drag_drop' && q.pairs) {
+        if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+            let subCorrectCount = 0;
+            const subTotal = q.subQuestions.length || 4;
+            q.subQuestions.forEach((sq, idx) => {
+                const correctVal = Array.isArray(sq.correctAnswers) ? sq.correctAnswers[0] : (sq.correctAnswer ?? 0);
+                if (userAns && userAns[idx] === correctVal) subCorrectCount++;
+            });
+            if (subCorrectCount === subTotal) {
+                correctCount += 1;
+            } else {
+                correctCount += (subCorrectCount / subTotal);
+            }
+        } else if (q.type === 'drag_drop' && q.pairs) {
             let isAllCorrect = true;
             q.pairs.forEach((p, idx) => {
                 if (userAns[idx] !== p.dropZone) isAllCorrect = false;
@@ -2565,6 +3526,9 @@ function confirmExit() {
 }
 
 function detectQuestionType(q) {
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        return { id: 'true_false', label: 'Đúng / Sai', fullLabel: 'Đúng / Sai (4 ý)' };
+    }
     if (q.type === 'drag_drop' || (q.pairs && q.pairs.length > 0)) {
         return { id: 'drag_drop', label: 'Kéo thả', fullLabel: 'Kéo thả (ghép cặp / sắp xếp)' };
     }
@@ -2602,6 +3566,14 @@ function getQuestionExplanation(q) {
     }
     if (q.type === 'drag_drop' && q.pairs) {
         return 'Ghép cặp chính xác: ' + q.pairs.map(p => `"${p.dragItem}" → [${p.dropZone}]`).join('; ') + '.';
+    }
+    if ((q.type === 'grouped_true_false' || q.subQuestions) && q.subQuestions.length > 0) {
+        const labels = ['a', 'b', 'c', 'd', 'e', 'f'];
+        const parts = q.subQuestions.map((sq, idx) => {
+            const cVal = Array.isArray(sq.correctAnswers) ? sq.correctAnswers[0] : (sq.correctAnswer ?? 0);
+            return `Ý ${labels[idx] || (idx + 1)}: [${cVal === 0 ? 'Đúng' : 'Sai'}]`;
+        });
+        return `Kết quả chuẩn từng ý: ${parts.join('; ')}. Căn cứ theo giáo trình chuẩn Chủ nghĩa xã hội khoa học (NXB Chính trị Quốc gia Sự thật).`;
     }
     if (q.type === 'true_false') {
         const correctIdx = Array.isArray(q.correctAnswers) ? q.correctAnswers[0] : 0;
@@ -2710,6 +3682,11 @@ function openModeSelectModal(topicId) {
 function resetTopicProgress(topicId) {
     if (confirm('Bạn có chắc chắn muốn xóa tiến trình ôn luyện cũ để làm lại từ đầu từ Câu 1?')) {
         clearProgress(topicId);
+        const user = getCurrentUser();
+        if (user && user.username) {
+            localStorage.removeItem(getMaxProgressStorageKey(topicId));
+            localStorage.removeItem(`max_progress_topic_${topicId}_${user.username}`);
+        }
         closeModal();
         syncDashboardProgress();
         showToast('Đã đặt lại tiến trình về Câu 1!');
@@ -2825,7 +3802,17 @@ function toggleMobileQuestionSheet() {
 
 function isAnswerCorrectForQuestion(q, userAns) {
     if (userAns === undefined || userAns === null) return false;
+    const correctList = getQuestionCorrectAnswers(q);
     const qInfo = detectQuestionType(q);
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        let isAll = true;
+        q.subQuestions.forEach((sq, idx) => {
+            const correctVal = Array.isArray(sq.correctAnswers) ? sq.correctAnswers[0] : (sq.correctAnswer ?? 0);
+            if (userAns[idx] !== correctVal) isAll = false;
+        });
+        return isAll;
+    }
     if (qInfo.id === 'drag_drop' && q.pairs) {
         let isAll = true;
         q.pairs.forEach((p, idx) => {
@@ -2833,12 +3820,12 @@ function isAnswerCorrectForQuestion(q, userAns) {
         });
         return isAll;
     }
-    if (qInfo.id === 'multiple') {
-        if (!Array.isArray(userAns) || !Array.isArray(q.correctAnswers)) return false;
+    if (qInfo.id === 'multiple' || correctList.length > 1) {
+        if (!Array.isArray(userAns)) return false;
         const s1 = [...userAns].sort().join(',');
-        const s2 = [...q.correctAnswers].sort().join(',');
+        const s2 = [...correctList].sort().join(',');
         return s1 === s2;
     }
-    const correctAns = Array.isArray(q.correctAnswers) ? q.correctAnswers[0] : 0;
+    const correctAns = correctList[0];
     return userAns === correctAns;
 }

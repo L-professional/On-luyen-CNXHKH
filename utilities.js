@@ -134,12 +134,24 @@ const RANK_LEVELS = [
 function getUserStats() {
     const user = getCurrentUser();
     if (!user || !user.username) return { exp: 0, level: 1, rankId: 'gamo' };
-    const key = 'userStats_' + user.username;
     try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return { exp: 0, level: 1, rankId: 'gamo' };
-        const data = JSON.parse(raw);
-        const exp = Math.max(0, parseInt(data.exp, 10) || 0);
+        const savedExp = localStorage.getItem('exp_' + user.username);
+        let exp;
+        if (savedExp !== null && savedExp !== undefined) {
+            exp = Math.max(0, parseInt(savedExp, 10) || 0);
+        } else {
+            const key = 'userStats_' + user.username;
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
+                    exp = Math.max(0, parseInt(data.exp, 10) || 0);
+                }
+            }
+        }
+        if (typeof exp === 'undefined' || isNaN(exp)) {
+            exp = 0;
+        }
         const rank = getRankByExp(exp);
         return { exp: exp, level: rank.level, rankId: rank.id };
     } catch (e) {
