@@ -86,7 +86,9 @@ function clearExistingSession() {
         FirebaseService.updateUserStatus(session.userId, 'offline');
     }
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionToken');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('sessionToken');
     const banner = document.getElementById('existing-session-banner');
     if (banner) banner.classList.add('hidden');
     showToast('Đã xóa phiên đăng nhập trên thiết bị!', 'success');
@@ -132,19 +134,25 @@ async function handleLogin(e) {
 
     if (matchedUser) {
         const userId = matchedUser.userId || ('u_' + matchedUser.username.toLowerCase());
-        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        const token = Date.now().toString() + Math.random().toString(36).substr(2);
 
-        // Cập nhật trạng thái status = 'online', lastActive = Date.now(), activeSession lên Firebase
+        // Lưu sessionToken này vào máy cục bộ
+        localStorage.setItem('sessionToken', token);
+        sessionStorage.setItem('sessionToken', token);
+
+        // Đồng thời, cập nhật (update) token này lên Firebase vào đúng node của user đó
         if (window.FirebaseService) {
             await FirebaseService.updateUser(userId, {
-                activeSession: sessionId,
+                sessionToken: token,
+                activeSession: token,
                 status: 'online',
                 lastActive: Date.now()
             });
             FirebaseService.setupPresence(userId);
         } else if (window.update && window.ref && window.db) {
             await update(ref(db, 'users/' + userId), {
-                activeSession: sessionId,
+                sessionToken: token,
+                activeSession: token,
                 status: 'online',
                 lastActive: Date.now()
             });
@@ -156,7 +164,8 @@ async function handleLogin(e) {
             username: matchedUser.username,
             role: matchedUser.role,
             loginAt: Date.now(),
-            sessionId: sessionId
+            sessionId: token,
+            sessionToken: token
         };
 
         if (rememberMe) {

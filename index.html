@@ -17,7 +17,9 @@
                 const user = JSON.parse(userStr);
                 if (!user || !user.username || !user.loginAt) {
                     localStorage.removeItem('currentUser');
+                    localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('sessionToken');
                     window.location.replace('login.html');
                 }
             } catch (e) {

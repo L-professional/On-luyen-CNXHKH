@@ -95,6 +95,7 @@ function verifyAdminSession(user) {
         return false;
     }
 
+    const localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken') || user.sessionToken || user.sessionId;
     const users = getUserList();
     const matched = users.find(u => 
         (u.userId && user.userId && u.userId === user.userId) || 
@@ -102,14 +103,10 @@ function verifyAdminSession(user) {
     );
 
     if (matched) {
-        if (matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
+        const targetToken = matched.sessionToken || matched.activeSession;
+        if (targetToken && localToken && targetToken !== localToken) {
             isAdminSessionTerminated = true;
-            forceLogoutAdmin('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
-            return false;
-        }
-        if (matched.activeSession && !user.sessionId) {
-            isAdminSessionTerminated = true;
-            forceLogoutAdmin('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+            forceLogoutAdmin('Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!');
             return false;
         }
     } else if (users.length > 0) {
@@ -123,7 +120,9 @@ function verifyAdminSession(user) {
 function forceLogoutAdmin(message) {
     isAdminSessionTerminated = true;
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionToken');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('sessionToken');
     sessionStorage.clear();
     if (message) {
         alert(message);
@@ -206,6 +205,26 @@ function initAdminFirebaseRealtimeListeners() {
                         ...data[uid],
                         userId: uid
                     }));
+
+                    // Kiểm tra Realtime phiên đăng nhập của Admin hiện tại (Single Session Guard)
+                    const currAdmin = getAdminCurrentUser();
+                    if (currAdmin) {
+                        const adminUid = currAdmin.userId || ('u_' + (currAdmin.username || '').toLowerCase());
+                        const adminData = data[adminUid] || Object.values(data).find(u => u.username && currAdmin.username && u.username.toLowerCase() === currAdmin.username.toLowerCase());
+                        if (adminData) {
+                            const fbToken = adminData.sessionToken || adminData.activeSession;
+                            const localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+                            if (fbToken && localToken && fbToken !== localToken) {
+                                isAdminSessionTerminated = true;
+                                forceLogoutAdmin("Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!");
+                                return;
+                            }
+                        } else {
+                            isAdminSessionTerminated = true;
+                            forceLogoutAdmin("Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!");
+                            return;
+                        }
+                    }
                 } else {
                     adminUsersList = [];
                 }
@@ -1013,7 +1032,7 @@ async function adminLogout() {
         if (window.FirebaseService) {
             try {
                 await FirebaseService.updateUserStatus(userId, 'offline');
-                await FirebaseService.updateUser(userId, { activeSession: null });
+                await FirebaseService.updateUser(userId, { activeSession: null, sessionToken: null });
             } catch (e) {}
         } else if (user.username) {
             try {
@@ -1021,6 +1040,7 @@ async function adminLogout() {
                 const idx = users.findIndex(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
                 if (idx !== -1 && users[idx].activeSession === user.sessionId) {
                     users[idx].activeSession = null;
+                    users[idx].sessionToken = null;
                     saveUserList(users);
                 }
             } catch (e) {}
@@ -1028,7 +1048,10 @@ async function adminLogout() {
     }
 
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionToken');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('sessionToken');
+    sessionStorage.clear();
     if (typeof closeAdminModal === 'function') {
         closeAdminModal();
     }

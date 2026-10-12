@@ -1505,7 +1505,7 @@ let isRealtimeWatcherAttached = false;
  * Lắng nghe Realtime trạng thái tài khoản từ Firebase:
  * Nếu Quản trị viên xóa user hoặc có thiết bị khác đăng nhập -> Đăng xuất ngay lập tức
  */
-function setupUserRealtimeWatcher(userId, currentSessionId) {
+function setupUserRealtimeWatcher(userId) {
     if (isRealtimeWatcherAttached || !userId) return;
     if (window.ref && window.onValue && window.db) {
         try {
@@ -1516,7 +1516,9 @@ function setupUserRealtimeWatcher(userId, currentSessionId) {
                     isSessionTerminated = true;
                     // 1. TRƯỚC KHI alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
                     localStorage.removeItem('currentUser');
+                    localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('sessionToken');
                     sessionStorage.clear();
 
                     try {
@@ -1530,25 +1532,42 @@ function setupUserRealtimeWatcher(userId, currentSessionId) {
                     return;
                 }
 
-                const u = snapshot.val();
+                const data = snapshot.val();
 
-                // Đè phiên đăng nhập từ nơi khác
-                if (u.activeSession && currentSessionId && u.activeSession !== currentSessionId) {
+                // Lấy data.sessionToken từ Firebase và sessionToken từ localStorage của máy hiện tại
+                const fbToken = data.sessionToken || data.activeSession;
+                const localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+
+                // Logic Cốt lõi: Nếu data.sessionToken KHÁC với sessionToken lưu ở localStorage
+                // (nghĩa là user đã đăng nhập ở một máy khác và tạo ra token mới đè lên Firebase)
+                if (fbToken && localToken && fbToken !== localToken) {
                     isSessionTerminated = true;
+
+                    // 1. Hiện thông báo
+                    alert("Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!");
+
+                    // 2. Xóa thông tin đăng nhập
                     localStorage.removeItem('currentUser');
+                    localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('sessionToken');
                     sessionStorage.clear();
 
-                    alert('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+                    try {
+                        resetAppState();
+                        resetAllProgressUI();
+                    } catch (e) {}
+
+                    // 3. Điều hướng ra ngoài
                     window.location.replace('login.html');
                     return;
                 }
 
                 // Đồng bộ tức thời tên đăng nhập mới nếu Admin vừa thực hiện đổi tên
-                if (u.username) {
+                if (data.username) {
                     const curr = getCurrentUser();
-                    if (curr && curr.username !== u.username) {
-                        curr.username = u.username;
+                    if (curr && curr.username !== data.username) {
+                        curr.username = data.username;
                         if (localStorage.getItem('currentUser')) {
                             localStorage.setItem('currentUser', JSON.stringify(curr));
                         } else if (sessionStorage.getItem('currentUser')) {
@@ -1585,7 +1604,9 @@ async function checkAuthentication() {
         user = JSON.parse(userStr);
     } catch (e) {
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('sessionToken');
         sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('sessionToken');
         sessionStorage.clear();
         window.location.replace('login.html');
         return false;
@@ -1593,7 +1614,9 @@ async function checkAuthentication() {
 
     if (!user || (!user.userId && !user.username) || !user.loginAt) {
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('sessionToken');
         sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('sessionToken');
         sessionStorage.clear();
         window.location.replace('login.html');
         return false;
@@ -1633,7 +1656,9 @@ async function checkAuthentication() {
 
                 // 1. TRƯỚC KHI gọi hàm alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionToken');
                 sessionStorage.removeItem('currentUser');
+                sessionStorage.removeItem('sessionToken');
                 sessionStorage.clear();
 
                 try {
@@ -1645,6 +1670,38 @@ async function checkAuthentication() {
                 alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
 
                 // 2. Sau khi báo alert xong, dùng window.location.replace('login.html') để đẩy user văng hẳn ra trang đăng nhập
+                window.location.replace('login.html');
+                return false;
+            }
+
+            // Khôi phục sessionToken vào localStorage nếu phiên cũ chưa lưu riêng
+            const fbToken = userData.sessionToken || userData.activeSession;
+            let localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+            if (!localToken && fbToken && (user.sessionToken || user.sessionId) === fbToken) {
+                localToken = fbToken;
+                localStorage.setItem('sessionToken', localToken);
+            }
+
+            // Kiểm tra bị đè phiên đăng nhập từ thiết bị khác (Single Session Guard)
+            if (fbToken && localToken && fbToken !== localToken) {
+                isSessionTerminated = true;
+
+                // 1. Hiện thông báo
+                alert("Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!");
+
+                // 2. Xóa thông tin đăng nhập
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionToken');
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.removeItem('sessionToken');
+                sessionStorage.clear();
+
+                try {
+                    resetAppState();
+                    resetAllProgressUI();
+                } catch (e) {}
+
+                // 3. Điều hướng ra ngoài
                 window.location.replace('login.html');
                 return false;
             }
@@ -1665,20 +1722,8 @@ async function checkAuthentication() {
                 updateHeaderUserPill(user);
             }
 
-            // Kiểm tra bị đè phiên đăng nhập từ thiết bị khác (Single Device Guard)
-            if (userData.activeSession && user.sessionId && userData.activeSession !== user.sessionId) {
-                isSessionTerminated = true;
-                localStorage.removeItem('currentUser');
-                sessionStorage.removeItem('currentUser');
-                sessionStorage.clear();
-
-                alert('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
-                window.location.replace('login.html');
-                return false;
-            }
-
-            // Thiết lập Realtime Watcher để theo dõi nếu bị Admin xóa khi đang dùng
-            setupUserRealtimeWatcher(user.userId || userId, user.sessionId);
+            // Thiết lập Realtime Watcher để theo dõi liên tục bằng onValue()
+            setupUserRealtimeWatcher(user.userId || userId);
 
             return true;
         } catch (err) {
@@ -1721,9 +1766,11 @@ function verifySession() {
     );
 
     if (matched) {
-        if (matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
+        const localToken = localStorage.getItem('sessionToken') || user.sessionId;
+        const targetToken = matched.sessionToken || matched.activeSession;
+        if (targetToken && localToken && targetToken !== localToken) {
             isSessionTerminated = true;
-            forceLogoutSession('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+            forceLogoutSession('Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!');
             return false;
         }
     } else if (users.length > 0) {
@@ -1743,7 +1790,9 @@ function forceLogoutSession(message) {
 
     // 1. TRƯỚC KHI alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionToken');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('sessionToken');
     sessionStorage.clear();
 
     try {
@@ -1751,7 +1800,7 @@ function forceLogoutSession(message) {
         resetAllProgressUI();
     } catch (e) {}
 
-    // Thông báo cho người dùng nếu có
+    // Thông báo cho người dùng
     if (message) {
         alert(message);
     }
@@ -1843,7 +1892,7 @@ async function logoutUser() {
         if (window.FirebaseService) {
             try {
                 await FirebaseService.updateUserStatus(uid, 'offline');
-                await FirebaseService.updateUser(uid, { activeSession: null });
+                await FirebaseService.updateUser(uid, { activeSession: null, sessionToken: null });
             } catch (e) {}
         }
         try {
@@ -1851,14 +1900,18 @@ async function logoutUser() {
             const idx = users.findIndex(u => (u.userId && u.userId === uid) || (u.username && u.username.toLowerCase() === user.username.toLowerCase()));
             if (idx !== -1 && users[idx].activeSession === user.sessionId) {
                 users[idx].activeSession = null;
+                users[idx].sessionToken = null;
                 localStorage.setItem('userList', JSON.stringify(users));
             }
         } catch (e) {}
     }
 
-    // 1. Xóa sạch currentUser
+    // 1. Xóa sạch currentUser và sessionToken
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionToken');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('sessionToken');
+    sessionStorage.clear();
 
     // 2. Reset toàn bộ biến trạng thái toàn cục
     resetAppState();
