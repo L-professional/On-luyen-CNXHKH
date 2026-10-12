@@ -3,41 +3,62 @@
  * Phân quyền route, CRUD danh sách tài khoản qua localStorage
  */
 
-// Danh sách tài khoản mặc định
+// Danh sách tài khoản mặc định và bộ nhớ đệm đồng bộ Firebase
 const DEFAULT_USERS = [
     {
+        userId: 'u_admin_root_2026',
         username: 'Admin',
         password: 'Loclsct2006',
         role: 'admin',
         createdAt: '08/10/2026',
         isRoot: true,
-        activeSession: null
+        status: 'offline',
+        lastActive: Date.now(),
+        activeSession: null,
+        exp: 200
     },
     {
+        userId: 'u_student_loc_2026',
         username: 'Loc',
         password: '123',
         role: 'user',
         createdAt: '08/10/2026',
         isRoot: false,
-        activeSession: null
+        status: 'offline',
+        lastActive: Date.now(),
+        activeSession: null,
+        exp: 50
     }
 ];
 
+let adminUsersList = [];
+let adminFeedbacksList = [];
+let isFirebaseListenersAttached = false;
+
 // Khởi tạo và bảo vệ route khi DOM sẵn sàng
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // 1. Bảo vệ Route: Chỉ cho phép admin truy cập và phiên phải hợp lệ
     if (!protectAdminRoute()) return;
 
-    // 2. Khởi tạo dữ liệu người dùng
-    ensureUserListInitialized();
+    // 2. Thiết lập theo dõi hiện diện (Presence Tracking) cho tài khoản Admin
+    const currAdmin = getAdminCurrentUser();
+    if (currAdmin && currAdmin.userId && window.FirebaseService) {
+        FirebaseService.setupPresence(currAdmin.userId);
+    }
 
-    // 3. Hiển thị thông tin người dùng quản trị hiện tại
+    // 3. Khởi tạo dữ liệu người dùng từ Firebase
+    await ensureUserListInitialized();
+
+    // 4. Lắng nghe cập nhật Realtime từ Firebase
+    initAdminFirebaseRealtimeListeners();
+
+    // 5. Hiển thị thông tin người dùng quản trị hiện tại
     updateAdminHeaderInfo();
 
-    // 4. Cập nhật các badge số liệu thống kê
+    // 6. Cập nhật các badge số liệu thống kê
     updateAdminStatsBadges();
 
-    // 5. Khởi tạo tab theo URL query parameter (?tab=users|feedbacks)
+    // 7. Khởi tạo tab theo URL query parameter (?tab=users|feedbacks)
     const urlParams = new URLSearchParams(window.location.search);
     const initialTab = urlParams.get('tab') === 'feedbacks' ? 'feedbacks' : 'users';
     switchAdminMainTab(initialTab, false);
@@ -60,7 +81,7 @@ function getAdminCurrentUser() {
         const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
         if (!userStr) return null;
         const user = JSON.parse(userStr);
-        return (user && user.username) ? user : null;
+        return (user && (user.userId || user.username)) ? user : null;
     } catch (e) {
         return null;
     }
@@ -75,7 +96,11 @@ function verifyAdminSession(user) {
     }
 
     const users = getUserList();
-    const matched = users.find(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+    const matched = users.find(u => 
+        (u.userId && user.userId && u.userId === user.userId) || 
+        (u.username && user.username && u.username.toLowerCase() === user.username.toLowerCase())
+    );
+
     if (matched) {
         if (matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
             isAdminSessionTerminated = true;
@@ -87,7 +112,7 @@ function verifyAdminSession(user) {
             forceLogoutAdmin('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
             return false;
         }
-    } else {
+    } else if (users.length > 0) {
         isAdminSessionTerminated = true;
         forceLogoutAdmin('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
         return false;
@@ -96,8 +121,10 @@ function verifyAdminSession(user) {
 }
 
 function forceLogoutAdmin(message) {
+    isAdminSessionTerminated = true;
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.clear();
     if (message) {
         alert(message);
     }
@@ -130,27 +157,92 @@ function protectAdminRoute() {
 }
 
 /**
- * Khởi tạo mảng userList trong localStorage nếu chưa tồn tại
+ * Khởi tạo dữ liệu người dùng trên Firebase / Fallback
  */
-function ensureUserListInitialized() {
-    if (!localStorage.getItem('userList')) {
-        localStorage.setItem('userList', JSON.stringify(DEFAULT_USERS));
+async function ensureUserListInitialized() {
+    if (window.FirebaseService) {
+        await FirebaseService.ensureInitialData();
+        adminUsersList = await FirebaseService.getAllUsers();
     } else {
-        // Đảm bảo Admin gốc luôn tồn tại
-        try {
-            const list = JSON.parse(localStorage.getItem('userList') || '[]');
-            const hasAdmin = list.some(u => u.username.toLowerCase() === 'admin');
-            if (!hasAdmin) {
-                list.unshift(DEFAULT_USERS[0]);
-                localStorage.setItem('userList', JSON.stringify(list));
-            }
-        } catch (e) {
+        if (!localStorage.getItem('userList')) {
             localStorage.setItem('userList', JSON.stringify(DEFAULT_USERS));
+            adminUsersList = [...DEFAULT_USERS];
+        } else {
+            try {
+                const list = JSON.parse(localStorage.getItem('userList') || '[]');
+                const hasAdmin = list.some(u => (u.username || '').toLowerCase() === 'admin');
+                if (!hasAdmin) {
+                    list.unshift(DEFAULT_USERS[0]);
+                    localStorage.setItem('userList', JSON.stringify(list));
+                }
+                adminUsersList = list;
+            } catch (e) {
+                adminUsersList = [...DEFAULT_USERS];
+            }
+        }
+    }
+}
+
+/**
+ * Lắng nghe cập nhật người dùng và phản hồi Realtime từ Firebase Database
+ */
+function initAdminFirebaseRealtimeListeners() {
+    if (isFirebaseListenersAttached) return;
+    isFirebaseListenersAttached = true;
+
+    // 1. Lắng nghe Realtime bảng Users
+    if (window.ref && window.onValue && window.db) {
+        try {
+            onValue(ref(db, 'users'), (snapshot) => {
+                // BẮT BUỘC: Dọn dẹp nội dung cũ trước khi render để tránh nối tiếp (append) dữ liệu gây đúp dòng
+                const tableBody = document.querySelector('#userTableBody') || document.getElementById('user-table-body');
+                if (tableBody) {
+                    tableBody.innerHTML = '';
+                }
+
+                if (snapshot && snapshot.exists() && snapshot.val()) {
+                    const data = snapshot.val();
+                    adminUsersList = Object.keys(data).map(uid => ({
+                        ...data[uid],
+                        userId: uid
+                    }));
+                } else {
+                    adminUsersList = [];
+                }
+                renderUserTable();
+                updateAdminStatsBadges();
+            });
+        } catch (e) {
+            console.warn('[Firebase] onValue users error:', e);
+        }
+
+        // 2. Lắng nghe Realtime bảng Feedbacks
+        try {
+            onValue(ref(db, 'feedbacks'), (snapshot) => {
+                if (snapshot && snapshot.exists() && snapshot.val()) {
+                    const data = snapshot.val();
+                    adminFeedbacksList = Object.keys(data)
+                        .map(k => ({ ...data[k], id: k }))
+                        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                } else {
+                    adminFeedbacksList = [];
+                }
+                const activeTab = document.getElementById('btn-admin-tab-feedbacks')?.classList.contains('active');
+                if (activeTab) {
+                    renderFeedbackTable();
+                }
+                updateAdminStatsBadges();
+            });
+        } catch (e) {
+            console.warn('[Firebase] onValue feedbacks error:', e);
         }
     }
 }
 
 function getUserList() {
+    if (adminUsersList && adminUsersList.length > 0) {
+        return adminUsersList;
+    }
     try {
         const listStr = localStorage.getItem('userList');
         return listStr ? JSON.parse(listStr) : [...DEFAULT_USERS];
@@ -159,9 +251,18 @@ function getUserList() {
     }
 }
 
-function saveUserList(list) {
+async function saveUserList(list) {
+    adminUsersList = list;
     try {
         localStorage.setItem('userList', JSON.stringify(list));
+        if (window.ref && window.set && window.db) {
+            const map = {};
+            list.forEach(u => {
+                const uid = u.userId || ('u_' + (u.username || '').toLowerCase());
+                map[uid] = { ...u, userId: uid };
+            });
+            await set(ref(db, 'users'), map);
+        }
     } catch (e) {
         console.error('Lỗi khi lưu userList:', e);
     }
@@ -302,14 +403,51 @@ function updateAdminHeaderInfo() {
 }
 
 /**
+ * Định dạng thời gian hoạt động tương đối (Hoạt động X phút/giờ trước)
+ * @param {number|string} timestamp Thời điểm hoạt động cuối cùng
+ */
+function formatLastActiveTime(timestamp) {
+    if (!timestamp) return 'Chưa có hoạt động';
+    const now = Date.now();
+    const diffMs = now - Number(timestamp);
+    if (diffMs < 0 || isNaN(diffMs)) return 'Vừa mới đây';
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return 'Vừa mới đây';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `Hoạt động ${diffMin} phút trước`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `Hoạt động ${diffHours} giờ trước`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 30) return `Hoạt động ${diffDays} ngày trước`;
+    return 'Hoạt động lâu trước đây';
+}
+
+/**
  * Render bảng danh sách tài khoản
  */
 function renderUserTable(searchKeyword = '') {
-    const tbody = document.getElementById('user-table-body');
+    const tbody = document.querySelector('#userTableBody') || document.getElementById('user-table-body');
     const countBadge = document.getElementById('total-users-count');
     if (!tbody) return;
 
+    // BẮT BUỘC: Dọn dẹp nội dung cũ trước khi render danh sách (Clear before Render / Append)
+    tbody.innerHTML = '';
+
     let users = getUserList();
+
+    // Loại bỏ trùng lặp UID hoặc username nếu có bản ghi tạo đúp
+    const seenUids = new Set();
+    const seenNames = new Set();
+    users = users.filter(u => {
+        const uid = u.userId || ('u_' + (u.username || '').toLowerCase());
+        const uname = (u.username || '').toLowerCase().trim();
+        if (seenUids.has(uid) || (uname && seenNames.has(uname))) {
+            return false;
+        }
+        seenUids.add(uid);
+        if (uname) seenNames.add(uname);
+        return true;
+    });
 
     if (countBadge) {
         countBadge.textContent = users.length;
@@ -317,13 +455,13 @@ function renderUserTable(searchKeyword = '') {
 
     if (searchKeyword.trim()) {
         const kw = searchKeyword.toLowerCase().trim();
-        users = users.filter(u => u.username.toLowerCase().includes(kw) || u.role.toLowerCase().includes(kw));
+        users = users.filter(u => (u.username && u.username.toLowerCase().includes(kw)) || (u.role && u.role.toLowerCase().includes(kw)));
     }
 
     if (users.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 13.5px;">
+                <td colspan="7" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 13.5px;">
                     <i class="fa-solid fa-user-slash" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
                     Không tìm thấy tài khoản nào phù hợp.
                 </td>
@@ -333,7 +471,8 @@ function renderUserTable(searchKeyword = '') {
     }
 
     tbody.innerHTML = users.map((u, idx) => {
-        const isRootAdmin = u.isRoot || u.username.toLowerCase() === 'admin';
+        const userId = u.userId || ('u_' + (u.username || '').toLowerCase());
+        const isRootAdmin = u.isRoot || (u.username && u.username.toLowerCase() === 'admin');
         const roleLabel = u.role === 'admin' ? 'Admin' : 'User';
         const roleClass = u.role === 'admin' ? 'role-admin' : 'role-user';
         const roleIcon = u.role === 'admin' ? 'fa-shield-halved' : 'fa-user';
@@ -342,6 +481,18 @@ function renderUserTable(searchKeyword = '') {
         const userExp = getUserExp(u.username, u);
         const userRank = getRankByExp(userExp);
         const rankLevel = userRank.level;
+
+        // Trạng thái hoạt động Online / Offline (Tách thành cột riêng)
+        const isOnline = u.status === 'online';
+        const statusHtml = isOnline
+            ? `<div class="user-activity-status flex items-center gap-2" title="Đang trực tuyến">
+                   <span class="status-indicator-dot online"></span>
+                   <span class="status-indicator-text online text-xs font-semibold">Online</span>
+               </div>`
+            : `<div class="user-activity-status flex items-center gap-2" title="${u.lastActive ? new Date(u.lastActive).toLocaleString('vi-VN') : 'Chưa có hoạt động'}">
+                   <span class="status-indicator-dot offline"></span>
+                   <span class="status-indicator-text offline text-xs font-medium">${formatLastActiveTime(u.lastActive)}</span>
+               </div>`;
 
         // Cột Mật khẩu: Root Admin được bảo vệ ([Đã mã hóa]), các User khác có nút mắt xem/ẩn
         const passwordCellHtml = isRootAdmin
@@ -369,6 +520,9 @@ function renderUserTable(searchKeyword = '') {
                         </div>
                     </div>
                 </td>
+                <td style="white-space: nowrap;">
+                    ${statusHtml}
+                </td>
                 <td>
                     ${passwordCellHtml}
                 </td>
@@ -384,9 +538,13 @@ function renderUserTable(searchKeyword = '') {
                 </td>
                 <td>
                     <div class="action-buttons-group">
-                        <button type="button" class="btn-action btn-edit-pwd" onclick="openEditPasswordModal('${escapeHtml(u.username)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}">
+                        <button type="button" class="btn-action btn-edit-pwd" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}">
                             <i class="fa-solid fa-key"></i>
                             <span>Sửa MK</span>
+                        </button>
+                        <button type="button" class="btn-action btn-edit-name" onclick="changeUsername('${escapeHtml(userId)}')" title="Đổi tên đăng nhập cho ${escapeHtml(u.username)}">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Sửa Tên</span>
                         </button>
                         ${isRootAdmin ? `
                             <button type="button" class="btn-action btn-delete btn-disabled" disabled title="Tài khoản Admin gốc không được phép xóa">
@@ -394,7 +552,7 @@ function renderUserTable(searchKeyword = '') {
                                 <span>Mặc định</span>
                             </button>
                         ` : `
-                            <button type="button" class="btn-action btn-delete" onclick="handleDeleteUser('${escapeHtml(u.username)}')" title="Xóa tài khoản ${escapeHtml(u.username)}">
+                            <button type="button" class="btn-action btn-delete" onclick="handleDeleteUser('${escapeHtml(userId)}')" title="Xóa tài khoản ${escapeHtml(u.username)}">
                                 <i class="fa-solid fa-trash-can"></i>
                                 <span>Xóa</span>
                             </button>
@@ -404,6 +562,58 @@ function renderUserTable(searchKeyword = '') {
             </tr>
         `;
     }).join('');
+}
+
+/**
+ * Đổi tên người dùng (Task 3: Admin User Rename)
+ * Lưu theo UID cố định trên Firebase, bảo toàn 100% dữ liệu lịch sử thi & tiến độ
+ * @param {string} userId UID của người dùng
+ */
+async function changeUsername(userId) {
+    if (!userId) return;
+    const users = getUserList();
+    const user = users.find(u => u.userId === userId || (u.username && u.username.toLowerCase() === userId.toLowerCase()));
+    if (!user) {
+        showToast('Không tìm thấy tài khoản người dùng!', 'error');
+        return;
+    }
+
+    const promptMsg = `Nhập tên đăng nhập mới cho "${user.username}":\n(Toàn bộ điểm số, lịch sử thi và tiến độ ôn luyện của học viên đều được bảo toàn 100% nhờ lưu theo UID cố định)`;
+    const newName = prompt(promptMsg, user.username);
+    if (newName === null) return; // Người dùng ấn Hủy
+
+    const cleanName = newName.trim();
+    if (!cleanName) {
+        alert('Tên đăng nhập không được để trống!');
+        return;
+    }
+    if (/\s/.test(cleanName)) {
+        alert('Tên đăng nhập không được chứa khoảng trắng!');
+        return;
+    }
+    if (cleanName.toLowerCase() === user.username.toLowerCase()) {
+        showToast('Tên đăng nhập không thay đổi.', 'warning');
+        return;
+    }
+
+    try {
+        if (window.FirebaseService) {
+            await FirebaseService.changeUsername(user.userId, cleanName);
+        } else {
+            // Kiểm tra trùng lặp
+            const isDup = users.some(u => u.userId !== user.userId && u.username && u.username.toLowerCase() === cleanName.toLowerCase());
+            if (isDup) {
+                alert(`Tên đăng nhập "${cleanName}" đã được sử dụng bởi một tài khoản khác!`);
+                return;
+            }
+            user.username = cleanName;
+            await saveUserList(users);
+        }
+        showToast(`Đã đổi tên tài khoản thành "${cleanName}" thành công!`, 'success');
+        renderUserTable();
+    } catch (err) {
+        alert(err.message || 'Lỗi khi đổi tên người dùng!');
+    }
 }
 
 /**
@@ -450,112 +660,159 @@ function toggleTablePassword(element) {
 }
 
 /**
- * Xử lý Form "Tạo tài khoản" (Khối 1)
+ * Xử lý Form "Tạo tài khoản" (Khối 1) - Tích hợp Firebase
  */
-function handleCreateUser(e) {
+async function handleCreateUser(e) {
     e.preventDefault();
+
+    // 1. Chống Spam Click (Double-click prevention)
+    const btnSubmit = (e.target && e.target.querySelector) ? e.target.querySelector('button[type="submit"]') : document.querySelector('.btn-create-account');
+    const originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : '<i class="fa-solid fa-plus"></i> <span>Tạo tài khoản</span>';
+
+    // Ngăn chặn spam click nếu đang trong tiến trình tạo
+    if (handleCreateUser.isSubmitting || (btnSubmit && btnSubmit.disabled)) {
+        return;
+    }
+
+    // Disable nút ngay dòng đầu tiên và đổi text thành "Đang tạo..."
+    if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang tạo...</span>';
+    }
+    handleCreateUser.isSubmitting = true;
 
     const usernameInput = document.getElementById('new-username');
     const passwordInput = document.getElementById('new-password');
     const roleSelect = document.getElementById('new-role');
 
-    if (!usernameInput || !passwordInput || !roleSelect) return;
-
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-    const role = roleSelect.value;
-
-    // Validation
-    if (username.length < 2) {
-        showToast('Tên đăng nhập phải có ít nhất 2 ký tự!', 'error');
-        usernameInput.focus();
+    if (!usernameInput || !passwordInput || !roleSelect) {
+        handleCreateUser.isSubmitting = false;
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = originalBtnHtml;
+        }
         return;
     }
 
-    if (password.length < 3) {
-        showToast('Mật khẩu phải có ít nhất 3 ký tự!', 'error');
-        passwordInput.focus();
-        return;
+    try {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+        const role = roleSelect.value;
+
+        // Validation
+        if (username.length < 2) {
+            showToast('Tên đăng nhập phải có ít nhất 2 ký tự!', 'error');
+            usernameInput.focus();
+            return;
+        }
+        if (/\s/.test(username)) {
+            showToast('Tên đăng nhập không được chứa khoảng trắng!', 'error');
+            usernameInput.focus();
+            return;
+        }
+        if (password.length < 3) {
+            showToast('Mật khẩu phải có ít nhất 3 ký tự!', 'error');
+            passwordInput.focus();
+            return;
+        }
+
+        if (window.FirebaseService) {
+            await FirebaseService.registerUser({ username, password, role });
+        } else {
+            const users = getUserList();
+            const isExisted = users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
+            if (isExisted) {
+                showToast(`Tên đăng nhập "${username}" đã tồn tại trên hệ thống!`, 'error');
+                usernameInput.focus();
+                return;
+            }
+
+            const today = new Date();
+            const dateFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+            const newUser = {
+                userId: 'u_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                username: username,
+                password: password,
+                role: role,
+                createdAt: dateFormatted,
+                isRoot: false,
+                status: 'offline',
+                lastActive: Date.now(),
+                activeSession: null
+            };
+
+            users.push(newUser);
+            await saveUserList(users);
+        }
+
+        // Reset Form & Render lại bảng
+        usernameInput.value = '';
+        passwordInput.value = '';
+        roleSelect.value = 'user';
+
+        renderUserTable();
+        showToast(`Đã tạo tài khoản "${username}" (${role.toUpperCase()}) thành công!`, 'success');
+    } catch (err) {
+        showToast(err.message || 'Lỗi khi tạo tài khoản!', 'error');
+    } finally {
+        // Chỉ khi lệnh push dữ liệu lên Firebase báo thành công (hoặc thất bại), mới enable lại nút và trả lại text gốc
+        handleCreateUser.isSubmitting = false;
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = originalBtnHtml;
+        }
     }
-
-    const users = getUserList();
-
-    // Kiểm tra trùng username (không phân biệt chữ hoa thường)
-    const isExisted = users.some(u => u.username.toLowerCase() === username.toLowerCase());
-    if (isExisted) {
-        showToast(`Tên đăng nhập "${username}" đã tồn tại trên hệ thống!`, 'error');
-        usernameInput.focus();
-        return;
-    }
-
-    // Định dạng ngày hiện tại
-    const today = new Date();
-    const dateFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-
-    // Thêm người dùng mới
-    const newUser = {
-        username: username,
-        password: password,
-        role: role,
-        createdAt: dateFormatted,
-        isRoot: false,
-        activeSession: null
-    };
-
-    users.push(newUser);
-    saveUserList(users);
-
-    // Reset Form & Render lại bảng
-    usernameInput.value = '';
-    passwordInput.value = '';
-    roleSelect.value = 'user';
-
-    renderUserTable();
-    showToast(`Đã tạo tài khoản "${username}" (${role.toUpperCase()}) thành công!`, 'success');
 }
 
 /**
- * Xử lý tính năng Xóa tài khoản
+ * Xử lý tính năng Xóa tài khoản - Tích hợp Firebase
  */
-function handleDeleteUser(username) {
-    if (!username) return;
-
-    // Không cho phép xóa tài khoản Admin gốc mặc định
-    if (username.toLowerCase() === 'admin') {
-        alert('TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP XÓA TÀI KHOẢN ADMIN GỐC MẶC ĐỊNH (Admin / Loclsct2006)!');
-        return;
-    }
+async function handleDeleteUser(userIdOrName) {
+    if (!userIdOrName) return;
 
     const users = getUserList();
-    const userToDelete = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    const userToDelete = users.find(u => 
+        u.userId === userIdOrName || 
+        (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+    );
 
     if (!userToDelete) {
         showToast('Không tìm thấy tài khoản cần xóa!', 'error');
         return;
     }
 
-    if (userToDelete.isRoot) {
-        alert('Tài khoản này là tài khoản hệ thống gốc, không được phép xóa!');
+    if (userToDelete.isRoot || (userToDelete.username && userToDelete.username.toLowerCase() === 'admin')) {
+        alert('TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP XÓA TÀI KHOẢN ADMIN GỐC MẶC ĐỊNH!');
         return;
     }
 
-    const isConfirmed = confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}" không?\nHành động này không thể hoàn tác!`);
+    const isConfirmed = confirm(`Bạn có chắc chắn muốn xóa tài khoản "${userToDelete.username}" không?\nHành động này không thể hoàn tác!`);
     if (!isConfirmed) return;
 
-    // Lọc bỏ tài khoản
-    const updatedUsers = users.filter(u => u.username.toLowerCase() !== username.toLowerCase());
-    saveUserList(updatedUsers);
+    try {
+        if (window.FirebaseService) {
+            await FirebaseService.deleteUser(userToDelete.userId);
+        } else {
+            const updatedUsers = users.filter(u => u.userId !== userToDelete.userId);
+            await saveUserList(updatedUsers);
+        }
 
-    renderUserTable();
-    showToast(`Đã xóa tài khoản "${username}" thành công!`, 'success');
+        renderUserTable();
+        showToast(`Đã xóa tài khoản "${userToDelete.username}" thành công!`, 'success');
+    } catch (err) {
+        showToast(err.message || 'Lỗi khi xóa tài khoản!', 'error');
+    }
 }
 
 /**
- * Tính năng Sửa mật khẩu (Modal Popup)
+ * Tính năng Sửa mật khẩu (Modal Popup) - Tích hợp Firebase
  */
-function openEditPasswordModal(username) {
+function openEditPasswordModal(userIdOrName) {
     const users = getUserList();
-    const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    const user = users.find(u => 
+        u.userId === userIdOrName || 
+        (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+    );
     if (!user) {
         showToast('Không tìm thấy tài khoản!', 'error');
         return;
@@ -579,7 +836,7 @@ function openEditPasswordModal(username) {
             </div>
         `,
         actionText: 'Lưu mật khẩu',
-        actionCallback: () => {
+        actionCallback: async () => {
             const pwdInput = document.getElementById('edit-new-pwd');
             const newPwd = pwdInput ? pwdInput.value : '';
 
@@ -588,10 +845,19 @@ function openEditPasswordModal(username) {
                 return;
             }
 
-            user.password = newPwd;
-            saveUserList(users);
-            closeAdminModal();
-            showToast(`Đã đổi mật khẩu cho tài khoản "${user.username}" thành công!`, 'success');
+            try {
+                if (window.FirebaseService) {
+                    await FirebaseService.updateUser(user.userId, { password: newPwd });
+                } else {
+                    user.password = newPwd;
+                    await saveUserList(users);
+                }
+                closeAdminModal();
+                showToast(`Đã đổi mật khẩu cho tài khoản "${user.username}" thành công!`, 'success');
+                renderUserTable();
+            } catch (err) {
+                alert(err.message || 'Lỗi khi cập nhật mật khẩu!');
+            }
         },
         showCancel: true,
         cancelText: 'Hủy'
@@ -740,18 +1006,24 @@ function openAdminUserMenu() {
     });
 }
 
-function adminLogout() {
+async function adminLogout() {
     const user = getAdminCurrentUser();
-    if (user && user.username) {
-        try {
-            const users = getUserList();
-            const idx = users.findIndex(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
-            if (idx !== -1 && users[idx].activeSession === user.sessionId) {
-                users[idx].activeSession = null;
-                saveUserList(users);
-            }
-        } catch (e) {
-            // ignore
+    if (user) {
+        const userId = user.userId || ('u_' + (user.username || '').toLowerCase());
+        if (window.FirebaseService) {
+            try {
+                await FirebaseService.updateUserStatus(userId, 'offline');
+                await FirebaseService.updateUser(userId, { activeSession: null });
+            } catch (e) {}
+        } else if (user.username) {
+            try {
+                const users = getUserList();
+                const idx = users.findIndex(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+                if (idx !== -1 && users[idx].activeSession === user.sessionId) {
+                    users[idx].activeSession = null;
+                    saveUserList(users);
+                }
+            } catch (e) {}
         }
     }
 
@@ -927,9 +1199,12 @@ function updateAdminHeaderForTab(tabName) {
 }
 
 /**
- * Đọc mảng system_feedbacks từ localStorage (Mảng dùng chung hệ thống)
+ * Đọc danh sách phản hồi từ Firebase / Fallback
  */
 function getSystemFeedbacks() {
+    if (adminFeedbacksList && adminFeedbacksList.length > 0) {
+        return adminFeedbacksList;
+    }
     try {
         const raw = localStorage.getItem('system_feedbacks');
         const list = raw ? JSON.parse(raw) : [];
@@ -940,11 +1215,20 @@ function getSystemFeedbacks() {
 }
 
 /**
- * Lưu mảng system_feedbacks vào localStorage
+ * Lưu danh sách phản hồi vào Firebase & LocalStorage
  */
-function saveSystemFeedbacks(list) {
+async function saveSystemFeedbacks(list) {
+    adminFeedbacksList = list;
     try {
         localStorage.setItem('system_feedbacks', JSON.stringify(list));
+        if (window.ref && window.set && window.db) {
+            const map = {};
+            list.forEach(f => {
+                const fid = f.id || ('fb_' + Date.now());
+                map[fid] = { ...f, id: fid };
+            });
+            await set(ref(db, 'feedbacks'), map);
+        }
     } catch (e) {
         console.error('Lỗi khi lưu system_feedbacks:', e);
     }

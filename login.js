@@ -28,44 +28,49 @@ document.addEventListener('DOMContentLoaded', () => {
     initFormBindings();
 });
 
-function ensureUserListInitialized() {
-    if (!localStorage.getItem('userList')) {
-        localStorage.setItem('userList', JSON.stringify(DEFAULT_USERS));
+async function ensureUserListInitialized() {
+    if (window.FirebaseService) {
+        await FirebaseService.ensureInitialData();
     }
 }
 
-function getUserList() {
-    try {
-        const listStr = localStorage.getItem('userList');
-        return listStr ? JSON.parse(listStr) : [...DEFAULT_USERS];
-    } catch (e) {
-        return [...DEFAULT_USERS];
+async function getUserList() {
+    if (window.FirebaseService) {
+        return await FirebaseService.getAllUsers();
     }
+    return [...DEFAULT_USERS];
 }
 
-function checkExistingSession() {
+async function checkExistingSession() {
     try {
         const str = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
         if (!str) return;
         const user = JSON.parse(str);
-        if (user && user.username && user.loginAt) {
-            // Kiểm tra xem sessionId còn khớp với activeSession trong userList hay không
-            const users = getUserList();
-            const matched = users.find(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+        if (user && (user.userId || user.username) && user.loginAt) {
+            // Kiểm tra session từ Firebase
+            let matched = null;
+            if (user.userId && window.FirebaseService) {
+                matched = await FirebaseService.getUserById(user.userId);
+            }
+            if (!matched && window.FirebaseService) {
+                matched = await FirebaseService.findUserByUsername(user.username);
+            }
+
             if (matched && matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
                 // Phiên đã bị nơi khác đăng nhập đè -> dọn dẹp phiên cũ
                 localStorage.removeItem('currentUser');
                 sessionStorage.removeItem('currentUser');
                 return;
             }
+
             const banner = document.getElementById('existing-session-banner');
             const nameEl = document.getElementById('existing-username');
             if (banner && nameEl) {
-                nameEl.textContent = `${user.username} (${user.role === 'admin' ? 'Admin' : 'User'})`;
+                const displayName = matched ? matched.username : user.username;
+                nameEl.textContent = `${displayName} (${user.role === 'admin' ? 'Admin' : 'User'})`;
                 banner.classList.remove('hidden');
             }
         } else {
-            // Dọn dẹp phiên không hợp lệ
             localStorage.removeItem('currentUser');
             sessionStorage.removeItem('currentUser');
         }
@@ -76,6 +81,10 @@ function checkExistingSession() {
 }
 
 function clearExistingSession() {
+    const session = window.FirebaseService ? FirebaseService.getCurrentSession() : null;
+    if (session && session.userId && window.FirebaseService) {
+        FirebaseService.updateUserStatus(session.userId, 'offline');
+    }
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('currentUser');
     const banner = document.getElementById('existing-session-banner');
@@ -95,7 +104,7 @@ function getRememberCheckbox() {
     return document.getElementById('remember-me') || document.querySelector('.custom-checkbox') || document.querySelector('input[type="checkbox"]');
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const usernameInput = getUsernameInput();
@@ -113,27 +122,37 @@ function handleLogin(e) {
         return;
     }
 
-    const users = getUserList();
+    const users = await getUserList();
 
     // Tìm kiếm tài khoản phù hợp
     const matchedUser = users.find(u => 
-        u.username.toLowerCase() === username.toLowerCase() && 
+        u.username && u.username.toLowerCase() === username.toLowerCase() && 
         u.password === password
     );
 
     if (matchedUser) {
-        // Sinh sessionId duy nhất cho phiên đăng nhập mới (Single Device Login)
+        const userId = matchedUser.userId || ('u_' + matchedUser.username.toLowerCase());
         const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 
-        // Cập nhật activeSession trong userList trên localStorage
-        const userIndex = users.findIndex(u => u.username.toLowerCase() === matchedUser.username.toLowerCase());
-        if (userIndex !== -1) {
-            users[userIndex].activeSession = sessionId;
-            localStorage.setItem('userList', JSON.stringify(users));
+        // Cập nhật trạng thái status = 'online', lastActive = Date.now(), activeSession lên Firebase
+        if (window.FirebaseService) {
+            await FirebaseService.updateUser(userId, {
+                activeSession: sessionId,
+                status: 'online',
+                lastActive: Date.now()
+            });
+            FirebaseService.setupPresence(userId);
+        } else if (window.update && window.ref && window.db) {
+            await update(ref(db, 'users/' + userId), {
+                activeSession: sessionId,
+                status: 'online',
+                lastActive: Date.now()
+            });
         }
 
-        // Lưu phiên đăng nhập currentUser với loginAt và sessionId
+        // Lưu phiên đăng nhập currentUser với userId cố định
         const currentSession = {
+            userId: userId,
             username: matchedUser.username,
             role: matchedUser.role,
             loginAt: Date.now(),
@@ -183,31 +202,37 @@ function togglePasswordVisibility(inputId, btn) {
     }
 }
 
-function handleSocialLogin(provider) {
+async function handleSocialLogin(provider) {
     const rememberMeCheckbox = document.getElementById('remember-me');
     const rememberMe = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
 
     showToast(`Đang kết nối tài khoản ${provider}... (Tính năng Demo)`, 'success');
-    setTimeout(() => {
+    setTimeout(async () => {
         const username = `User_${provider}`;
         const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-        const users = getUserList();
-        let userIndex = users.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
-        if (userIndex === -1) {
-            users.push({
+        let user = window.FirebaseService ? await FirebaseService.findUserByUsername(username) : null;
+        let userId = user ? user.userId : (window.FirebaseService ? FirebaseService.generateUID() : 'u_' + Date.now());
+
+        if (!user && window.FirebaseService) {
+            user = await FirebaseService.registerUser({
                 username: username,
                 password: '',
-                role: 'user',
-                createdAt: new Date().toLocaleDateString('vi-VN'),
-                isRoot: false,
-                activeSession: sessionId
+                role: 'user'
             });
-        } else {
-            users[userIndex].activeSession = sessionId;
+            userId = user.userId;
         }
-        localStorage.setItem('userList', JSON.stringify(users));
+
+        if (window.FirebaseService) {
+            await FirebaseService.updateUser(userId, {
+                activeSession: sessionId,
+                status: 'online',
+                lastActive: Date.now()
+            });
+            FirebaseService.setupPresence(userId);
+        }
 
         const currentSession = {
+            userId: userId,
             username: username,
             role: 'user',
             loginAt: Date.now(),
@@ -228,7 +253,7 @@ function handleForgotPassword() {
     alert('Vui lòng liên hệ Quản trị viên (Admin) để được cấp lại mật khẩu hoặc đổi mật khẩu trực tiếp!');
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const regUsernameEl = document.getElementById('reg-username');
@@ -270,31 +295,35 @@ function handleRegister(e) {
         return;
     }
 
-    // 4. Kiểm tra username đã tồn tại trong userList (không phân biệt hoa thường)
-    const users = getUserList();
-    const isExisted = users.some(u => u.username.toLowerCase() === username.toLowerCase());
-    if (isExisted) {
-        showToast('Tên đăng nhập đã tồn tại!', 'error');
-        if (regUsernameEl) regUsernameEl.focus();
-        return;
+    // 4. Kiểm tra username đã tồn tại trên Firebase (không phân biệt hoa thường)
+    if (window.FirebaseService) {
+        const existed = await FirebaseService.findUserByUsername(username);
+        if (existed) {
+            showToast('Tên đăng nhập đã tồn tại!', 'error');
+            if (regUsernameEl) regUsernameEl.focus();
+            return;
+        }
+
+        // 5. Tạo userId (UID) duy nhất làm key gốc trong Firebase
+        try {
+            await FirebaseService.registerUser({
+                username: username,
+                password: password,
+                role: 'user'
+            });
+        } catch (err) {
+            showToast(err.message, 'error');
+            return;
+        }
+    } else {
+        const users = await getUserList();
+        const isExisted = users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
+        if (isExisted) {
+            showToast('Tên đăng nhập đã tồn tại!', 'error');
+            if (regUsernameEl) regUsernameEl.focus();
+            return;
+        }
     }
-
-    // 5. Tạo Object user mới: { username, password, role: 'user', createdAt: [ngày hôm nay], isRoot: false }
-    const today = new Date();
-    const dateFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-
-    const newUser = {
-        username: username,
-        password: password,
-        role: 'user',
-        createdAt: dateFormatted,
-        isRoot: false,
-        activeSession: null
-    };
-
-    // 6. Push vào mảng userList và lưu vào localStorage
-    users.push(newUser);
-    localStorage.setItem('userList', JSON.stringify(users));
 
     // 7. Chuyển luồng: Toast thành công, ẩn form Đăng ký, hiện lại form Đăng nhập, điền sẵn username
     showToast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');

@@ -54,17 +54,17 @@ const TOPICS_METADATA = [
 ];
 
 // Khởi chạy khi DOM sẵn sàng
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Kiểm tra xác thực người dùng
-    const user = getCurrentUser();
-    if (!user) {
-        window.location.replace('login.html');
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Kiểm tra xác thực người dùng qua Firebase (Auth Guard & Auto-clear Session)
+    const isAuthValid = await checkAuthentication();
+    if (!isAuthValid) {
         return;
     }
 
-    // Kiểm tra tính hợp lệ của phiên làm việc (Single Device Guard)
-    if (!verifySession()) {
-        return;
+    const user = getCurrentUser();
+    // Thiết lập Presence Tracking cho người dùng trên Firebase
+    if (user && user.userId && window.FirebaseService) {
+        FirebaseService.setupPresence(user.userId);
     }
 
     // 2. Cập nhật thông tin Header
@@ -94,17 +94,23 @@ document.addEventListener('click', (e) => {
 });
 
 // ==========================================================================
-// 1. QUẢN LÝ PHIÊN & NGƯỜI DÙNG
+// 1. QUẢN LÝ PHIÊN & NGƯỜI DÙNG (FIREBASE & LOCAL SESSION)
 // ==========================================================================
 function getCurrentUser() {
     try {
         const str = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
         if (!str) return null;
         const u = JSON.parse(str);
-        return (u && u.username) ? u : null;
+        return (u && (u.userId || u.username)) ? u : null;
     } catch (e) {
         return null;
     }
+}
+
+function getCurrentUserUID() {
+    const user = getCurrentUser();
+    if (!user) return 'guest';
+    return user.userId || ('u_' + (user.username || 'guest').toLowerCase());
 }
 
 function updateHeaderUser(user) {
@@ -133,20 +139,31 @@ const RANK_LEVELS = [
 
 function getUserStats() {
     const user = getCurrentUser();
-    if (!user || !user.username) return { exp: 0, level: 1, rankId: 'gamo' };
+    if (!user) return { exp: 0, level: 1, rankId: 'gamo' };
+    const uid = getCurrentUserUID();
     try {
-        const savedExp = localStorage.getItem('exp_' + user.username);
+        let savedExp = localStorage.getItem('exp_' + uid);
         let exp;
         if (savedExp !== null && savedExp !== undefined) {
             exp = Math.max(0, parseInt(savedExp, 10) || 0);
         } else {
-            const key = 'userStats_' + user.username;
-            const raw = localStorage.getItem(key);
-            if (raw) {
-                const data = JSON.parse(raw);
-                if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
-                    exp = Math.max(0, parseInt(data.exp, 10) || 0);
+            if (user.username) {
+                savedExp = localStorage.getItem('exp_' + user.username);
+                if (savedExp !== null && savedExp !== undefined) {
+                    exp = Math.max(0, parseInt(savedExp, 10) || 0);
+                } else {
+                    const key = 'userStats_' + user.username;
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
+                            exp = Math.max(0, parseInt(data.exp, 10) || 0);
+                        }
+                    }
                 }
+            }
+            if (typeof exp !== 'undefined' && !isNaN(exp)) {
+                localStorage.setItem('exp_' + uid, exp.toString());
             }
         }
         if (typeof exp === 'undefined' || isNaN(exp)) {
@@ -789,10 +806,15 @@ function updateHeaderCardInfo(tabName) {
 // ==========================================================================
 function getUserHistory() {
     const user = getCurrentUser();
-    if (!user || !user.username) return [];
-    const historyKey = 'history_' + user.username;
+    if (!user) return [];
+    const uid = getCurrentUserUID();
+    const historyKey = 'history_' + uid;
     try {
-        const stored = localStorage.getItem(historyKey);
+        let stored = localStorage.getItem(historyKey);
+        if (!stored && user.username) {
+            stored = localStorage.getItem('history_' + user.username);
+            if (stored) localStorage.setItem(historyKey, stored);
+        }
         const list = stored ? JSON.parse(stored) : [];
         return Array.isArray(list) ? list : [];
     } catch (e) {
@@ -972,12 +994,20 @@ function renderHistoryTab() {
 function deleteHistoryItem(id) {
     if (!confirm('Bạn có chắc chắn muốn xóa kết quả lượt thi này khỏi lịch sử cá nhân?')) return;
     const user = getCurrentUser();
-    if (!user || !user.username) return;
+    if (!user) return;
+    const uid = getCurrentUserUID();
 
-    const historyKey = 'history_' + user.username;
+    const historyKey = 'history_' + uid;
     let history = getUserHistory();
     history = history.filter(item => item.id !== id);
     localStorage.setItem(historyKey, JSON.stringify(history));
+    if (user.username) {
+        localStorage.setItem('history_' + user.username, JSON.stringify(history));
+    }
+
+    if (uid !== 'guest' && window.ref && window.set && window.db) {
+        set(ref(db, `users/${uid}/history`), history);
+    }
 
     showToast('Đã xóa lượt thi khỏi lịch sử!');
     renderHistoryTab();
@@ -992,9 +1022,20 @@ function confirmClearHistory() {
 
     if (confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử làm bài kiểm tra của tài khoản này? Hành động này không thể hoàn tác.')) {
         const user = getCurrentUser();
-        if (!user || !user.username) return;
-        const historyKey = 'history_' + user.username;
+        if (!user) return;
+        const uid = getCurrentUserUID();
+        const historyKey = 'history_' + uid;
         localStorage.removeItem(historyKey);
+        if (user.username) {
+            localStorage.removeItem('history_' + user.username);
+        }
+        if (uid !== 'guest') {
+            if (window.FirebaseService) {
+                FirebaseService.clearHistory(uid);
+            } else if (window.ref && window.set && window.db) {
+                set(ref(db, `users/${uid}/history`), []);
+            }
+        }
         showToast('Đã dọn sạch toàn bộ lịch sử thi!');
         renderHistoryTab();
     }
@@ -1016,10 +1057,11 @@ function handleSendFeedback(e) {
     e.preventDefault();
 
     const user = getCurrentUser();
-    if (!user || !user.username) {
+    if (!user) {
         showToast('Vui lòng đăng nhập để gửi góp ý!', 'error');
         return;
     }
+    const uid = getCurrentUserUID();
 
     const typeSelect = document.getElementById('fb-type');
     const titleInput = document.getElementById('fb-title');
@@ -1050,6 +1092,7 @@ function handleSendFeedback(e) {
     // Tạo Object góp ý
     const newFeedback = {
         id: Date.now(),
+        userId: uid,
         username: user.username,
         type: type,
         title: title,
@@ -1057,6 +1100,13 @@ function handleSendFeedback(e) {
         createdAt: dateFormatted,
         status: 'Chờ duyệt'
     };
+
+    // Lưu vào Firebase
+    if (window.FirebaseService) {
+        FirebaseService.sendFeedback(newFeedback);
+    } else if (window.ref && window.set && window.db) {
+        set(ref(db, `feedbacks/${newFeedback.id}`), newFeedback);
+    }
 
     // Lưu vào mảng chung system_feedbacks trên localStorage
     let allFeedbacks = [];
@@ -1084,20 +1134,31 @@ function renderFeedbackTab() {
     renderUserFeedbackList();
 }
 
-function renderUserFeedbackList() {
+async function renderUserFeedbackList() {
     const user = getCurrentUser();
     const container = document.getElementById('user-feedback-list-container');
     if (!container || !user) return;
+    const uid = getCurrentUserUID();
 
     let allFeedbacks = [];
-    try {
-        const raw = localStorage.getItem('system_feedbacks');
-        allFeedbacks = raw ? JSON.parse(raw) : [];
-    } catch (e) {
-        allFeedbacks = [];
+    if (window.FirebaseService) {
+        try {
+            allFeedbacks = await FirebaseService.getFeedbacks();
+        } catch (e) {}
+    }
+    if (!allFeedbacks || allFeedbacks.length === 0) {
+        try {
+            const raw = localStorage.getItem('system_feedbacks');
+            allFeedbacks = raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            allFeedbacks = [];
+        }
     }
 
-    const myFeedbacks = allFeedbacks.filter(f => f.username === user.username);
+    const myFeedbacks = allFeedbacks.filter(f => 
+        (f.userId && f.userId === uid) || 
+        (f.username && user.username && f.username.toLowerCase() === user.username.toLowerCase())
+    );
 
     if (myFeedbacks.length === 0) {
         container.innerHTML = `
@@ -1271,9 +1332,158 @@ function openUserMenuModal() {
 }
 
 // ==========================================================================
-// KIỂM SOÁT PHIÊN ĐĂNG NHẬP ĐƠN THIẾT BỊ (SINGLE-DEVICE / SINGLE SESSION GUARD)
+// KIỂM SOÁT PHIÊN ĐĂNG NHẬP & XÁC THỰC FIREBASE (AUTH GUARD & SINGLE SESSION)
 // ==========================================================================
 let isSessionTerminated = false;
+let isRealtimeWatcherAttached = false;
+
+function setupUserRealtimeWatcher(userId, currentSessionId) {
+    if (isRealtimeWatcherAttached || !userId) return;
+    if (window.ref && window.onValue && window.db) {
+        try {
+            isRealtimeWatcherAttached = true;
+            onValue(ref(db, 'users/' + userId), (snapshot) => {
+                if (!snapshot || !snapshot.exists || !snapshot.exists() || !snapshot.val()) {
+                    isSessionTerminated = true;
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    sessionStorage.clear();
+                    alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                const u = snapshot.val();
+                if (u.activeSession && currentSessionId && u.activeSession !== currentSessionId) {
+                    isSessionTerminated = true;
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    sessionStorage.clear();
+                    alert('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                if (u.username) {
+                    const curr = getCurrentUser();
+                    if (curr && curr.username !== u.username) {
+                        curr.username = u.username;
+                        if (localStorage.getItem('currentUser')) {
+                            localStorage.setItem('currentUser', JSON.stringify(curr));
+                        } else if (sessionStorage.getItem('currentUser')) {
+                            sessionStorage.setItem('currentUser', JSON.stringify(curr));
+                        }
+                        updateHeaderUser(curr);
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn('[setupUserRealtimeWatcher] error:', e);
+        }
+    }
+}
+
+async function checkAuthentication() {
+    if (isSessionTerminated) return false;
+
+    const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+    if (!userStr) {
+        window.location.replace('login.html');
+        return false;
+    }
+
+    let user = null;
+    try {
+        user = JSON.parse(userStr);
+    } catch (e) {
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.clear();
+        window.location.replace('login.html');
+        return false;
+    }
+
+    if (!user || (!user.userId && !user.username) || !user.loginAt) {
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.clear();
+        window.location.replace('login.html');
+        return false;
+    }
+
+    const userId = user.userId || ('u_' + (user.username || '').toLowerCase());
+
+    if (window.FirebaseService || (window.get && window.ref && window.db)) {
+        try {
+            let userData = null;
+            let snapshot = null;
+
+            if (window.get && window.ref && window.db) {
+                const dbRef = ref(db);
+                const userRef = window.child ? child(dbRef, 'users/' + userId) : ref(db, 'users/' + userId);
+                snapshot = await get(userRef);
+                if (snapshot && snapshot.exists && snapshot.exists() && snapshot.val()) {
+                    userData = snapshot.val();
+                }
+            }
+
+            if (!userData && window.FirebaseService) {
+                if (user.userId) {
+                    userData = await FirebaseService.getUserById(user.userId);
+                }
+                if (!userData && user.username) {
+                    userData = await FirebaseService.findUserByUsername(user.username);
+                }
+            }
+
+            if (!userData || (snapshot && snapshot.exists && !snapshot.exists())) {
+                isSessionTerminated = true;
+                localStorage.removeItem('currentUser');
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.clear();
+
+                try {
+                    resetAllProgressUI();
+                } catch (e) {}
+
+                alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
+                window.location.replace('login.html');
+                return false;
+            }
+
+            if (!user.userId && userData.userId) {
+                user.userId = userData.userId;
+            }
+            if (userData.username && user.username !== userData.username) {
+                user.username = userData.username;
+            }
+            if (localStorage.getItem('currentUser')) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+            } else if (sessionStorage.getItem('currentUser')) {
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+            }
+            updateHeaderUser(user);
+
+            if (userData.activeSession && user.sessionId && userData.activeSession !== user.sessionId) {
+                isSessionTerminated = true;
+                localStorage.removeItem('currentUser');
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.clear();
+                alert('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+                window.location.replace('login.html');
+                return false;
+            }
+
+            setupUserRealtimeWatcher(user.userId || userId, user.sessionId);
+            return true;
+        } catch (err) {
+            console.warn('[checkAuthentication] error:', err);
+            return true;
+        }
+    }
+
+    return verifySession();
+}
 
 function verifySession() {
     if (isSessionTerminated) return false;
@@ -1281,6 +1491,10 @@ function verifySession() {
     const user = getCurrentUser();
     if (!user) {
         return false;
+    }
+
+    if (window.FirebaseService || (window.ref && window.db)) {
+        return true;
     }
 
     let users = [];
@@ -1291,20 +1505,18 @@ function verifySession() {
         users = [];
     }
 
-    const matched = users.find(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+    const matched = users.find(u => 
+        (u.userId && user.userId && u.userId === user.userId) ||
+        (u.username && user.username && u.username.toLowerCase() === user.username.toLowerCase())
+    );
+
     if (matched) {
         if (matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
             isSessionTerminated = true;
             forceLogoutSession('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
             return false;
         }
-
-        if (matched.activeSession && !user.sessionId) {
-            isSessionTerminated = true;
-            forceLogoutSession('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
-            return false;
-        }
-    } else {
+    } else if (users.length > 0) {
         isSessionTerminated = true;
         forceLogoutSession('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
         return false;
@@ -1314,10 +1526,14 @@ function verifySession() {
 }
 
 function forceLogoutSession(message) {
+    isSessionTerminated = true;
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.clear();
 
-    resetAllProgressUI();
+    try {
+        resetAllProgressUI();
+    } catch (e) {}
 
     if (message) {
         alert(message);
@@ -1353,19 +1569,24 @@ function resetAllProgressUI() {
     });
 }
 
-function logoutUser() {
+async function logoutUser() {
     const user = getCurrentUser();
-    if (user && user.username) {
+    if (user) {
+        const uid = user.userId || ('u_' + (user.username || '').toLowerCase());
+        if (window.FirebaseService) {
+            try {
+                await FirebaseService.updateUserStatus(uid, 'offline');
+                await FirebaseService.updateUser(uid, { activeSession: null });
+            } catch (e) {}
+        }
         try {
             const users = JSON.parse(localStorage.getItem('userList') || '[]');
-            const idx = users.findIndex(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+            const idx = users.findIndex(u => (u.userId && u.userId === uid) || (u.username && u.username.toLowerCase() === user.username.toLowerCase()));
             if (idx !== -1 && users[idx].activeSession === user.sessionId) {
                 users[idx].activeSession = null;
                 localStorage.setItem('userList', JSON.stringify(users));
             }
-        } catch (e) {
-            // ignore
-        }
+        } catch (e) {}
     }
 
     // 1. Xóa sạch currentUser

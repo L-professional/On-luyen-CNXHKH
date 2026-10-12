@@ -82,6 +82,7 @@ const appState = {
     activeFilter: 'all',      // 'all' | 'single' | 'multiple' | 'drag_drop' | 'true_false' | 'fill_blank'
     currentIndex: 0,          // Vị trí câu hỏi hiện tại trong danh sách đang xem
     userAnswers: {},          // Lưu câu trả lời của người dùng: { [qId]: value }
+    questionResults: {},      // Quản lý trạng thái Đúng/Sai: { [qId]: { isCorrect: boolean } }
     flaggedQuestions: {},     // Đánh dấu câu hỏi: { [qId]: boolean }
     timerSeconds: 30 * 60,    // Đếm ngược (30 phút hoặc 60 phút)
     timerInterval: null,
@@ -91,16 +92,25 @@ const appState = {
 };
 
 // ==========================================================================
-// 1. QUẢN LÝ TIẾN TRÌNH VỚI LOCALSTORAGE (CHỈ DÀNH CHO CHẾ ĐỘ ÔN LUYỆN)
+// 1. QUẢN LÝ TIẾN TRÌNH VỚI FIREBASE & LOCAL CACHE (CHẾ ĐỘ ÔN LUYỆN)
+// Cấu trúc định danh: Sử dụng userId (UID cố định) làm key gốc
 // ==========================================================================
 /**
- * Trả về Storage Key độc lập 1-1 cho tiến trình của từng tài khoản:
- * progress_{username}_topic_{topicId}
+ * Trả về UID của người dùng hiện tại (hoặc u_username nếu phiên cũ)
+ */
+function getCurrentUserUID() {
+    const user = getCurrentUser();
+    if (!user) return 'guest';
+    return user.userId || ('u_' + (user.username || 'guest').toLowerCase());
+}
+
+/**
+ * Trả về Storage Key độc lập 1-1 cho tiến trình của từng tài khoản theo UID:
+ * progress_{userId}_topic_{topicId}
  */
 function getProgressStorageKey(topicId) {
-    const user = getCurrentUser();
-    const username = (user && user.username) ? user.username : 'guest';
-    return `progress_${username}_topic_${topicId}`;
+    const uid = getCurrentUserUID();
+    return `progress_${uid}_topic_${topicId}`;
 }
 
 /**
@@ -118,80 +128,119 @@ function cleanupLegacySharedProgress() {
 }
 
 /**
- * Lưu tiến trình ôn luyện vào localStorage
+ * Lưu tiến trình ôn luyện vào Firebase Realtime Database & Local Cache
  * @param {number|string} topicId - ID của chủ đề (1..6)
  * @param {Object} data - Dữ liệu gồm { currentIndex, answeredQuestions }
  */
 function saveProgress(topicId, data) {
     if (!topicId || topicId === 'mock') return;
+    const uid = getCurrentUserUID();
+    const payload = {
+        topicId: topicId,
+        currentIndex: (typeof data.currentIndex === 'number') ? data.currentIndex : (parseInt(data.currentIndex, 10) || 0),
+        answeredQuestions: data.answeredQuestions || data.userAnswers || {},
+        questionResults: data.questionResults || (appState ? appState.questionResults : {}) || {},
+        updatedAt: Date.now()
+    };
+
+    // 1. Lưu vào Local Cache
     try {
-        const payload = {
-            topicId: topicId,
-            currentIndex: (typeof data.currentIndex === 'number') ? data.currentIndex : (parseInt(data.currentIndex, 10) || 0),
-            answeredQuestions: data.answeredQuestions || data.userAnswers || {},
-            updatedAt: Date.now()
-        };
         localStorage.setItem(getProgressStorageKey(topicId), JSON.stringify(payload));
     } catch (e) {
         console.warn('Lỗi khi lưu tiến trình vào localStorage:', e);
     }
+
+    // 2. Ghi trực tiếp lên Firebase Realtime Database
+    if (uid !== 'guest') {
+        if (window.FirebaseService) {
+            FirebaseService.saveProgress(uid, topicId, payload);
+            FirebaseService.updateUserStatus(uid, 'online');
+        } else if (window.ref && window.set && window.db) {
+            try {
+                set(ref(db, `users/${uid}/progress/${topicId}`), payload);
+            } catch (err) {}
+        }
+    }
 }
 
 /**
- * Đọc tiến trình ôn luyện từ localStorage
+ * Đọc tiến trình ôn luyện từ Local Cache / Firebase
  * @param {number|string} topicId - ID của chủ đề (1..6)
  * @returns {Object|null} { topicId, currentIndex, answeredQuestions, updatedAt }
  */
 function loadProgress(topicId) {
     if (!topicId || topicId === 'mock') return null;
+    const user = getCurrentUser();
+    const uid = getCurrentUserUID();
+
     try {
-        const raw = localStorage.getItem(getProgressStorageKey(topicId));
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-            return parsed;
+        // 1. Đọc từ cache theo UID
+        let raw = localStorage.getItem(getProgressStorageKey(topicId));
+        // Fallback: nếu chưa có theo UID, thử đọc theo username phiên bản cũ
+        if (!raw && user && user.username) {
+            raw = localStorage.getItem(`progress_${user.username}_topic_${topicId}`);
+            if (raw) {
+                localStorage.setItem(getProgressStorageKey(topicId), raw);
+            }
         }
-        return null;
+
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+                return parsed;
+            }
+        }
     } catch (e) {
-        console.warn('Lỗi khi đọc tiến trình từ localStorage:', e);
-        return null;
+        console.warn('Lỗi khi đọc tiến trình từ cache:', e);
     }
+    return null;
 }
 
 /**
- * Xóa tiến trình ôn luyện của một chủ đề (khi người dùng muốn làm lại từ đầu)
+ * Xóa tiến trình ôn luyện của một chủ đề
  */
 function clearProgress(topicId) {
     if (!topicId || topicId === 'mock') return;
+    const uid = getCurrentUserUID();
     try {
         localStorage.removeItem(getProgressStorageKey(topicId));
     } catch (e) {
         console.warn('Lỗi khi xóa tiến trình:', e);
     }
+    if (uid !== 'guest' && window.ref && window.remove && window.db) {
+        try {
+            remove(ref(db, `users/${uid}/progress/${topicId}`));
+        } catch (err) {}
+    }
 }
 
 /**
- * Trả về Storage Key cho TIẾN ĐỘ CAO NHẤT (Max Progress):
- * max_progress_topic{topicId}_{currentUser.username}
+ * Trả về Storage Key cho TIẾN ĐỘ CAO NHẤT (Max Progress) theo UID:
+ * max_progress_topic{topicId}_{userId}
  */
 function getMaxProgressStorageKey(topicId) {
-    const user = getCurrentUser();
-    const username = (user && user.username) ? user.username : 'guest';
-    return `max_progress_topic${topicId}_${username}`;
+    const uid = getCurrentUserUID();
+    return `max_progress_topic${topicId}_${uid}`;
 }
 
 /**
- * Đọc TIẾN ĐỘ CAO NHẤT (Max Progress) từ localStorage
+ * Đọc TIẾN ĐỘ CAO NHẤT (Max Progress) từ Cache / Firebase
  */
 function getMaxProgress(topicId) {
     if (!topicId || topicId === 'mock') return 0;
     const user = getCurrentUser();
-    if (!user || !user.username) return 0;
+    if (!user) return 0;
+
     try {
         const key = getMaxProgressStorageKey(topicId);
         let val = localStorage.getItem(key);
-        if (val === null) {
-            val = localStorage.getItem(`max_progress_topic_${topicId}_${user.username}`);
+        // Fallback kiểm tra key theo username cũ
+        if (val === null && user.username) {
+            val = localStorage.getItem(`max_progress_topic${topicId}_${user.username}`) ||
+                  localStorage.getItem(`max_progress_topic_${topicId}_${user.username}`);
+            if (val !== null) {
+                localStorage.setItem(key, val);
+            }
         }
         if (val !== null && val !== undefined) {
             return Math.min(100, Math.max(0, parseInt(val, 10) || 0));
@@ -203,18 +252,29 @@ function getMaxProgress(topicId) {
 }
 
 /**
- * Cập nhật TIẾN ĐỘ CAO NHẤT (Max Progress) vào localStorage nếu % hiện tại lớn hơn max đã lưu
+ * Cập nhật TIẾN ĐỘ CAO NHẤT (Max Progress) vào Firebase & Cache nếu % hiện tại lớn hơn max đã lưu
  */
 function saveMaxProgress(topicId, percent) {
     if (!topicId || topicId === 'mock') return 0;
     const user = getCurrentUser();
-    if (!user || !user.username) return 0;
+    if (!user) return 0;
+    const uid = getCurrentUserUID();
+
     try {
         const currentMax = getMaxProgress(topicId);
         const newPercent = Math.min(100, Math.max(0, Math.round(percent) || 0));
         if (newPercent > currentMax || localStorage.getItem(getMaxProgressStorageKey(topicId)) === null) {
             const key = getMaxProgressStorageKey(topicId);
             localStorage.setItem(key, newPercent.toString());
+
+            // Ghi lên Firebase Realtime Database
+            if (uid !== 'guest') {
+                if (window.FirebaseService) {
+                    FirebaseService.saveMaxProgress(uid, topicId, newPercent);
+                } else if (window.ref && window.set && window.db) {
+                    set(ref(db, `users/${uid}/maxProgress/${topicId}`), newPercent);
+                }
+            }
             return Math.max(currentMax, newPercent);
         }
         return currentMax;
@@ -296,7 +356,8 @@ function saveCurrentLearnProgress() {
 
     saveProgress(appState.topicId, {
         currentIndex: targetIndex,
-        answeredQuestions: appState.userAnswers
+        answeredQuestions: appState.userAnswers,
+        questionResults: appState.questionResults
     });
 
     // Tính % hiện tại và cập nhật Max Progress nếu lớn hơn
@@ -506,31 +567,41 @@ const RANK_LEVELS = [
 
 /**
  * Đọc thông tin cấp độ và EXP của tài khoản hiện tại từ localStorage
- * Kiểm tra kỹ: const savedExp = localStorage.getItem('exp_' + currentUser.username)
+ * Quản lý điểm kinh nghiệm (EXP) và Cấp độ gắn với UID người dùng
  */
 function getUserStats() {
     const user = getCurrentUser();
-    if (!user || !user.username) {
+    if (!user) {
         return { exp: 0, level: 1, rankId: 'gamo' };
     }
+    const uid = getCurrentUserUID();
     try {
-        const savedExp = localStorage.getItem('exp_' + user.username);
+        // 1. Kiểm tra theo UID
+        let savedExp = localStorage.getItem('exp_' + uid);
         let exp;
         if (savedExp !== null && savedExp !== undefined) {
             exp = Math.max(0, parseInt(savedExp, 10) || 0);
         } else {
-            // Fallback sang userStats_${user.username} nếu chưa có exp_ key
-            const key = 'userStats_' + user.username;
-            const raw = localStorage.getItem(key);
-            if (raw) {
-                const data = JSON.parse(raw);
-                if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
-                    exp = Math.max(0, parseInt(data.exp, 10) || 0);
-                    localStorage.setItem('exp_' + user.username, exp.toString());
+            // Fallback sang username cũ hoặc userStats
+            if (user.username) {
+                savedExp = localStorage.getItem('exp_' + user.username);
+                if (savedExp !== null && savedExp !== undefined) {
+                    exp = Math.max(0, parseInt(savedExp, 10) || 0);
+                } else {
+                    const raw = localStorage.getItem('userStats_' + user.username);
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
+                            exp = Math.max(0, parseInt(data.exp, 10) || 0);
+                        }
+                    }
                 }
             }
+            if (typeof exp !== 'undefined' && !isNaN(exp)) {
+                localStorage.setItem('exp_' + uid, exp.toString());
+            }
         }
-        // CHỈ set bằng 0 khi savedExp là null hoặc undefined
+
         if (typeof exp === 'undefined' || isNaN(exp)) {
             exp = 0;
         }
@@ -546,48 +617,60 @@ function getUserStats() {
 }
 
 /**
- * Khởi tạo/Đồng bộ EXP khi load trang:
- * Kiểm tra kỹ const savedExp = localStorage.getItem('exp_' + currentUser.username)
- * Nếu có savedExp, parse ra số và dùng nó. CHỈ set bằng 0 khi savedExp là null hoặc undefined.
+ * Khởi tạo/Đồng bộ EXP khi load trang từ Firebase & Cache
  */
 function initExp() {
     const user = getCurrentUser();
-    if (!user || !user.username) return;
-    const savedExp = localStorage.getItem('exp_' + user.username);
-    let exp;
-    if (savedExp !== null && savedExp !== undefined) {
-        exp = Math.max(0, parseInt(savedExp, 10) || 0);
-    } else {
-        const raw = localStorage.getItem('userStats_' + user.username);
-        if (raw) {
-            try {
-                const data = JSON.parse(raw);
-                if (data && typeof data.exp !== 'undefined' && data.exp !== null) {
-                    exp = Math.max(0, parseInt(data.exp, 10) || 0);
-                }
-            } catch (e) {}
-        }
+    if (!user) return;
+    const uid = getCurrentUserUID();
+
+    let stats = getUserStats();
+    let exp = stats.exp;
+
+    localStorage.setItem('exp_' + uid, exp.toString());
+    if (user.username) {
+        localStorage.setItem('exp_' + user.username, exp.toString());
     }
-    // CHỈ set bằng 0 khi savedExp là null hoặc undefined
-    if (typeof exp === 'undefined' || isNaN(exp)) {
-        exp = 0;
-    }
-    localStorage.setItem('exp_' + user.username, exp.toString());
     const rank = getRankByExp(exp);
     saveUserStats({ exp: exp, level: rank.level, rankId: rank.id });
+
+    // Đồng bộ tức thời từ Firebase Realtime Database
+    if (uid !== 'guest' && window.FirebaseService) {
+        FirebaseService.getExp(uid).then(fbExp => {
+            if (fbExp > 0 && fbExp !== exp) {
+                localStorage.setItem('exp_' + uid, fbExp.toString());
+                const updatedRank = getRankByExp(fbExp);
+                saveUserStats({ exp: fbExp, level: updatedRank.level, rankId: updatedRank.id });
+                updateHeaderRankDisplay();
+            }
+        }).catch(() => {});
+    }
 }
 
 /**
- * Lưu thông tin cấp độ và EXP vào localStorage
+ * Lưu thông tin cấp độ và EXP vào Firebase & LocalStorage
  */
 function saveUserStats(stats) {
     const user = getCurrentUser();
-    if (!user || !user.username) return;
-    const key = 'userStats_' + user.username;
+    if (!user) return;
+    const uid = getCurrentUserUID();
+
     try {
-        localStorage.setItem(key, JSON.stringify(stats));
+        localStorage.setItem('userStats_' + uid, JSON.stringify(stats));
         if (typeof stats.exp !== 'undefined' && stats.exp !== null) {
-            localStorage.setItem('exp_' + user.username, stats.exp.toString());
+            localStorage.setItem('exp_' + uid, stats.exp.toString());
+            if (user.username) {
+                localStorage.setItem('exp_' + user.username, stats.exp.toString());
+            }
+
+            // Ghi trực tiếp lên Firebase Realtime Database
+            if (uid !== 'guest') {
+                if (window.FirebaseService) {
+                    FirebaseService.saveExp(uid, stats.exp);
+                } else if (window.ref && window.set && window.db) {
+                    set(ref(db, `users/${uid}/exp`), stats.exp);
+                }
+            }
         }
     } catch (e) {
         console.error('Lỗi khi lưu userStats:', e);
@@ -642,9 +725,10 @@ function addExp(points) {
     }
 
     const user = getCurrentUser();
-    if (!user || !user.username) {
+    if (!user) {
         return { gained: 0, leveledUp: false };
     }
+    const uid = getCurrentUserUID();
 
     const stats = getUserStats();
     const oldExp = stats.exp;
@@ -657,8 +741,11 @@ function addExp(points) {
     stats.level = newRank.level;
     stats.rankId = newRank.id;
 
-    // Đảm bảo sau khi cộng điểm, phải lập tức gọi localStorage.setItem('exp_' + currentUser.username, newExp)
-    localStorage.setItem('exp_' + user.username, newExp.toString());
+    // Lưu điểm EXP theo UID và đồng bộ Firebase
+    localStorage.setItem('exp_' + uid, newExp.toString());
+    if (user.username) {
+        localStorage.setItem('exp_' + user.username, newExp.toString());
+    }
     saveUserStats(stats);
 
     // Cập nhật ngay huy hiệu trên Header
@@ -669,7 +756,6 @@ function addExp(points) {
     if (leveledUp) {
         appState.pendingLevelUp = newRank;
 
-        // Tự động push thông báo vào mảng notifications_${currentUser.username}
         const now = new Date();
         const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         addUserNotification({
@@ -1410,14 +1496,202 @@ function openUserMenuModal() {
 }
 
 // ==========================================================================
-// KIỂM SOÁT PHIÊN ĐĂNG NHẬP ĐƠN THIẾT BỊ (SINGLE-DEVICE / SINGLE SESSION GUARD)
+// KIỂM SOÁT PHIÊN ĐĂNG NHẬP & XÁC THỰC FIREBASE (AUTH GUARD & SINGLE SESSION)
 // ==========================================================================
 let isSessionTerminated = false;
+let isRealtimeWatcherAttached = false;
 
 /**
- * Kiểm tra tính hợp lệ của phiên đăng nhập
- * Nếu phát hiện currentUser.sessionId KHÔNG KHỚP với activeSession trong userList
- * -> Ngay lập tức alert, xóa sạch dữ liệu phiên và redirect về login.html
+ * Lắng nghe Realtime trạng thái tài khoản từ Firebase:
+ * Nếu Quản trị viên xóa user hoặc có thiết bị khác đăng nhập -> Đăng xuất ngay lập tức
+ */
+function setupUserRealtimeWatcher(userId, currentSessionId) {
+    if (isRealtimeWatcherAttached || !userId) return;
+    if (window.ref && window.onValue && window.db) {
+        try {
+            isRealtimeWatcherAttached = true;
+            onValue(ref(db, 'users/' + userId), (snapshot) => {
+                // Nếu snapshot không tồn tại hoặc val() rỗng -> Tài khoản thực sự không tồn tại hoặc đã bị xóa
+                if (!snapshot || !snapshot.exists || !snapshot.exists() || !snapshot.val()) {
+                    isSessionTerminated = true;
+                    // 1. TRƯỚC KHI alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    sessionStorage.clear();
+
+                    try {
+                        resetAppState();
+                        resetAllProgressUI();
+                    } catch (e) {}
+
+                    alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
+                    // 2. Sau khi alert xong: Đẩy văng hẳn ra trang đăng nhập
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                const u = snapshot.val();
+
+                // Đè phiên đăng nhập từ nơi khác
+                if (u.activeSession && currentSessionId && u.activeSession !== currentSessionId) {
+                    isSessionTerminated = true;
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('currentUser');
+                    sessionStorage.clear();
+
+                    alert('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                // Đồng bộ tức thời tên đăng nhập mới nếu Admin vừa thực hiện đổi tên
+                if (u.username) {
+                    const curr = getCurrentUser();
+                    if (curr && curr.username !== u.username) {
+                        curr.username = u.username;
+                        if (localStorage.getItem('currentUser')) {
+                            localStorage.setItem('currentUser', JSON.stringify(curr));
+                        } else if (sessionStorage.getItem('currentUser')) {
+                            sessionStorage.setItem('currentUser', JSON.stringify(curr));
+                        }
+                        if (typeof updateHeaderUserPill === 'function') {
+                            updateHeaderUserPill(curr);
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn('[setupUserRealtimeWatcher] error:', e);
+        }
+    }
+}
+
+/**
+ * Kiểm tra xác thực người dùng trên Firebase Realtime Database (Auth Guard & Auto-clear Session)
+ * 1. Tự động dọn dẹp LocalStorage / SessionStorage TRƯỚC KHI alert nếu user không tồn tại hoặc đã bị xóa
+ * 2. Điều hướng an toàn bằng window.location.replace('login.html') sau khi alert
+ */
+async function checkAuthentication() {
+    if (isSessionTerminated) return false;
+
+    const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+    if (!userStr) {
+        window.location.replace('login.html');
+        return false;
+    }
+
+    let user = null;
+    try {
+        user = JSON.parse(userStr);
+    } catch (e) {
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.clear();
+        window.location.replace('login.html');
+        return false;
+    }
+
+    if (!user || (!user.userId && !user.username) || !user.loginAt) {
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.clear();
+        window.location.replace('login.html');
+        return false;
+    }
+
+    const userId = user.userId || ('u_' + (user.username || '').toLowerCase());
+
+    // Kiểm tra trực tiếp trên Firebase Realtime Database
+    if (window.FirebaseService || (window.get && window.ref && window.db)) {
+        try {
+            let userData = null;
+            let snapshot = null;
+
+            if (window.get && window.ref && window.db) {
+                const dbRef = ref(db);
+                const userRef = window.child ? child(dbRef, 'users/' + userId) : ref(db, 'users/' + userId);
+                snapshot = await get(userRef);
+                if (snapshot && snapshot.exists && snapshot.exists() && snapshot.val()) {
+                    userData = snapshot.val();
+                }
+            }
+
+            // Fallback qua FirebaseService nếu get() theo userId không tìm thấy (hỗ trợ session cũ chỉ có username)
+            if (!userData && window.FirebaseService) {
+                if (user.userId) {
+                    userData = await FirebaseService.getUserById(user.userId);
+                }
+                if (!userData && user.username) {
+                    userData = await FirebaseService.findUserByUsername(user.username);
+                }
+            }
+
+            // NẾU KẾT QUẢ TRẢ VỀ LÀ NULL HOẶC !snapshot.exists()
+            // (nghĩa là tài khoản thực sự không tồn tại hoặc đã bị xóa trên Firebase)
+            if (!userData || (snapshot && snapshot.exists && !snapshot.exists())) {
+                isSessionTerminated = true;
+
+                // 1. TRƯỚC KHI gọi hàm alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
+                localStorage.removeItem('currentUser');
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.clear();
+
+                try {
+                    resetAppState();
+                    resetAllProgressUI();
+                } catch (e) {}
+
+                // Thông báo cho người dùng
+                alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
+
+                // 2. Sau khi báo alert xong, dùng window.location.replace('login.html') để đẩy user văng hẳn ra trang đăng nhập
+                window.location.replace('login.html');
+                return false;
+            }
+
+            // Tài khoản hợp lệ -> Cập nhật cấu trúc user mới nếu session cũ chưa có userId
+            if (!user.userId && userData.userId) {
+                user.userId = userData.userId;
+            }
+            if (userData.username && user.username !== userData.username) {
+                user.username = userData.username;
+            }
+            if (localStorage.getItem('currentUser')) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+            } else if (sessionStorage.getItem('currentUser')) {
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+            }
+            if (typeof updateHeaderUserPill === 'function') {
+                updateHeaderUserPill(user);
+            }
+
+            // Kiểm tra bị đè phiên đăng nhập từ thiết bị khác (Single Device Guard)
+            if (userData.activeSession && user.sessionId && userData.activeSession !== user.sessionId) {
+                isSessionTerminated = true;
+                localStorage.removeItem('currentUser');
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.clear();
+
+                alert('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
+                window.location.replace('login.html');
+                return false;
+            }
+
+            // Thiết lập Realtime Watcher để theo dõi nếu bị Admin xóa khi đang dùng
+            setupUserRealtimeWatcher(user.userId || userId, user.sessionId);
+
+            return true;
+        } catch (err) {
+            console.warn('[checkAuthentication] Lỗi khi kết nối Firebase:', err);
+            return true;
+        }
+    }
+
+    return verifySession();
+}
+
+/**
+ * Kiểm tra tính hợp lệ của phiên đăng nhập (Dành cho Fallback Offline & Heartbeat)
  */
 function verifySession() {
     if (isSessionTerminated) return false;
@@ -1427,7 +1701,12 @@ function verifySession() {
         return false;
     }
 
-    // Đọc danh sách tài khoản từ localStorage để đối chiếu activeSession
+    // Nếu đang kết nối Firebase, việc kiểm tra user tồn tại do checkAuthentication & Realtime Watcher phụ trách
+    if (window.FirebaseService || (window.ref && window.db)) {
+        return true;
+    }
+
+    // Fallback Offline: Đọc danh sách tài khoản từ localStorage
     let users = [];
     try {
         const str = localStorage.getItem('userList');
@@ -1436,23 +1715,18 @@ function verifySession() {
         users = [];
     }
 
-    const matched = users.find(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+    const matched = users.find(u => 
+        (u.userId && user.userId && u.userId === user.userId) ||
+        (u.username && user.username && u.username.toLowerCase() === user.username.toLowerCase())
+    );
+
     if (matched) {
-        // Nếu user trong hệ thống đã có activeSession và khác với sessionId hiện tại
         if (matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
             isSessionTerminated = true;
             forceLogoutSession('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
             return false;
         }
-
-        // Nếu user trong hệ thống có activeSession mới mà phiên này không có sessionId
-        if (matched.activeSession && !user.sessionId) {
-            isSessionTerminated = true;
-            forceLogoutSession('Tài khoản của bạn vừa được đăng nhập ở một nơi khác. Vui lòng đăng nhập lại!');
-            return false;
-        }
-    } else {
-        // Tài khoản đã bị quản trị viên xóa khỏi hệ thống
+    } else if (users.length > 0) {
         isSessionTerminated = true;
         forceLogoutSession('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
         return false;
@@ -1465,16 +1739,24 @@ function verifySession() {
  * Cưỡng chế đăng xuất khi bị đè phiên hoặc tài khoản bị vô hiệu hóa
  */
 function forceLogoutSession(message) {
+    isSessionTerminated = true;
+
+    // 1. TRƯỚC KHI alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.clear();
 
-    resetAppState();
-    resetAllProgressUI();
+    try {
+        resetAppState();
+        resetAllProgressUI();
+    } catch (e) {}
 
+    // Thông báo cho người dùng nếu có
     if (message) {
         alert(message);
     }
 
+    // 2. Điều hướng an toàn bằng replace đẩy hẳn ra login.html
     window.location.replace('login.html');
 }
 
@@ -1490,6 +1772,7 @@ function resetAppState() {
     appState.activeFilter = 'all';
     appState.currentIndex = 0;
     appState.userAnswers = {};
+    appState.questionResults = {};
     appState.flaggedQuestions = {};
     appState.timerSeconds = 30 * 60;
     if (appState.timerInterval) {
@@ -1547,24 +1830,30 @@ function resetAllProgressUI() {
 
 /**
  * Đăng xuất an toàn:
- * 1. Xóa currentUser
- * 2. Reset appState
- * 3. Reset giao diện về 0%
- * 4. window.location.replace('login.html')
+ * 1. Chuyển status = 'offline' trên Firebase
+ * 2. Xóa currentUser
+ * 3. Reset appState
+ * 4. Reset giao diện về 0%
+ * 5. window.location.replace('login.html')
  */
-function logoutUser() {
+async function logoutUser() {
     const user = getCurrentUser();
-    if (user && user.username) {
+    if (user) {
+        const uid = user.userId || ('u_' + (user.username || '').toLowerCase());
+        if (window.FirebaseService) {
+            try {
+                await FirebaseService.updateUserStatus(uid, 'offline');
+                await FirebaseService.updateUser(uid, { activeSession: null });
+            } catch (e) {}
+        }
         try {
             const users = JSON.parse(localStorage.getItem('userList') || '[]');
-            const idx = users.findIndex(u => u.username && u.username.toLowerCase() === user.username.toLowerCase());
+            const idx = users.findIndex(u => (u.userId && u.userId === uid) || (u.username && u.username.toLowerCase() === user.username.toLowerCase()));
             if (idx !== -1 && users[idx].activeSession === user.sessionId) {
                 users[idx].activeSession = null;
                 localStorage.setItem('userList', JSON.stringify(users));
             }
-        } catch (e) {
-            // ignore
-        }
+        } catch (e) {}
     }
 
     // 1. Xóa sạch currentUser
@@ -1613,21 +1902,21 @@ setInterval(() => {
 // ==========================================================================
 // KHỞI ĐỘNG ỨNG DỤNG
 // ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initUserStorage();
     initExp();
     cleanupLegacySharedProgress();
 
-    // Bắt buộc phải đăng nhập mới được ôn luyện và sử dụng hệ thống
-    const user = getCurrentUser();
-    if (!user) {
-        window.location.replace('login.html');
+    // 1. Kiểm tra xác thực phiên đăng nhập qua Firebase (Auth Guard & Auto-clear Session)
+    const isAuthValid = await checkAuthentication();
+    if (!isAuthValid) {
         return;
     }
 
-    // Kiểm tra tính hợp lệ của phiên làm việc (Single Device Guard)
-    if (!verifySession()) {
-        return;
+    // Thiết lập Presence Tracking cho người dùng trên Firebase
+    const user = getCurrentUser();
+    if (user && user.userId && window.FirebaseService) {
+        FirebaseService.setupPresence(user.userId);
     }
 
     checkAdminMenu();
@@ -1858,6 +2147,7 @@ async function loadTopicData(topicId) {
             const saved = loadProgress(topicId);
             if (saved) {
                 appState.userAnswers = saved.answeredQuestions || saved.userAnswers || {};
+                appState.questionResults = saved.questionResults || {};
 
                 // Migration: chuyển các câu trả lời phân mảnh cũ (331, 332...) sang câu grouped_true_false
                 appState.allQuestions.forEach(item => {
@@ -1875,6 +2165,17 @@ async function loadTopicData(topicId) {
                     }
                 });
 
+                // Đồng bộ lại questionResults cho mọi câu đã hoàn tất
+                appState.allQuestions.forEach(item => {
+                    const uAns = appState.userAnswers[item.id];
+                    if (isQuestionGraded(item, uAns)) {
+                        if (!appState.questionResults) appState.questionResults = {};
+                        appState.questionResults[item.id] = {
+                            isCorrect: isAnswerCorrectForQuestion(item, uAns)
+                        };
+                    }
+                });
+
                 // Tự động nhảy đến đúng câu hỏi (currentIndex) đang làm dở lần trước
                 let savedIndex = parseInt(saved.currentIndex, 10);
                 if (!isNaN(savedIndex) && savedIndex >= 0 && savedIndex < grouped.length) {
@@ -1885,6 +2186,7 @@ async function loadTopicData(topicId) {
             } else {
                 appState.currentIndex = 0;
                 appState.userAnswers = {};
+                appState.questionResults = {};
             }
 
             appState.flaggedQuestions = {};
@@ -1898,6 +2200,7 @@ async function loadTopicData(topicId) {
             // Chế độ Thi thử (mode=test): Không lưu và không phục hồi tiến trình dở dang
             appState.currentIndex = 0;
             appState.userAnswers = {};
+            appState.questionResults = {};
             appState.flaggedQuestions = {};
             initTestMode();
         }
@@ -1946,6 +2249,7 @@ async function loadMockExamData() {
     appState.filteredQuestions = examQuestions;
     appState.currentIndex = 0;
     appState.userAnswers = {};
+    appState.questionResults = {};
     appState.flaggedQuestions = {};
     appState.timerSeconds = 60 * 60; // 60 phút
     appState.isSubmitted = false;
@@ -2051,6 +2355,61 @@ function scrollToActiveLearnQuestion() {
     }, 40);
 }
 
+/**
+ * Lấy hoặc tính toán trạng thái Đúng/Sai của câu hỏi trong chế độ Ôn luyện
+ * @param {Object} q Câu hỏi
+ * @param {*} [overrideAns] Đáp án tùy chọn nếu vừa được cập nhật
+ * @returns {{ isAnswered: boolean, isCorrect: boolean }}
+ */
+function getQuestionCorrectness(q, overrideAns) {
+    if (!q) return { isAnswered: false, isCorrect: false };
+    const uAns = (overrideAns !== undefined) ? overrideAns : (appState.userAnswers ? appState.userAnswers[q.id] : undefined);
+    const isAnswered = isQuestionGraded(q, uAns);
+    if (!isAnswered) {
+        if (appState.questionResults) delete appState.questionResults[q.id];
+        return { isAnswered: false, isCorrect: false };
+    }
+    if (appState.questionResults && appState.questionResults[q.id] !== undefined && overrideAns === undefined) {
+        return { isAnswered: true, isCorrect: appState.questionResults[q.id].isCorrect === true };
+    }
+    const isCorr = isAnswerCorrectForQuestion(q, uAns);
+    if (!appState.questionResults) appState.questionResults = {};
+    appState.questionResults[q.id] = { isCorrect: isCorr };
+    return { isAnswered: true, isCorrect: isCorr };
+}
+
+/**
+ * Đồng bộ ngay lập tức icon trạng thái của câu hỏi trên Sidebar (Danh sách câu hỏi) mà không cần reload trang
+ * @param {number|string} qId ID của câu hỏi
+ */
+function updateLearnSidebarQuestionStatus(qId) {
+    if (!qId) return;
+    const q = (appState.allQuestions || []).find(item => String(item.id) === String(qId));
+    if (!q) return;
+    const qStatus = getQuestionCorrectness(q);
+    const statusBox = document.getElementById(`lql-status-${q.id}`);
+    const itemEl = document.querySelector(`.lql-item[data-qid="${q.id}"]`);
+
+    if (statusBox) {
+        if (!qStatus.isAnswered) {
+            statusBox.innerHTML = `<i class="fa-solid fa-chevron-right lql-chevron"></i>`;
+            if (itemEl) itemEl.classList.remove('answered-correct', 'answered-wrong');
+        } else if (qStatus.isCorrect === true) {
+            statusBox.innerHTML = `<i class="fas fa-check-circle text-green-500" style="color: #10b981; font-size: 13px;" title="Đúng"></i>`;
+            if (itemEl) {
+                itemEl.classList.add('answered-correct');
+                itemEl.classList.remove('answered-wrong');
+            }
+        } else {
+            statusBox.innerHTML = `<i class="fas fa-times-circle text-red-500" style="color: #ef4444; font-size: 13px;" title="Sai"></i>`;
+            if (itemEl) {
+                itemEl.classList.add('answered-wrong');
+                itemEl.classList.remove('answered-correct');
+            }
+        }
+    }
+}
+
 // Cột trái: Danh sách câu hỏi
 function renderLearnQuestionsList() {
     const listEl = document.getElementById('learn-questions-list');
@@ -2064,8 +2423,7 @@ function renderLearnQuestionsList() {
     listEl.innerHTML = appState.filteredQuestions.map((q, idx) => {
         const qInfo = detectQuestionType(q);
         const isActive = idx === appState.currentIndex;
-        const userAns = appState.userAnswers[q.id];
-        const isAnswered = isQuestionGraded(q, userAns);
+        const qStatus = getQuestionCorrectness(q);
 
         let badgeClass = 'single';
         if (qInfo.id === 'multiple') badgeClass = 'multiple';
@@ -2073,16 +2431,27 @@ function renderLearnQuestionsList() {
         if (qInfo.id === 'true_false') badgeClass = 'tf';
         if (qInfo.id === 'fill_blank') badgeClass = 'fill';
 
+        let statusIconHtml = `<i class="fa-solid fa-chevron-right lql-chevron"></i>`;
+        let itemStatusClass = '';
+
+        if (qStatus.isAnswered) {
+            if (qStatus.isCorrect === true) {
+                statusIconHtml = `<i class="fas fa-check-circle text-green-500" style="color: #10b981; font-size: 13px;" title="Đúng"></i>`;
+                itemStatusClass = 'answered-correct';
+            } else {
+                statusIconHtml = `<i class="fas fa-times-circle text-red-500" style="color: #ef4444; font-size: 13px;" title="Sai"></i>`;
+                itemStatusClass = 'answered-wrong';
+            }
+        }
+
         return `
-            <div class="lql-item ${isActive ? 'active' : ''}" onclick="goToLearnQuestion(${idx})">
+            <div class="lql-item ${isActive ? 'active' : ''} ${itemStatusClass}" data-qid="${q.id}" onclick="goToLearnQuestion(${idx})">
                 <div class="lql-left">
                     <span class="lql-num">${idx + 1}</span>
                     <span class="lql-badge ${badgeClass}">${qInfo.label}</span>
                 </div>
-                <div>
-                    ${isAnswered 
-                        ? `<i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 12px;" title="Đã trả lời"></i>` 
-                        : `<i class="fa-solid fa-chevron-right lql-chevron"></i>`}
+                <div class="lql-status-box" id="lql-status-${q.id}">
+                    ${statusIconHtml}
                 </div>
             </div>
         `;
@@ -2165,11 +2534,10 @@ function renderLearnCurrentQuestionDetail() {
     if (stripEl) {
         stripEl.innerHTML = appState.filteredQuestions.map((item, i) => {
             const isActive = i === appState.currentIndex;
-            const uAns = appState.userAnswers[item.id];
+            const qStatus = getQuestionCorrectness(item);
             let statusClass = '';
-            if (isQuestionGraded(item, uAns)) {
-                const isCorr = isAnswerCorrectForQuestion(item, uAns);
-                statusClass = isCorr ? 'answered-correct' : 'answered-wrong';
+            if (qStatus.isAnswered) {
+                statusClass = qStatus.isCorrect ? 'answered-correct' : 'answered-wrong';
             }
             return `<button type="button" class="mq-pill ${isActive ? 'active' : ''} ${statusClass}" onclick="goToLearnQuestion(${i})">${i + 1}</button>`;
         }).join('');
@@ -2600,8 +2968,17 @@ function onDragDropAnswerUpdated(q) {
         const wasGradedBefore = appState._dragGradedCache && appState._dragGradedCache[q.id];
         const isGradedNow = isQuestionGraded(q, appState.userAnswers[q.id]);
 
+        if (isGradedNow) {
+            const isCorr = isAnswerCorrectForQuestion(q, appState.userAnswers[q.id]);
+            if (!appState.questionResults) appState.questionResults = {};
+            appState.questionResults[q.id] = { isCorrect: isCorr };
+        } else {
+            if (appState.questionResults) delete appState.questionResults[q.id];
+        }
+
         saveCurrentLearnProgress();
         renderLearnWorkspace();
+        updateLearnSidebarQuestionStatus(q.id);
 
         if (isGradedNow && !wasGradedBefore) {
             if (!appState._dragGradedCache) appState._dragGradedCache = {};
@@ -2779,8 +3156,17 @@ function handleSelectGroupedTfAnswer(qId, subIdx, choiceVal) {
         const wasGradedBefore = appState._dragGradedCache && appState._dragGradedCache[q.id];
         const isGradedNow = isQuestionGraded(q, appState.userAnswers[q.id]);
 
+        if (isGradedNow) {
+            const isCorr = isAnswerCorrectForQuestion(q, userChoices);
+            if (!appState.questionResults) appState.questionResults = {};
+            appState.questionResults[q.id] = { isCorrect: isCorr };
+        } else {
+            if (appState.questionResults) delete appState.questionResults[q.id];
+        }
+
         saveCurrentLearnProgress();
         renderLearnWorkspace();
+        updateLearnSidebarQuestionStatus(q.id);
 
         // CHỈ kích hoạt chấm điểm và cộng EXP khi và chỉ khi user đã tick đủ số lượng đáp án yêu cầu (cả 4 ý)
         if (isGradedNow && !wasGradedBefore) {
@@ -3169,10 +3555,20 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
             else delete matches[optionIndex];
             appState.userAnswers[q.id] = matches;
 
+            const isGradedNow = isQuestionGraded(q, matches);
+            if (isGradedNow) {
+                const isCorr = isAnswerCorrectForQuestion(q, matches);
+                if (!appState.questionResults) appState.questionResults = {};
+                appState.questionResults[q.id] = { isCorrect: isCorr };
+            } else {
+                if (appState.questionResults) delete appState.questionResults[q.id];
+            }
+
             saveCurrentLearnProgress();
             renderLearnWorkspace();
+            updateLearnSidebarQuestionStatus(q.id);
 
-            if (isQuestionGraded(q, appState.userAnswers[q.id])) {
+            if (isGradedNow) {
                 const expResult = addExp(2);
                 showFloatingExpBadge(2);
                 if (expResult.leveledUp) {
@@ -3201,14 +3597,24 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
 
             if (selectedAnswers.length === 0) {
                 delete appState.userAnswers[q.id];
+                if (appState.questionResults) delete appState.questionResults[q.id];
             } else {
                 appState.userAnswers[q.id] = selectedAnswers;
+            }
+
+            if (selectedAnswers.length >= requiredCount) {
+                const isCorr = isAnswerCorrectForQuestion(q, selectedAnswers);
+                if (!appState.questionResults) appState.questionResults = {};
+                appState.questionResults[q.id] = { isCorrect: isCorr };
+            } else {
+                if (appState.questionResults) delete appState.questionResults[q.id];
             }
 
             // Lưu tiến trình dở dang
             saveCurrentLearnProgress();
             // Re-render UI
             renderLearnWorkspace();
+            updateLearnSidebarQuestionStatus(q.id);
 
             // CHỈ KÍCH HOẠT HÀM CHẤM ĐIỂM KHI VÀ CHỈ KHI user đã tick đủ số lượng đáp án yêu cầu
             if (selectedAnswers.length >= requiredCount) {
@@ -3224,9 +3630,13 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
 
         // Single choice / true_false / fill_blank: Click là chấm điểm ngay (giữ nguyên logic cũ)
         appState.userAnswers[q.id] = optionIndex;
+        const isCorr = isAnswerCorrectForQuestion(q, optionIndex);
+        if (!appState.questionResults) appState.questionResults = {};
+        appState.questionResults[q.id] = { isCorrect: isCorr };
 
         saveCurrentLearnProgress();
         renderLearnWorkspace();
+        updateLearnSidebarQuestionStatus(q.id);
 
         // GAMIFICATION: Chế độ Ôn luyện (mode=learn): Mỗi khi tick chọn 1 đáp án -> +2 EXP
         const expResult = addExp(2);
@@ -3351,13 +3761,14 @@ function submitTest() {
     const earnedExp = (correctCount * 10) + (isPerfect ? 50 : 0);
     const expResult = addExp(earnedExp);
 
-    // === ĐỘC LẬP DỮ LIỆU (DATA ISOLATION): LƯU KẾT QUẢ THI THEO USER HIỆN TẠI ===
+    // === ĐỘC LẬP DỮ LIỆU (DATA ISOLATION): LƯU KẾT QUẢ THI THEO UID TRÊN FIREBASE ===
     const currentUser = getCurrentUser();
-    if (currentUser && currentUser.username) {
-        const historyKey = 'history_' + currentUser.username;
+    if (currentUser) {
+        const uid = getCurrentUserUID();
+        const historyKey = 'history_' + uid;
         let historyList = [];
         try {
-            const rawHistory = localStorage.getItem(historyKey);
+            const rawHistory = localStorage.getItem(historyKey) || (currentUser.username ? localStorage.getItem('history_' + currentUser.username) : null);
             historyList = rawHistory ? JSON.parse(rawHistory) : [];
             if (!Array.isArray(historyList)) historyList = [];
         } catch (e) {
@@ -3387,6 +3798,18 @@ function submitTest() {
 
         historyList.unshift(historyItem);
         localStorage.setItem(historyKey, JSON.stringify(historyList));
+        if (currentUser.username) {
+            localStorage.setItem('history_' + currentUser.username, JSON.stringify(historyList));
+        }
+
+        // Lưu trực tiếp lên Firebase Realtime Database
+        if (uid !== 'guest') {
+            if (window.FirebaseService) {
+                FirebaseService.addHistory(uid, historyItem);
+            } else if (window.ref && window.set && window.db) {
+                set(ref(db, `users/${uid}/history`), historyList);
+            }
+        }
     }
 
     // Hiển thị Popup kết quả
@@ -3801,31 +4224,43 @@ function toggleMobileQuestionSheet() {
 }
 
 function isAnswerCorrectForQuestion(q, userAns) {
-    if (userAns === undefined || userAns === null) return false;
+    if (!q || userAns === undefined || userAns === null) return false;
     const correctList = getQuestionCorrectAnswers(q);
     const qInfo = detectQuestionType(q);
+
+    // Dạng câu hỏi Đúng / Sai gom nhóm (4 ý): phải đúng hoàn toàn mọi ý
     if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
         if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        if (Object.keys(userAns).length < q.subQuestions.length) return false;
         let isAll = true;
         q.subQuestions.forEach((sq, idx) => {
             const correctVal = Array.isArray(sq.correctAnswers) ? sq.correctAnswers[0] : (sq.correctAnswer ?? 0);
-            if (userAns[idx] !== correctVal) isAll = false;
+            if (Number(userAns[idx]) !== Number(correctVal)) isAll = false;
         });
         return isAll;
     }
+
+    // Dạng kéo thả ghép cặp: phải đúng hoàn toàn tất cả các cặp
     if (qInfo.id === 'drag_drop' && q.pairs) {
+        if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        if (Object.keys(userAns).length < q.pairs.length) return false;
         let isAll = true;
         q.pairs.forEach((p, idx) => {
             if (userAns[idx] !== p.dropZone) isAll = false;
         });
         return isAll;
     }
+
+    // Dạng trắc nghiệm nhiều đáp án: phải chọn đúng HOÀN TOÀN tất cả các đáp án yêu cầu
     if (qInfo.id === 'multiple' || correctList.length > 1) {
         if (!Array.isArray(userAns)) return false;
-        const s1 = [...userAns].sort().join(',');
-        const s2 = [...correctList].sort().join(',');
+        if (userAns.length !== correctList.length) return false;
+        const s1 = [...userAns].map(Number).sort((a, b) => a - b).join(',');
+        const s2 = [...correctList].map(Number).sort((a, b) => a - b).join(',');
         return s1 === s2;
     }
+
+    // Trắc nghiệm 1 đáp án / Đúng Sai 2 lựa chọn / Điền từ
     const correctAns = correctList[0];
-    return userAns === correctAns;
+    return Number(userAns) === Number(correctAns);
 }

@@ -286,10 +286,11 @@
                                 <tr>
                                     <th style="width: 50px; text-align: center;">STT</th>
                                     <th>Tên đăng nhập</th>
+                                    <th style="width: 170px;" class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                     <th style="width: 170px;">Mật khẩu</th>
                                     <th style="width: 140px;">Vai trò</th>
                                     <th style="width: 130px;">Ngày tạo</th>
-                                    <th style="width: 200px; text-align: center;">Hành động</th>
+                                    <th style="min-width: 250px; text-align: center;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="user-table-body">
@@ -402,6 +403,10 @@
         </button>
     </nav>
 
+    <!-- Firebase SDK (v9 compat) & Cấu hình dịch vụ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="admin.js"></script>
 </body>
 
