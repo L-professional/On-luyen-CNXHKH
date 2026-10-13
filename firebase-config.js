@@ -22,6 +22,7 @@ const firebaseConfig = {
 // Khởi tạo Firebase SDK
 let fbApp = null;
 let fbDb = null;
+let fbAuth = null;
 let isFirebaseReady = false;
 
 try {
@@ -32,8 +33,11 @@ try {
             fbApp = firebase.app();
         }
         fbDb = firebase.database();
+        if (typeof firebase.auth === 'function') {
+            fbAuth = firebase.auth();
+        }
         isFirebaseReady = true;
-        console.log('[Firebase] Đã khởi tạo Firebase Realtime Database thành công.');
+        console.log('[Firebase] Đã khởi tạo Firebase Realtime Database & Auth thành công.');
     } else {
         console.warn('[Firebase] Thư viện Firebase SDK chưa được tải qua thẻ <script>. Sẽ sử dụng chế độ lưu dự phòng.');
     }
@@ -41,8 +45,21 @@ try {
     console.warn('[Firebase] Khởi tạo Firebase gặp sự cố (sử dụng chế độ fallback):', err.message);
 }
 
-// 2. Xuất các hàm Modular API theo yêu cầu kỹ thuật: ref, set, get, update, remove
+// 2. Xuất các hàm Modular API theo yêu cầu kỹ thuật: ref, set, get, update, remove, auth, signInWithPopup
 window.db = fbDb;
+window.auth = fbAuth;
+window.GoogleAuthProvider = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth.GoogleAuthProvider) ? firebase.auth.GoogleAuthProvider : class GoogleAuthProvider {
+    constructor() { this.parameters = {}; }
+    setCustomParameters(params) { Object.assign(this.parameters, params); }
+};
+
+window.signInWithPopup = async function (authInstance, provider) {
+    const targetAuth = authInstance || window.auth || (typeof firebase !== 'undefined' && firebase.auth ? firebase.auth() : null);
+    if (targetAuth && typeof targetAuth.signInWithPopup === 'function') {
+        return await targetAuth.signInWithPopup(provider);
+    }
+    throw new Error('Dịch vụ Firebase Auth chưa được nạp hoặc chưa sẵn sàng.');
+};
 
 window.ref = function (dbInstance, path) {
     const targetDb = dbInstance || fbDb;

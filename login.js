@@ -236,54 +236,116 @@ function togglePasswordVisibility(inputId, btn) {
 }
 window.togglePasswordVisibility = togglePasswordVisibility;
 
-async function handleSocialLogin(provider) {
-    const rememberMeCheckbox = document.getElementById('remember-me');
-    const rememberMe = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
+async function handleGoogleLogin() {
+    showToast('Đang kết nối tài khoản Google...', 'info');
+    try {
+        const authInstance = window.auth || (typeof firebase !== 'undefined' && firebase.auth ? firebase.auth() : null);
+        const ProviderClass = window.GoogleAuthProvider || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth.GoogleAuthProvider ? firebase.auth.GoogleAuthProvider : null);
 
-    showToast(`Đang kết nối tài khoản ${provider}... (Tính năng Demo)`, 'success');
-    setTimeout(async () => {
-        const username = `User_${provider}`;
-        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-        let user = window.FirebaseService ? await FirebaseService.findUserByUsername(username) : null;
-        let userId = user ? user.userId : (window.FirebaseService ? FirebaseService.generateUID() : 'u_' + Date.now());
-
-        if (!user && window.FirebaseService) {
-            user = await FirebaseService.registerUser({
-                username: username,
-                password: '',
-                role: 'user'
-            });
-            userId = user.userId;
+        if (!authInstance || !ProviderClass) {
+            throw new Error('Dịch vụ xác thực Firebase Auth chưa sẵn sàng.');
         }
 
-        const token = sessionId;
-        const currentSession = {
-            userId: userId,
-            username: username,
-            role: 'user',
-            loginAt: Date.now(),
-            sessionId: token,
-            sessionToken: token
-        };
+        const provider = new ProviderClass();
+        if (typeof provider.setCustomParameters === 'function') {
+            provider.setCustomParameters({ prompt: 'select_account' });
+        }
 
-        update(ref(db, 'users/' + userId), {
+        let result;
+        if (typeof window.signInWithPopup === 'function') {
+            result = await window.signInWithPopup(authInstance, provider);
+        } else {
+            result = await authInstance.signInWithPopup(provider);
+        }
+
+        const user = result.user;
+        if (!user) {
+            throw new Error('Không nhận được thông tin người dùng từ Google.');
+        }
+
+        const uid = user.uid;
+        const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Google User');
+        const email = user.email || '';
+        const photoURL = user.photoURL || '';
+
+        // Tạo sessionToken ngẫu nhiên bảo mật Single Session
+        const token = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+
+        // Lấy vai trò (role) từ Firebase RTDB nếu đã tồn tại, mặc định là 'user'
+        let role = 'user';
+        const userRef = window.ref(window.db, 'users/' + uid);
+        try {
+            const snap = await window.get(userRef);
+            const val = snap && typeof snap.val === 'function' ? snap.val() : (snap ? snap : null);
+            if (val && val.role) {
+                role = val.role;
+            }
+        } catch (e) {
+            console.warn('[Google Auth] Không đọc được user cũ, sử dụng role mặc định:', e);
+        }
+
+        const userData = {
+            userId: uid,
+            username: displayName,
+            email: email,
+            photoURL: photoURL,
+            role: role,
             sessionToken: token,
             activeSession: token,
             status: 'online',
+            lastLogin: Date.now(),
             lastActive: Date.now()
-        })
-          .then(() => {
-              localStorage.setItem('currentUser', JSON.stringify(currentSession));
-              localStorage.setItem('sessionToken', token);
-              sessionStorage.removeItem('currentUser');
-              sessionStorage.removeItem('sessionToken');
-              window.location.replace('index.html');
-          })
-          .catch(err => {
-              console.error(err);
-              alert("Lỗi mạng!");
-          });
-    }, 300);
+        };
+
+        // BẮT BUỘC await để chờ Firebase Realtime Database cập nhật xong sessionToken
+        await window.update(userRef, userData);
+
+        // Lưu session vào localStorage
+        const sessionData = {
+            userId: uid,
+            username: displayName,
+            email: email,
+            photoURL: photoURL,
+            role: role,
+            sessionId: token,
+            sessionToken: token,
+            loginAt: Date.now()
+        };
+        localStorage.setItem('currentUser', JSON.stringify(sessionData));
+        localStorage.setItem('sessionToken', token);
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('sessionToken');
+
+        showToast(`Đăng nhập thành công! Xin chào ${displayName}`, 'success');
+
+        // Redirect đồng bộ vào trang hệ thống theo phân quyền
+        setTimeout(() => {
+            if (role.toLowerCase() === 'admin') {
+                window.location.replace('admin.html');
+            } else {
+                window.location.replace('index.html');
+            }
+        }, 500);
+
+    } catch (err) {
+        console.error('[Google Auth Error]:', err);
+        if (err.code === 'auth/popup-closed-by-user') {
+            showToast('Bạn đã đóng cửa sổ đăng nhập Google.', 'warning');
+        } else if (err.code === 'auth/cancelled-popup-request') {
+            // Popup mới đã mở
+        } else if (err.code === 'auth/network-request-failed') {
+            showToast('Lỗi mạng khi kết nối Google. Vui lòng thử lại!', 'error');
+        } else {
+            showToast('Đăng nhập Google thất bại: ' + (err.message || 'Lỗi không xác định'), 'error');
+        }
+    }
+}
+
+async function handleSocialLogin(provider) {
+    if (provider === 'Google') {
+        return await handleGoogleLogin();
+    }
+    showToast(`Đang kết nối ${provider}...`, 'info');
 }
 
 function handleForgotPassword() {
@@ -532,17 +594,37 @@ function showToast(message, type = 'success') {
     }, 2400);
 }
 
-function handleOtherAccountChoice() {
-    const choice = prompt('CHỌN TÀI KHOẢN MẪU:\n1. Quản trị viên (Admin / Loclsct2006)\n2. Người học (Loc / 123)\n\nNhập 1 hoặc 2:');
-    if (choice === '1') {
-        quickFillAccount('Admin', 'Loclsct2006');
-        const form = document.querySelector('.login-card form') || document.querySelector('form');
-        if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
-    } else if (choice === '2') {
-        quickFillAccount('Loc', '123');
-        const form = document.querySelector('.login-card form') || document.querySelector('form');
-        if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
+function openMockAccountModal() {
+    const modal = document.getElementById('mockAccountModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
     }
+}
+
+function closeMockAccountModal() {
+    const modal = document.getElementById('mockAccountModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+function selectMockAccount(username, password) {
+    closeMockAccountModal();
+    quickFillAccount(username, password);
+    const form = document.getElementById('login-form') || document.querySelector('.login-card form') || document.querySelector('form');
+    if (form) {
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+    }
+}
+
+function handleOtherAccountChoice() {
+    openMockAccountModal();
 }
 
 function initFormBindings() {
@@ -612,12 +694,12 @@ function initFormBindings() {
     // Các nút Social Login (Google & Tài khoản khác)
     const googleBtn = document.getElementById('btn-social-google');
     if (googleBtn) {
-        googleBtn.addEventListener('click', () => handleSocialLogin('Google'));
+        googleBtn.addEventListener('click', handleGoogleLogin);
     }
 
     const otherBtn = document.getElementById('btn-social-other');
     if (otherBtn) {
-        otherBtn.addEventListener('click', () => handleOtherAccountChoice());
+        otherBtn.addEventListener('click', handleOtherAccountChoice);
     }
 
     const socialBtns = document.querySelectorAll('.social-btn');
@@ -626,10 +708,45 @@ function initFormBindings() {
         btn.addEventListener('click', () => {
             const text = btn.innerText.trim();
             if (text.includes('Google')) {
-                handleSocialLogin('Google');
+                handleGoogleLogin();
             } else {
                 handleOtherAccountChoice();
             }
         });
+    });
+
+    // Sự kiện tương tác cho Modal Chọn tài khoản mẫu (mockAccountModal)
+    const closeMockModalBtn = document.getElementById('closeMockAccountModal');
+    if (closeMockModalBtn) {
+        closeMockModalBtn.addEventListener('click', closeMockAccountModal);
+    }
+
+    const mockModal = document.getElementById('mockAccountModal');
+    if (mockModal) {
+        mockModal.addEventListener('click', (e) => {
+            if (e.target === mockModal) {
+                closeMockAccountModal();
+            }
+        });
+    }
+
+    const mockAdminBtn = document.getElementById('btn-login-mock-admin');
+    if (mockAdminBtn) {
+        mockAdminBtn.addEventListener('click', () => {
+            selectMockAccount('Admin', 'Loclsct2006');
+        });
+    }
+
+    const mockStudentBtn = document.getElementById('btn-login-mock-student');
+    if (mockStudentBtn) {
+        mockStudentBtn.addEventListener('click', () => {
+            selectMockAccount('Loc', '123');
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeMockAccountModal();
+        }
     });
 }

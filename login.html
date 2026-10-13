@@ -11,8 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
+        .hidden {
+            display: none !important;
+        }
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
@@ -612,10 +617,10 @@
                             <span>Hoặc đăng nhập bằng</span>
                         </div>
 
-                        <!-- Social Login (2 nút: Google, Tài khoản khác) -->
-                        <div class="social-login-group">
-                            <button type="button" class="social-btn" id="btn-social-google">
-                                <svg width="17" height="17" viewBox="0 0 18 18">
+                        <!-- Social Login (2 nút: Google và Tài khoản khác) -->
+                        <div class="grid grid-cols-2 gap-3.5 mb-6 w-full social-login-group">
+                            <button type="button" class="social-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all font-medium text-[13px] text-gray-700 w-full cursor-pointer" id="btn-social-google">
+                                <svg width="18" height="18" viewBox="0 0 18 18">
                                     <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
                                     <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
                                     <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
@@ -624,8 +629,8 @@
                                 <span>Google</span>
                             </button>
 
-                            <button type="button" class="social-btn" id="btn-social-other">
-                                <i class="fa-solid fa-user-gear" style="color: #64748b; font-size: 14px;"></i>
+                            <button type="button" class="social-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all font-medium text-[13px] text-gray-700 w-full cursor-pointer" id="btn-social-other">
+                                <i class="fa-solid fa-users-gear text-slate-500 text-sm"></i>
                                 <span>Tài khoản khác</span>
                             </button>
                         </div>
@@ -703,8 +708,77 @@
 
     </div>
 
+    <!-- ==================== MODAL CHỌN TÀI KHOẢN MẪU (id="mockAccountModal") ==================== -->
+    <div id="mockAccountModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-200">
+        <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all" style="background: #ffffff; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-slate-50/60" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid #f1f5f9; background-color: #f8fafc;">
+                <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shadow-sm" style="width: 40px; height: 40px; border-radius: 10px; background-color: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-800 leading-tight" style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0;">Đăng nhập tài khoản mẫu</h3>
+                        <p class="text-xs text-gray-500 mt-0.5" style="font-size: 12px; color: #64748b; margin: 2px 0 0 0;">Chọn quyền tài khoản để thử nghiệm hệ thống</p>
+                    </div>
+                </div>
+                <button type="button" id="closeMockAccountModal" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors cursor-pointer" style="background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 18px; padding: 6px 10px; border-radius: 8px;" title="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (2 Nút bấm nổi bật) -->
+            <div class="p-5 space-y-3.5" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <!-- Nút 1: Đăng nhập quyền Admin -->
+                <button type="button" id="btn-login-mock-admin" class="w-full flex items-center justify-between p-4 rounded-xl border border-red-200 bg-red-50/40 hover:bg-red-50 hover:border-red-400 transition-all cursor-pointer group text-left" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 12px; border: 1.5px solid #fecaca; background: #fff5f5; cursor: pointer; text-align: left; transition: all 0.2s;">
+                    <div class="flex items-center gap-3.5" style="display: flex; align-items: center; gap: 14px;">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center font-bold text-lg shadow-sm" style="width: 44px; height: 44px; border-radius: 10px; background: #dc2626; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-900 text-sm flex items-center gap-2" style="font-size: 14px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                                <span>Đăng nhập quyền Admin</span>
+                                <span class="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 9999px;">Quản trị</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-0.5" style="font-size: 12px; color: #64748b; margin-top: 3px;">Tài khoản: <strong>Admin</strong> • Mật khẩu: <strong>Loclsct2006</strong></div>
+                        </div>
+                    </div>
+                    <span class="text-red-500 text-sm font-semibold group-hover:translate-x-1 transition-transform" style="color: #dc2626; font-size: 14px;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </span>
+                </button>
+
+                <!-- Nút 2: Đăng nhập quyền Học viên -->
+                <button type="button" id="btn-login-mock-student" class="w-full flex items-center justify-between p-4 rounded-xl border border-blue-200 bg-blue-50/40 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group text-left" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 12px; border: 1.5px solid #bfdbfe; background: #f0f7ff; cursor: pointer; text-align: left; transition: all 0.2s;">
+                    <div class="flex items-center gap-3.5" style="display: flex; align-items: center; gap: 14px;">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm" style="width: 44px; height: 44px; border-radius: 10px; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-900 text-sm flex items-center gap-2" style="font-size: 14px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                                <span>Đăng nhập quyền Học viên</span>
+                                <span class="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold" style="font-size: 11px; background: #dbeafe; color: #1d4ed8; padding: 2px 8px; border-radius: 9999px;">User</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-0.5" style="font-size: 12px; color: #64748b; margin-top: 3px;">Tài khoản: <strong>Loc</strong> • Mật khẩu: <strong>123</strong></div>
+                        </div>
+                    </div>
+                    <span class="text-blue-500 text-sm font-semibold group-hover:translate-x-1 transition-transform" style="color: #2563eb; font-size: 14px;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="py-3 px-5 bg-gray-50 text-center border-t border-gray-100 text-xs text-gray-400" style="padding: 12px 20px; background-color: #f8fafc; text-align: center; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
+                Nhấp nút đóng hoặc click ra ngoài để hủy bỏ
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK (v9 compat) & Cấu hình dịch vụ -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
     <!-- Script xử lý đăng nhập & logic phiên làm việc -->
