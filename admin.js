@@ -95,25 +95,7 @@ function verifyAdminSession(user) {
         return false;
     }
 
-    const localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken') || user.sessionToken || user.sessionId;
-    const users = getUserList();
-    const matched = users.find(u => 
-        (u.userId && user.userId && u.userId === user.userId) || 
-        (u.username && user.username && u.username.toLowerCase() === user.username.toLowerCase())
-    );
-
-    if (matched) {
-        const targetToken = matched.sessionToken || matched.activeSession;
-        if (targetToken && localToken && targetToken !== localToken) {
-            isAdminSessionTerminated = true;
-            forceLogoutAdmin('Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!');
-            return false;
-        }
-    } else if (users.length > 0) {
-        isAdminSessionTerminated = true;
-        forceLogoutAdmin('Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!');
-        return false;
-    }
+    // KIM BÀI MIỄN TỬ: Admin không bị check Single Session
     return true;
 }
 

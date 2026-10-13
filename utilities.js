@@ -1340,15 +1340,23 @@ let isRealtimeWatcherAttached = false;
 function setupUserRealtimeWatcher(userId) {
     if (isRealtimeWatcherAttached || isSessionTerminated) return;
 
-    if (!userId) {
+    let currentUser = null;
+    try {
         const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
-        if (!userStr) return;
-        try {
-            const parsed = JSON.parse(userStr);
-            userId = parsed ? (parsed.userId || ('u_' + (parsed.username || '').toLowerCase())) : null;
-        } catch (e) {
-            return;
-        }
+        if (!userStr) return; // Khách thì bỏ qua
+        currentUser = JSON.parse(userStr);
+    } catch (e) {
+        return;
+    }
+    if (!currentUser) return; // Khách thì bỏ qua
+
+    // KIM BÀI MIỄN TỬ: Admin không bị check Single Session
+    if (currentUser.role === 'Admin' || currentUser.role === 'admin' || currentUser.username === 'Admin' || currentUser.username === 'admin' || currentUser.isRoot) {
+        return;
+    }
+
+    if (!userId) {
+        userId = currentUser.userId || ('u_' + (currentUser.username || '').toLowerCase());
     }
     if (!userId) return;
 
@@ -1429,6 +1437,11 @@ async function checkAuthentication() {
         return false;
     }
 
+    // KIM BÀI MIỄN TỬ: Admin không bị check Single Session
+    if (user.role === 'Admin' || user.role === 'admin' || user.username === 'Admin' || user.username === 'admin' || user.isRoot) {
+        return true;
+    }
+
     const userId = user.userId || ('u_' + (user.username || '').toLowerCase());
 
     if (window.FirebaseService || (window.get && window.ref && window.db)) {
@@ -1499,6 +1512,11 @@ function verifySession() {
     const user = getCurrentUser();
     if (!user) {
         return false;
+    }
+
+    // KIM BÀI MIỄN TỬ: Admin không bị check Single Session
+    if (user.role === 'Admin' || user.role === 'admin' || user.username === 'Admin' || user.username === 'admin' || user.isRoot) {
+        return true;
     }
 
     if (window.FirebaseService || (window.ref && window.db)) {
