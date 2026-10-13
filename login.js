@@ -24,11 +24,17 @@ const DEFAULT_USERS = [
     }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+function initLoginApp() {
     ensureUserListInitialized();
     checkExistingSession();
     initFormBindings();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLoginApp);
+} else {
+    initLoginApp();
+}
 
 async function ensureUserListInitialized() {
     if (window.FirebaseService) {
@@ -210,18 +216,25 @@ function quickFillAccount(username, password) {
 }
 
 function togglePasswordVisibility(inputId, btn) {
-    const input = document.getElementById(inputId);
+    const input = typeof inputId === 'string' ? (document.getElementById(inputId) || document.getElementById('login-password') || document.getElementById('password')) : inputId;
     if (!input || !btn) return;
 
     const icon = btn.querySelector('i');
     if (input.type === 'password') {
         input.type = 'text';
-        if (icon) icon.className = 'fa-regular fa-eye-slash';
+        if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     } else {
         input.type = 'password';
-        if (icon) icon.className = 'fa-regular fa-eye';
+        if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
     }
 }
+window.togglePasswordVisibility = togglePasswordVisibility;
 
 async function handleSocialLogin(provider) {
     const rememberMeCheckbox = document.getElementById('remember-me');
@@ -558,21 +571,27 @@ function initFormBindings() {
     }
 
     // Toggle ẩn/hiện mật khẩu form đăng nhập
-    const eyeBtn = document.querySelector('#login-view .input-icon-right') || document.querySelector('.input-icon-right');
-    if (eyeBtn) {
-        eyeBtn.style.cursor = 'pointer';
-        eyeBtn.addEventListener('click', () => {
-            const pwdInput = getPasswordInput();
-            if (!pwdInput) return;
-            const icon = eyeBtn.querySelector('i');
-            if (pwdInput.type === 'password') {
-                pwdInput.type = 'text';
+    const togglePasswordBtn = document.getElementById('togglePassword') || document.querySelector('#login-view .input-icon-right') || document.querySelector('.input-icon-right');
+    if (togglePasswordBtn) {
+        togglePasswordBtn.classList.remove('pointer-events-none');
+        togglePasswordBtn.classList.add('cursor-pointer');
+        togglePasswordBtn.style.cursor = 'pointer';
+        togglePasswordBtn.style.pointerEvents = 'auto';
+
+        togglePasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const passwordInput = document.getElementById('login-password') || document.getElementById('password') || getPasswordInput();
+            if (!passwordInput) return;
+
+            const icon = togglePasswordBtn.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
                 if (icon) {
                     icon.classList.remove('fa-eye-slash');
                     icon.classList.add('fa-eye');
                 }
             } else {
-                pwdInput.type = 'password';
+                passwordInput.type = 'password';
                 if (icon) {
                     icon.classList.remove('fa-eye');
                     icon.classList.add('fa-eye-slash');

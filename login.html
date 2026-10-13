@@ -207,6 +207,12 @@
             align-items: center;
             justify-content: center;
             transition: color 0.2s;
+            pointer-events: auto;
+        }
+
+        .cursor-pointer {
+            cursor: pointer !important;
+            pointer-events: auto !important;
         }
 
         .input-icon-right:hover {
@@ -579,8 +585,8 @@
                         <!-- Trường 2: Mật khẩu -->
                         <div class="input-group">
                             <i class="fa-solid fa-lock input-icon-left"></i>
-                            <input type="password" id="login-password" class="input-field" placeholder="Mật khẩu" required autocomplete="current-password" style="padding-right: 45px;">
-                            <span class="input-icon-right" onclick="togglePasswordVisibility('login-password', this)" title="Ẩn/Hiện mật khẩu">
+                            <input type="password" id="login-password" name="password" class="input-field" placeholder="Mật khẩu" required autocomplete="current-password" style="padding-right: 45px;">
+                            <span id="togglePassword" class="input-icon-right cursor-pointer" title="Ẩn/Hiện mật khẩu" style="cursor: pointer; pointer-events: auto;">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </span>
                         </div>
@@ -667,7 +673,7 @@
                         <div class="input-group">
                             <i class="fa-solid fa-lock input-icon-left"></i>
                             <input type="password" id="reg-password" class="input-field" placeholder="Mật khẩu (tối thiểu 4 ký tự)" required autocomplete="new-password" style="padding-right: 45px;">
-                            <span class="input-icon-right" onclick="togglePasswordVisibility('reg-password', this)" title="Ẩn/Hiện mật khẩu">
+                            <span class="input-icon-right cursor-pointer" onclick="togglePasswordVisibility('reg-password', this)" title="Ẩn/Hiện mật khẩu" style="cursor: pointer; pointer-events: auto;">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </span>
                         </div>
@@ -676,7 +682,7 @@
                         <div class="input-group">
                             <i class="fa-solid fa-shield-halved input-icon-left"></i>
                             <input type="password" id="reg-confirm-password" class="input-field" placeholder="Nhập lại mật khẩu" required autocomplete="new-password" style="padding-right: 45px;">
-                            <span class="input-icon-right" onclick="togglePasswordVisibility('reg-confirm-password', this)" title="Ẩn/Hiện mật khẩu">
+                            <span class="input-icon-right cursor-pointer" onclick="togglePasswordVisibility('reg-confirm-password', this)" title="Ẩn/Hiện mật khẩu" style="cursor: pointer; pointer-events: auto;">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </span>
                         </div>
