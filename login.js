@@ -609,15 +609,24 @@ function initFormBindings() {
         });
     }
 
-    // Các nút Social Login
+    // Các nút Social Login (Google & Tài khoản khác)
+    const googleBtn = document.getElementById('btn-social-google');
+    if (googleBtn) {
+        googleBtn.addEventListener('click', () => handleSocialLogin('Google'));
+    }
+
+    const otherBtn = document.getElementById('btn-social-other');
+    if (otherBtn) {
+        otherBtn.addEventListener('click', () => handleOtherAccountChoice());
+    }
+
     const socialBtns = document.querySelectorAll('.social-btn');
     socialBtns.forEach(btn => {
+        if (btn.id === 'btn-social-google' || btn.id === 'btn-social-other') return;
         btn.addEventListener('click', () => {
             const text = btn.innerText.trim();
             if (text.includes('Google')) {
                 handleSocialLogin('Google');
-            } else if (text.includes('Microsoft')) {
-                handleSocialLogin('Microsoft');
             } else {
                 handleOtherAccountChoice();
             }
