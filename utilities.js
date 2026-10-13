@@ -1358,10 +1358,12 @@ function setupUserRealtimeWatcher(userId) {
             onValue(ref(db, 'users/' + userId), (snapshot) => {
                 if (isSessionTerminated) return;
 
-                const userData = (snapshot && snapshot.exists && snapshot.exists()) ? snapshot.val() : null;
                 const localToken = localStorage.getItem('sessionToken');
+                const dbToken = snapshot.val() ? snapshot.val().sessionToken : null;
 
-                if (!userData) {
+                // Code phòng thủ (Defensive Programming):
+                // Chỉ thực hiện lệnh KICK khi thỏa mãn: Có dbToken trên mạng VÀ dbToken KHÁC localToken ở máy
+                if (dbToken && localToken && dbToken !== localToken) {
                     isSessionTerminated = true;
                     localStorage.removeItem('currentUser');
                     localStorage.removeItem('sessionToken');
@@ -1372,23 +1374,11 @@ function setupUserRealtimeWatcher(userId) {
                     return;
                 }
 
-                const fbToken = userData.sessionToken || userData.activeSession;
-
-                if (fbToken && localToken && fbToken !== localToken) {
-                    isSessionTerminated = true;
-                    localStorage.removeItem('currentUser');
-                    localStorage.removeItem('sessionToken');
-                    sessionStorage.removeItem('currentUser');
-                    sessionStorage.removeItem('sessionToken');
-                    alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
-                    window.location.replace('login.html');
-                    return;
-                }
-
-                if (userData.username) {
+                const val = snapshot.val();
+                if (val && val.username) {
                     const curr = getCurrentUser();
-                    if (curr && curr.username !== userData.username) {
-                        curr.username = userData.username;
+                    if (curr && curr.username !== val.username) {
+                        curr.username = val.username;
                         if (localStorage.getItem('currentUser')) {
                             localStorage.setItem('currentUser', JSON.stringify(curr));
                         } else if (sessionStorage.getItem('currentUser')) {
@@ -1464,25 +1454,10 @@ async function checkAuthentication() {
                 }
             }
 
-            if (!userData || (snapshot && snapshot.exists && !snapshot.exists())) {
-                isSessionTerminated = true;
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('sessionToken');
-                sessionStorage.removeItem('currentUser');
-                sessionStorage.removeItem('sessionToken');
-                alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
-                window.location.replace('login.html');
-                return false;
-            }
+            const localToken = localStorage.getItem('sessionToken');
+            const dbToken = userData ? userData.sessionToken : null;
 
-            const fbToken = userData.sessionToken || userData.activeSession;
-            let localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-            if (!localToken && fbToken && (user.sessionToken || user.sessionId) === fbToken) {
-                localToken = fbToken;
-                localStorage.setItem('sessionToken', localToken);
-            }
-
-            if (fbToken && localToken && fbToken !== localToken) {
+            if (dbToken && localToken && dbToken !== localToken) {
                 isSessionTerminated = true;
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('sessionToken');

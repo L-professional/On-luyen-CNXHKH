@@ -1532,25 +1532,12 @@ function setupUserRealtimeWatcher(userId) {
             onValue(ref(db, 'users/' + userId), (snapshot) => {
                 if (isSessionTerminated) return;
 
-                const userData = (snapshot && snapshot.exists && snapshot.exists()) ? snapshot.val() : null;
                 const localToken = localStorage.getItem('sessionToken');
+                const dbToken = snapshot.val() ? snapshot.val().sessionToken : null;
 
-                // Nếu Firebase trả về null do tài khoản bị xóa
-                if (!userData) {
-                    isSessionTerminated = true;
-                    localStorage.removeItem('currentUser');
-                    localStorage.removeItem('sessionToken');
-                    sessionStorage.removeItem('currentUser');
-                    sessionStorage.removeItem('sessionToken');
-                    alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
-                    window.location.replace('login.html');
-                    return;
-                }
-
-                const fbToken = userData.sessionToken || userData.activeSession;
-
-                // Nếu Token trên Firebase KHÁC Token dưới localStorage
-                if (fbToken && localToken && fbToken !== localToken) {
+                // Code phòng thủ (Defensive Programming):
+                // Chỉ thực hiện lệnh KICK (đăng xuất) khi thỏa mãn đủ 2 điều kiện: Có tồn tại dbToken trên mạng VÀ dbToken đó KHÁC với localToken ở máy.
+                if (dbToken && localToken && dbToken !== localToken) {
                     isSessionTerminated = true;
                     localStorage.removeItem('currentUser');
                     localStorage.removeItem('sessionToken');
@@ -1562,10 +1549,11 @@ function setupUserRealtimeWatcher(userId) {
                 }
 
                 // Đồng bộ tức thời tên đăng nhập mới nếu Admin vừa thực hiện đổi tên
-                if (userData.username) {
+                const val = snapshot.val();
+                if (val && val.username) {
                     const curr = getCurrentUser();
-                    if (curr && curr.username !== userData.username) {
-                        curr.username = userData.username;
+                    if (curr && curr.username !== val.username) {
+                        curr.username = val.username;
                         if (localStorage.getItem('currentUser')) {
                             localStorage.setItem('currentUser', JSON.stringify(curr));
                         } else if (sessionStorage.getItem('currentUser')) {
@@ -1648,28 +1636,11 @@ async function checkAuthentication() {
                 }
             }
 
-            // NẾU KẾT QUẢ TRẢ VỀ LÀ NULL HOẶC !snapshot.exists()
-            // (nghĩa là tài khoản thực sự không tồn tại hoặc đã bị xóa trên Firebase)
-            if (!userData || (snapshot && snapshot.exists && !snapshot.exists())) {
-                isSessionTerminated = true;
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('sessionToken');
-                sessionStorage.removeItem('currentUser');
-                sessionStorage.removeItem('sessionToken');
-                alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
-                window.location.replace('login.html');
-                return false;
-            }
+            const localToken = localStorage.getItem('sessionToken');
+            const dbToken = userData ? userData.sessionToken : null;
 
-            const fbToken = userData.sessionToken || userData.activeSession;
-            let localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-            if (!localToken && fbToken && (user.sessionToken || user.sessionId) === fbToken) {
-                localToken = fbToken;
-                localStorage.setItem('sessionToken', localToken);
-            }
-
-            // Kiểm tra bị đè phiên đăng nhập từ thiết bị khác (Single Session Guard)
-            if (fbToken && localToken && fbToken !== localToken) {
+            // Code phòng thủ: Chỉ kick khi có dbToken trên mạng VÀ dbToken khác localToken ở máy
+            if (dbToken && localToken && dbToken !== localToken) {
                 isSessionTerminated = true;
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('sessionToken');
@@ -1681,19 +1652,21 @@ async function checkAuthentication() {
             }
 
             // Tài khoản hợp lệ -> Cập nhật cấu trúc user mới nếu session cũ chưa có userId
-            if (!user.userId && userData.userId) {
-                user.userId = userData.userId;
-            }
-            if (userData.username && user.username !== userData.username) {
-                user.username = userData.username;
-            }
-            if (localStorage.getItem('currentUser')) {
-                localStorage.setItem('currentUser', JSON.stringify(user));
-            } else if (sessionStorage.getItem('currentUser')) {
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-            }
-            if (typeof updateHeaderUserPill === 'function') {
-                updateHeaderUserPill(user);
+            if (userData) {
+                if (!user.userId && userData.userId) {
+                    user.userId = userData.userId;
+                }
+                if (userData.username && user.username !== userData.username) {
+                    user.username = userData.username;
+                }
+                if (localStorage.getItem('currentUser')) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                } else if (sessionStorage.getItem('currentUser')) {
+                    sessionStorage.setItem('currentUser', JSON.stringify(user));
+                }
+                if (typeof updateHeaderUserPill === 'function') {
+                    updateHeaderUserPill(user);
+                }
             }
 
             // Thiết lập Realtime Watcher để theo dõi liên tục bằng onValue()

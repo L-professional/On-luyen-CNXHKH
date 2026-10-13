@@ -5,6 +5,7 @@
 
 const DEFAULT_USERS = [
     {
+        userId: 'u_admin_root_2026',
         username: 'Admin',
         password: 'Loclsct2006',
         role: 'admin',
@@ -13,6 +14,7 @@ const DEFAULT_USERS = [
         activeSession: null
     },
     {
+        userId: 'u_student_loc_2026',
         username: 'Loc',
         password: '123',
         role: 'user',
@@ -126,27 +128,53 @@ async function handleLogin(e) {
 
     const users = await getUserList();
 
-    // Tìm kiếm tài khoản phù hợp
-    const matchedUser = users.find(u => 
+    // Tìm kiếm tài khoản phù hợp (ưu tiên Firebase, dự phòng DEFAULT_USERS)
+    let matchedUser = users.find(u => 
         u.username && u.username.toLowerCase() === username.toLowerCase() && 
         u.password === password
     );
 
+    if (!matchedUser) {
+        matchedUser = DEFAULT_USERS.find(u => 
+            u.username && u.username.toLowerCase() === username.toLowerCase() && 
+            u.password === password
+        );
+    }
+
     if (matchedUser) {
-        const userId = matchedUser.userId || ('u_' + matchedUser.username.toLowerCase());
+        // Đảm bảo lấy đúng UID trên Firebase cho Admin và User
+        let userId = matchedUser.userId;
+        if (!userId && window.FirebaseService) {
+            try {
+                const fbUser = await FirebaseService.findUserByUsername(matchedUser.username);
+                if (fbUser && fbUser.userId) {
+                    userId = fbUser.userId;
+                }
+            } catch (err) {}
+        }
+        if (!userId) {
+            if (matchedUser.username && matchedUser.username.toLowerCase() === 'admin') {
+                userId = 'u_admin_root_2026';
+            } else if (matchedUser.username && matchedUser.username.toLowerCase() === 'loc') {
+                userId = 'u_student_loc_2026';
+            } else {
+                userId = 'u_' + (matchedUser.username || 'user').toLowerCase();
+            }
+        }
+
+        // BẮT BUỘC: Dù là Admin (hardcode/Firebase) hay User thường, đều phải sinh sessionToken ngẫu nhiên
         const token = Date.now().toString() + Math.random().toString(36).substr(2);
 
         const userData = {
             userId: userId,
             username: matchedUser.username,
-            role: matchedUser.role,
+            role: matchedUser.role || (matchedUser.username.toLowerCase() === 'admin' ? 'admin' : 'user'),
             loginAt: Date.now(),
             sessionId: token,
             sessionToken: token
         };
 
-        // BƯỚC 1: Sửa lỗi bất đồng bộ (Race Condition) khi Đăng nhập
-        // Gọi hàm update lên Firebase và BẮT BUỘC dùng .then() để chờ Firebase xác nhận lưu xong
+        // Phải Update sessionToken đó lên Firebase của user/admin đó
         update(ref(db, 'users/' + userId), {
             sessionToken: token,
             activeSession: token,
@@ -154,7 +182,7 @@ async function handleLogin(e) {
             lastActive: Date.now()
         })
           .then(() => {
-              // CHỈ KHI Firebase trả về thành công thì mới được phép lưu vào localStorage và gọi lệnh window.location.replace()
+              // Lưu sessionToken đó vào localStorage cùng với currentUser rồi mới cho phép window.location.replace()
               localStorage.setItem('currentUser', JSON.stringify(userData));
               localStorage.setItem('sessionToken', token);
               sessionStorage.removeItem('currentUser');
