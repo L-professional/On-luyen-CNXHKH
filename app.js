@@ -1496,78 +1496,76 @@ function openUserMenuModal() {
 }
 
 // ==========================================================================
-// KIỂM SOÁT PHIÊN ĐĂNG NHẬP & XÁC THỰC FIREBASE (AUTH GUARD & SINGLE SESSION)
+// KIỂM SOÁT PHIÊN ĐĂNG NHẬP & BẢO VỆ SINGLE SESSION TOÀN CỤC (GLOBAL SCOPE)
 // ==========================================================================
 let isSessionTerminated = false;
 let isRealtimeWatcherAttached = false;
 
 /**
- * Lắng nghe Realtime trạng thái tài khoản từ Firebase:
- * Nếu Quản trị viên xóa user hoặc có thiết bị khác đăng nhập -> Đăng xuất ngay lập tức
+ * BƯỚC 2: Listener bảo vệ Single Session toàn cục (Global Scope)
+ * Khi trang load, nếu có currentUser, lập tức kiểm tra sessionToken trên Firebase.
+ * Nếu Token trên Firebase KHÁC Token dưới localStorage (hoặc Firebase trả về null do tài khoản bị xóa),
+ * BẮT BUỘC thực thi:
+ *   localStorage.removeItem('currentUser');
+ *   localStorage.removeItem('sessionToken');
+ *   alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
+ *   window.location.replace('login.html');
  */
 function setupUserRealtimeWatcher(userId) {
-    if (isRealtimeWatcherAttached || !userId) return;
+    if (isRealtimeWatcherAttached || isSessionTerminated) return;
+
+    if (!userId) {
+        const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+        if (!userStr) return;
+        try {
+            const parsed = JSON.parse(userStr);
+            userId = parsed ? (parsed.userId || ('u_' + (parsed.username || '').toLowerCase())) : null;
+        } catch (e) {
+            return;
+        }
+    }
+    if (!userId) return;
+
     if (window.ref && window.onValue && window.db) {
         try {
             isRealtimeWatcherAttached = true;
             onValue(ref(db, 'users/' + userId), (snapshot) => {
-                // Nếu snapshot không tồn tại hoặc val() rỗng -> Tài khoản thực sự không tồn tại hoặc đã bị xóa
-                if (!snapshot || !snapshot.exists || !snapshot.exists() || !snapshot.val()) {
+                if (isSessionTerminated) return;
+
+                const userData = (snapshot && snapshot.exists && snapshot.exists()) ? snapshot.val() : null;
+                const localToken = localStorage.getItem('sessionToken');
+
+                // Nếu Firebase trả về null do tài khoản bị xóa
+                if (!userData) {
                     isSessionTerminated = true;
-                    // 1. TRƯỚC KHI alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
                     localStorage.removeItem('currentUser');
                     localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('currentUser');
                     sessionStorage.removeItem('sessionToken');
-                    sessionStorage.clear();
-
-                    try {
-                        resetAppState();
-                        resetAllProgressUI();
-                    } catch (e) {}
-
-                    alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
-                    // 2. Sau khi alert xong: Đẩy văng hẳn ra trang đăng nhập
+                    alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
                     window.location.replace('login.html');
                     return;
                 }
 
-                const data = snapshot.val();
+                const fbToken = userData.sessionToken || userData.activeSession;
 
-                // Lấy data.sessionToken từ Firebase và sessionToken từ localStorage của máy hiện tại
-                const fbToken = data.sessionToken || data.activeSession;
-                const localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-
-                // Logic Cốt lõi: Nếu data.sessionToken KHÁC với sessionToken lưu ở localStorage
-                // (nghĩa là user đã đăng nhập ở một máy khác và tạo ra token mới đè lên Firebase)
+                // Nếu Token trên Firebase KHÁC Token dưới localStorage
                 if (fbToken && localToken && fbToken !== localToken) {
                     isSessionTerminated = true;
-
-                    // 1. Hiện thông báo
-                    alert("Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!");
-
-                    // 2. Xóa thông tin đăng nhập
                     localStorage.removeItem('currentUser');
                     localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('currentUser');
                     sessionStorage.removeItem('sessionToken');
-                    sessionStorage.clear();
-
-                    try {
-                        resetAppState();
-                        resetAllProgressUI();
-                    } catch (e) {}
-
-                    // 3. Điều hướng ra ngoài
+                    alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
                     window.location.replace('login.html');
                     return;
                 }
 
                 // Đồng bộ tức thời tên đăng nhập mới nếu Admin vừa thực hiện đổi tên
-                if (data.username) {
+                if (userData.username) {
                     const curr = getCurrentUser();
-                    if (curr && curr.username !== data.username) {
-                        curr.username = data.username;
+                    if (curr && curr.username !== userData.username) {
+                        curr.username = userData.username;
                         if (localStorage.getItem('currentUser')) {
                             localStorage.setItem('currentUser', JSON.stringify(curr));
                         } else if (sessionStorage.getItem('currentUser')) {
@@ -1585,10 +1583,11 @@ function setupUserRealtimeWatcher(userId) {
     }
 }
 
+// Tự động kích hoạt lắng nghe Single Session ngay khi trang load
+setupUserRealtimeWatcher();
+
 /**
  * Kiểm tra xác thực người dùng trên Firebase Realtime Database (Auth Guard & Auto-clear Session)
- * 1. Tự động dọn dẹp LocalStorage / SessionStorage TRƯỚC KHI alert nếu user không tồn tại hoặc đã bị xóa
- * 2. Điều hướng an toàn bằng window.location.replace('login.html') sau khi alert
  */
 async function checkAuthentication() {
     if (isSessionTerminated) return false;
@@ -1639,7 +1638,7 @@ async function checkAuthentication() {
                 }
             }
 
-            // Fallback qua FirebaseService nếu get() theo userId không tìm thấy (hỗ trợ session cũ chỉ có username)
+            // Fallback qua FirebaseService nếu get() theo userId không tìm thấy
             if (!userData && window.FirebaseService) {
                 if (user.userId) {
                     userData = await FirebaseService.getUserById(user.userId);
@@ -1653,28 +1652,15 @@ async function checkAuthentication() {
             // (nghĩa là tài khoản thực sự không tồn tại hoặc đã bị xóa trên Firebase)
             if (!userData || (snapshot && snapshot.exists && !snapshot.exists())) {
                 isSessionTerminated = true;
-
-                // 1. TRƯỚC KHI gọi hàm alert: BẮT BUỘC xóa sạch phiên đăng nhập hiện tại
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('sessionToken');
                 sessionStorage.removeItem('currentUser');
                 sessionStorage.removeItem('sessionToken');
-                sessionStorage.clear();
-
-                try {
-                    resetAppState();
-                    resetAllProgressUI();
-                } catch (e) {}
-
-                // Thông báo cho người dùng
-                alert('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
-
-                // 2. Sau khi báo alert xong, dùng window.location.replace('login.html') để đẩy user văng hẳn ra trang đăng nhập
+                alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
                 window.location.replace('login.html');
                 return false;
             }
 
-            // Khôi phục sessionToken vào localStorage nếu phiên cũ chưa lưu riêng
             const fbToken = userData.sessionToken || userData.activeSession;
             let localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
             if (!localToken && fbToken && (user.sessionToken || user.sessionId) === fbToken) {
@@ -1685,23 +1671,11 @@ async function checkAuthentication() {
             // Kiểm tra bị đè phiên đăng nhập từ thiết bị khác (Single Session Guard)
             if (fbToken && localToken && fbToken !== localToken) {
                 isSessionTerminated = true;
-
-                // 1. Hiện thông báo
-                alert("Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!");
-
-                // 2. Xóa thông tin đăng nhập
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('sessionToken');
                 sessionStorage.removeItem('currentUser');
                 sessionStorage.removeItem('sessionToken');
-                sessionStorage.clear();
-
-                try {
-                    resetAppState();
-                    resetAllProgressUI();
-                } catch (e) {}
-
-                // 3. Điều hướng ra ngoài
+                alert("Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!");
                 window.location.replace('login.html');
                 return false;
             }

@@ -136,30 +136,7 @@ async function handleLogin(e) {
         const userId = matchedUser.userId || ('u_' + matchedUser.username.toLowerCase());
         const token = Date.now().toString() + Math.random().toString(36).substr(2);
 
-        // Lưu sessionToken này vào máy cục bộ
-        localStorage.setItem('sessionToken', token);
-        sessionStorage.setItem('sessionToken', token);
-
-        // Đồng thời, cập nhật (update) token này lên Firebase vào đúng node của user đó
-        if (window.FirebaseService) {
-            await FirebaseService.updateUser(userId, {
-                sessionToken: token,
-                activeSession: token,
-                status: 'online',
-                lastActive: Date.now()
-            });
-            FirebaseService.setupPresence(userId);
-        } else if (window.update && window.ref && window.db) {
-            await update(ref(db, 'users/' + userId), {
-                sessionToken: token,
-                activeSession: token,
-                status: 'online',
-                lastActive: Date.now()
-            });
-        }
-
-        // Lưu phiên đăng nhập currentUser với userId cố định
-        const currentSession = {
+        const userData = {
             userId: userId,
             username: matchedUser.username,
             role: matchedUser.role,
@@ -168,19 +145,26 @@ async function handleLogin(e) {
             sessionToken: token
         };
 
-        if (rememberMe) {
-            localStorage.setItem('currentUser', JSON.stringify(currentSession));
-            sessionStorage.removeItem('currentUser');
-        } else {
-            sessionStorage.setItem('currentUser', JSON.stringify(currentSession));
-            localStorage.removeItem('currentUser');
-        }
-
-        showToast(`Đăng nhập thành công với vai trò ${matchedUser.role.toUpperCase()}!`, 'success');
-
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 500);
+        // BƯỚC 1: Sửa lỗi bất đồng bộ (Race Condition) khi Đăng nhập
+        // Gọi hàm update lên Firebase và BẮT BUỘC dùng .then() để chờ Firebase xác nhận lưu xong
+        update(ref(db, 'users/' + userId), {
+            sessionToken: token,
+            activeSession: token,
+            status: 'online',
+            lastActive: Date.now()
+        })
+          .then(() => {
+              // CHỈ KHI Firebase trả về thành công thì mới được phép lưu vào localStorage và gọi lệnh window.location.replace()
+              localStorage.setItem('currentUser', JSON.stringify(userData));
+              localStorage.setItem('sessionToken', token);
+              sessionStorage.removeItem('currentUser');
+              sessionStorage.removeItem('sessionToken');
+              window.location.replace('index.html');
+          })
+          .catch(err => {
+              console.error(err);
+              alert("Lỗi mạng!");
+          });
     } else {
         showToast('Tên đăng nhập hoặc mật khẩu không chính xác!', 'error');
         passwordInput.focus();
@@ -231,31 +215,34 @@ async function handleSocialLogin(provider) {
             userId = user.userId;
         }
 
-        if (window.FirebaseService) {
-            await FirebaseService.updateUser(userId, {
-                activeSession: sessionId,
-                status: 'online',
-                lastActive: Date.now()
-            });
-            FirebaseService.setupPresence(userId);
-        }
-
+        const token = sessionId;
         const currentSession = {
             userId: userId,
             username: username,
             role: 'user',
             loginAt: Date.now(),
-            sessionId: sessionId
+            sessionId: token,
+            sessionToken: token
         };
-        if (rememberMe) {
-            localStorage.setItem('currentUser', JSON.stringify(currentSession));
-            sessionStorage.removeItem('currentUser');
-        } else {
-            sessionStorage.setItem('currentUser', JSON.stringify(currentSession));
-            localStorage.removeItem('currentUser');
-        }
-        window.location.href = 'index.html';
-    }, 600);
+
+        update(ref(db, 'users/' + userId), {
+            sessionToken: token,
+            activeSession: token,
+            status: 'online',
+            lastActive: Date.now()
+        })
+          .then(() => {
+              localStorage.setItem('currentUser', JSON.stringify(currentSession));
+              localStorage.setItem('sessionToken', token);
+              sessionStorage.removeItem('currentUser');
+              sessionStorage.removeItem('sessionToken');
+              window.location.replace('index.html');
+          })
+          .catch(err => {
+              console.error(err);
+              alert("Lỗi mạng!");
+          });
+    }, 300);
 }
 
 function handleForgotPassword() {
@@ -315,11 +302,42 @@ async function handleRegister(e) {
 
         // 5. Tạo userId (UID) duy nhất làm key gốc trong Firebase
         try {
-            await FirebaseService.registerUser({
+            const newUser = await FirebaseService.registerUser({
                 username: username,
                 password: password,
                 role: 'user'
             });
+
+            // BƯỚC 1: Sửa lỗi bất đồng bộ (Race Condition) khi Đăng ký
+            const userId = newUser.userId;
+            const token = Date.now().toString() + Math.random().toString(36).substr(2);
+            const userData = {
+                userId: userId,
+                username: newUser.username,
+                role: 'user',
+                loginAt: Date.now(),
+                sessionId: token,
+                sessionToken: token
+            };
+
+            update(ref(db, 'users/' + userId), {
+                sessionToken: token,
+                activeSession: token,
+                status: 'online',
+                lastActive: Date.now()
+            })
+              .then(() => {
+                  localStorage.setItem('currentUser', JSON.stringify(userData));
+                  localStorage.setItem('sessionToken', token);
+                  sessionStorage.removeItem('currentUser');
+                  sessionStorage.removeItem('sessionToken');
+                  window.location.replace('index.html');
+              })
+              .catch(err => {
+                  console.error(err);
+                  alert("Lỗi mạng!");
+              });
+            return;
         } catch (err) {
             showToast(err.message, 'error');
             return;
@@ -332,28 +350,37 @@ async function handleRegister(e) {
             if (regUsernameEl) regUsernameEl.focus();
             return;
         }
-    }
 
-    // 7. Chuyển luồng: Toast thành công, ẩn form Đăng ký, hiện lại form Đăng nhập, điền sẵn username
-    showToast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+        const userId = 'u_' + Date.now();
+        const token = Date.now().toString() + Math.random().toString(36).substr(2);
+        const userData = {
+            userId: userId,
+            username: username,
+            role: 'user',
+            loginAt: Date.now(),
+            sessionId: token,
+            sessionToken: token
+        };
 
-    // Reset các trường form đăng ký
-    if (regUsernameEl) regUsernameEl.value = '';
-    if (regPasswordEl) regPasswordEl.value = '';
-    if (regConfirmPasswordEl) regConfirmPasswordEl.value = '';
-
-    // Tự động chuyển về form Đăng nhập
-    showLoginForm();
-
-    // Fill sẵn tên đăng nhập vừa tạo vào ô Input Username của form Đăng nhập
-    const loginUserInput = getUsernameInput();
-    const loginPwdInput = getPasswordInput();
-    if (loginUserInput) {
-        loginUserInput.value = username;
-    }
-    if (loginPwdInput) {
-        loginPwdInput.value = '';
-        loginPwdInput.focus();
+        if (window.update && window.ref && window.db) {
+            update(ref(db, 'users/' + userId), {
+                sessionToken: token,
+                activeSession: token,
+                status: 'online',
+                lastActive: Date.now()
+            })
+              .then(() => {
+                  localStorage.setItem('currentUser', JSON.stringify(userData));
+                  localStorage.setItem('sessionToken', token);
+                  sessionStorage.removeItem('currentUser');
+                  sessionStorage.removeItem('sessionToken');
+                  window.location.replace('index.html');
+              })
+              .catch(err => {
+                  console.error(err);
+                  alert("Lỗi mạng!");
+              });
+        }
     }
 }
 

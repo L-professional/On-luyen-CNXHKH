@@ -106,12 +106,12 @@ function verifyAdminSession(user) {
         const targetToken = matched.sessionToken || matched.activeSession;
         if (targetToken && localToken && targetToken !== localToken) {
             isAdminSessionTerminated = true;
-            forceLogoutAdmin('Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!');
+            forceLogoutAdmin('Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!');
             return false;
         }
     } else if (users.length > 0) {
         isAdminSessionTerminated = true;
-        forceLogoutAdmin('Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!');
+        forceLogoutAdmin('Phiên đăng nhập đã hết hạn hoặc tài khoản đang được sử dụng ở thiết bị khác. Vui lòng đăng nhập lại!');
         return false;
     }
     return true;
@@ -205,26 +205,6 @@ function initAdminFirebaseRealtimeListeners() {
                         ...data[uid],
                         userId: uid
                     }));
-
-                    // Kiểm tra Realtime phiên đăng nhập của Admin hiện tại (Single Session Guard)
-                    const currAdmin = getAdminCurrentUser();
-                    if (currAdmin) {
-                        const adminUid = currAdmin.userId || ('u_' + (currAdmin.username || '').toLowerCase());
-                        const adminData = data[adminUid] || Object.values(data).find(u => u.username && currAdmin.username && u.username.toLowerCase() === currAdmin.username.toLowerCase());
-                        if (adminData) {
-                            const fbToken = adminData.sessionToken || adminData.activeSession;
-                            const localToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-                            if (fbToken && localToken && fbToken !== localToken) {
-                                isAdminSessionTerminated = true;
-                                forceLogoutAdmin("Tài khoản của bạn vừa được đăng nhập ở một thiết bị khác. Bạn đã bị đăng xuất!");
-                                return;
-                            }
-                        } else {
-                            isAdminSessionTerminated = true;
-                            forceLogoutAdmin("Tài khoản của bạn không tồn tại hoặc đã bị xóa. Vui lòng liên hệ Quản trị viên!");
-                            return;
-                        }
-                    }
                 } else {
                     adminUsersList = [];
                 }
