@@ -318,11 +318,11 @@ const CUC_DAO_RANK = {
 };
 
 const RANK_LEVELS = [
-    { level: 1, id: 'gamo', name: 'GÀ MỜ', displayName: 'Gà mờ', minExp: 0, maxExp: 100, color: '#475569', bgColor: '#f1f5f9', textColor: '#475569', borderColor: '#cbd5e1', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo' },
-    { level: 2, id: 'tapsu', name: 'TẬP SỰ', displayName: 'Tập sự', minExp: 101, maxExp: 300, color: '#15803d', bgColor: '#dcfce7', textColor: '#15803d', borderColor: '#86efac', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu' },
-    { level: 3, id: 'tanbinh', name: 'TÂN BINH', displayName: 'Tân binh', minExp: 301, maxExp: 600, color: '#1d4ed8', bgColor: '#dbeafe', textColor: '#1d4ed8', borderColor: '#93c5fd', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh' },
-    { level: 4, id: 'caothu', name: 'CAO THỦ', displayName: 'Cao thủ', minExp: 601, maxExp: 1000, color: '#7e22ce', bgColor: '#f3e8ff', textColor: '#7e22ce', borderColor: '#d8b4fe', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu' },
-    { level: 5, id: 'daide', name: 'ĐẠI ĐẾ', displayName: 'Đại đế', minExp: 1001, maxExp: 1500, color: '#b45309', bgColor: '#fef3c7', textColor: '#92400e', borderColor: '#fcd34d', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide' },
+    { level: 1, id: 'gamo', name: 'PHÀM CẢNH', displayName: 'Phàm cảnh', minExp: 0, maxExp: 100, color: '#475569', bgColor: '#f1f5f9', textColor: '#475569', borderColor: '#cbd5e1', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo' },
+    { level: 2, id: 'tapsu', name: 'LUYỆN KHÍ CẢNH', displayName: 'Luyện Khí cảnh', minExp: 101, maxExp: 300, color: '#15803d', bgColor: '#dcfce7', textColor: '#15803d', borderColor: '#86efac', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu' },
+    { level: 3, id: 'tanbinh', name: 'KIM ĐAN CẢNH', displayName: 'Kim Đan cảnh', minExp: 301, maxExp: 600, color: '#1d4ed8', bgColor: '#dbeafe', textColor: '#1d4ed8', borderColor: '#93c5fd', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh' },
+    { level: 4, id: 'caothu', name: 'NGUYÊN ANH CẢNH', displayName: 'Nguyên Anh cảnh', minExp: 601, maxExp: 1000, color: '#7e22ce', bgColor: '#f3e8ff', textColor: '#7e22ce', borderColor: '#d8b4fe', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu' },
+    { level: 5, id: 'daide', name: 'HÓA THẦN CẢNH', displayName: 'Hóa Thần cảnh', minExp: 1001, maxExp: 1500, color: '#b45309', bgColor: '#fef3c7', textColor: '#92400e', borderColor: '#fcd34d', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide' },
     { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ea580c', bgColor: '#ffedd5', textColor: '#ea580c', borderColor: '#fdba74', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' }
 ];
 
@@ -512,7 +512,7 @@ function renderRankContainerHtml(level, username, options = {}) {
 
 /**
  * Chuẩn hóa Khung viền Avatar (Universal Avatar Frame)
- * Dù user ở Cảnh giới nào (từ Gà mờ đến Chí Tôn Cực Đạo, hay Admin),
+ * Dù user ở Cảnh giới nào (từ Phàm cảnh đến Chí Tôn Cực Đạo, hay Admin),
  * avatar luôn phải được bọc trong một Wrapper chuẩn:
  * <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12">
  *   <img src="...avatar..." class="rounded-full..." />
@@ -1116,7 +1116,7 @@ async function executeBuffExp(amount, buffName) {
         const isCucDao = !!(target.isAscended === true || target.isAscended === 'true' || target.level === 7 || (target.rank && typeof target.rank === 'string' && target.rank.toLowerCase().includes('cực đạo')));
         const newRank = getRankByExp(newExp, isCucDao);
         const newLevel = newRank.level || 1;
-        const newRankName = newRank.name || 'GÀ MỜ';
+        const newRankName = newRank.name || 'PHÀM CẢNH';
 
         const updateData = {
             exp: newExp,

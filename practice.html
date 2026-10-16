@@ -64,6 +64,9 @@
         </div>
 
         <div class="header-right">
+            <button class="btn-pause-learn" id="btn-header-finish-learn" onclick="finishLearnTopic()" title="Kết thúc / Nộp bài ôn tập" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: 1px solid #059669; font-weight: 700;">
+                <i class="fa-solid fa-flag-checkered"></i> <span>Kết thúc / Nộp bài</span>
+            </button>
             <button class="btn-pause-learn" onclick="pauseLearnMode()" title="Tạm dừng ôn và lưu tiến trình">
                 <i class="fa-solid fa-circle-pause"></i> <span>Tạm dừng</span>
             </button>
@@ -349,13 +352,18 @@
                     </div>
 
                     <!-- Bottom bar -->
-                    <div class="detail-bottom-bar" style="margin-top: 24px;">
+                    <div class="detail-bottom-bar" style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
                         <button class="btn-nav btn-prev" id="btn-learn-prev" onclick="learnPrevQuestion()">
                             <i class="fa-solid fa-chevron-left"></i> Câu trước
                         </button>
-                        <button class="btn-nav btn-pause-outline" onclick="pauseLearnMode()" title="Tạm dừng ôn và lưu tiến trình">
-                            <i class="fa-solid fa-circle-pause"></i> Tạm dừng ôn
-                        </button>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn-nav btn-pause-outline" onclick="pauseLearnMode()" title="Tạm dừng ôn và lưu tiến trình">
+                                <i class="fa-solid fa-circle-pause"></i> Tạm dừng ôn
+                            </button>
+                            <button class="btn-nav btn-finish-learn" id="btn-learn-finish" onclick="finishLearnTopic()" title="Kết thúc / Nộp bài ôn tập" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: 1px solid #059669; font-weight: 700; border-radius: 10px; padding: 10px 18px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <i class="fa-solid fa-flag-checkered"></i> <span>Kết thúc / Nộp bài</span>
+                            </button>
+                        </div>
                         <button class="btn-nav btn-next" id="btn-learn-next" onclick="learnNextQuestion()">
                             Câu tiếp theo <i class="fa-solid fa-chevron-right"></i>
                         </button>

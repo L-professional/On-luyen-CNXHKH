@@ -163,11 +163,11 @@ const CUC_DAO_RANK = {
 };
 
 const RANK_LEVELS = [
-    { level: 1, id: 'gamo', name: 'GÀ MỜ', displayName: 'Gà mờ', minExp: 0, maxExp: 100, color: '#475569', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo', nextRankName: 'TẬP SỰ' },
-    { level: 2, id: 'tapsu', name: 'TẬP SỰ', displayName: 'Tập sự', minExp: 101, maxExp: 300, color: '#15803d', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu', nextRankName: 'TÂN BINH' },
-    { level: 3, id: 'tanbinh', name: 'TÂN BINH', displayName: 'Tân binh', minExp: 301, maxExp: 600, color: '#1d4ed8', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh', nextRankName: 'CAO THỦ' },
-    { level: 4, id: 'caothu', name: 'CAO THỦ', displayName: 'Cao thủ', minExp: 601, maxExp: 1000, color: '#7e22ce', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu', nextRankName: 'ĐẠI ĐẾ' },
-    { level: 5, id: 'daide', name: 'ĐẠI ĐẾ', displayName: 'Đại đế', minExp: 1001, maxExp: 1500, color: '#b45309', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide', nextRankName: 'CHÍ TÔN THẦN' },
+    { level: 1, id: 'gamo', name: 'PHÀM CẢNH', displayName: 'Phàm cảnh', minExp: 0, maxExp: 100, color: '#475569', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo', nextRankName: 'LUYỆN KHÍ CẢNH' },
+    { level: 2, id: 'tapsu', name: 'LUYỆN KHÍ CẢNH', displayName: 'Luyện Khí cảnh', minExp: 101, maxExp: 300, color: '#15803d', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu', nextRankName: 'KIM ĐAN CẢNH' },
+    { level: 3, id: 'tanbinh', name: 'KIM ĐAN CẢNH', displayName: 'Kim Đan cảnh', minExp: 301, maxExp: 600, color: '#1d4ed8', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh', nextRankName: 'NGUYÊN ANH CẢNH' },
+    { level: 4, id: 'caothu', name: 'NGUYÊN ANH CẢNH', displayName: 'Nguyên Anh cảnh', minExp: 601, maxExp: 1000, color: '#7e22ce', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu', nextRankName: 'HÓA THẦN CẢNH' },
+    { level: 5, id: 'daide', name: 'HÓA THẦN CẢNH', displayName: 'Hóa Thần cảnh', minExp: 1001, maxExp: 1500, color: '#b45309', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide', nextRankName: 'CHÍ TÔN THẦN' },
     { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ffffff', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan', nextRankName: null }
 ];
 
@@ -612,7 +612,7 @@ function renderRankCardHtml() {
 
 /**
  * Render Lộ trình Cảnh giới Tu Tiên (Roadmap)
- * Mặc định CHỈ render từ Cấp 1 (Gà mờ) đến Cấp 6 (Chí tôn thần).
+ * Mặc định CHỈ render từ Cấp 1 (Phàm cảnh) đến Cấp 6 (Chí tôn thần).
  * Chỉ khi người dùng đạt Cấp 6 hoặc Cấp 7 mới hiển thị Cấp 7:
  * - Cấp 6: Hiển thị "Cực Cảnh", ghi chú "Đã đủ điều kiện Độ Kiếp" kèm nút kích hoạt triggerDoKiep().
  * - Cấp 7: Hiển thị "Chí Tôn Cực Đạo" (Đã đạt).

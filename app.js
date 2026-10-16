@@ -533,9 +533,9 @@ const RANK_LEVELS = [
     {
         level: 1,
         id: 'gamo',
-        name: 'GÀ MỜ',
-        title: 'Gà Mờ',
-        displayName: 'Gà mờ',
+        name: 'PHÀM CẢNH',
+        title: 'Phàm Cảnh',
+        displayName: 'Phàm cảnh',
         minExp: 0,
         maxExp: 100,
         color: '#475569',
@@ -544,14 +544,14 @@ const RANK_LEVELS = [
         borderColor: '#cbd5e1',
         icon: 'fa-solid fa-egg',
         badgeClass: 'rank-gamo',
-        nextRankName: 'TẬP SỰ'
+        nextRankName: 'LUYỆN KHÍ CẢNH'
     },
     {
         level: 2,
         id: 'tapsu',
-        name: 'TẬP SỰ',
-        title: 'Tập Sự',
-        displayName: 'Tập sự',
+        name: 'LUYỆN KHÍ CẢNH',
+        title: 'Luyện Khí Cảnh',
+        displayName: 'Luyện Khí cảnh',
         minExp: 101,
         maxExp: 300,
         color: '#15803d',
@@ -560,14 +560,14 @@ const RANK_LEVELS = [
         borderColor: '#86efac',
         icon: 'fa-solid fa-feather-pointed',
         badgeClass: 'rank-tapsu',
-        nextRankName: 'TÂN BINH'
+        nextRankName: 'KIM ĐAN CẢNH'
     },
     {
         level: 3,
         id: 'tanbinh',
-        name: 'TÂN BINH',
-        title: 'Tân Binh',
-        displayName: 'Tân binh',
+        name: 'KIM ĐAN CẢNH',
+        title: 'Kim Đan Cảnh',
+        displayName: 'Kim Đan cảnh',
         minExp: 301,
         maxExp: 600,
         color: '#1d4ed8',
@@ -576,14 +576,14 @@ const RANK_LEVELS = [
         borderColor: '#93c5fd',
         icon: 'fa-solid fa-shield-halved',
         badgeClass: 'rank-tanbinh',
-        nextRankName: 'CAO THỦ'
+        nextRankName: 'NGUYÊN ANH CẢNH'
     },
     {
         level: 4,
         id: 'caothu',
-        name: 'CAO THỦ',
-        title: 'Cao Thủ',
-        displayName: 'Cao thủ',
+        name: 'NGUYÊN ANH CẢNH',
+        title: 'Nguyên Anh Cảnh',
+        displayName: 'Nguyên Anh cảnh',
         minExp: 601,
         maxExp: 1000,
         color: '#7e22ce',
@@ -592,14 +592,14 @@ const RANK_LEVELS = [
         borderColor: '#d8b4fe',
         icon: 'fa-solid fa-wand-magic-sparkles',
         badgeClass: 'rank-caothu',
-        nextRankName: 'ĐẠI ĐẾ'
+        nextRankName: 'HÓA THẦN CẢNH'
     },
     {
         level: 5,
         id: 'daide',
-        name: 'ĐẠI ĐẾ',
-        title: 'Đại Đế',
-        displayName: 'Đại đế',
+        name: 'HÓA THẦN CẢNH',
+        title: 'Hóa Thần Cảnh',
+        displayName: 'Hóa Thần cảnh',
         minExp: 1001,
         maxExp: 1500,
         color: '#b45309',
@@ -760,7 +760,12 @@ function saveUserStats(stats) {
 
             // Ghi trực tiếp lên Firebase Realtime Database
             if (uid !== 'guest') {
-                if (window.FirebaseService) {
+                if (window.update && window.ref && window.db) {
+                    const fbUpdate = { exp: stats.exp };
+                    if (stats.level) fbUpdate.level = stats.level;
+                    if (stats.rank && stats.rank.name) fbUpdate.rank = stats.rank.name;
+                    update(ref(db, `users/${uid}`), fbUpdate).catch(() => {});
+                } else if (window.FirebaseService) {
                     FirebaseService.saveExp(uid, stats.exp);
                 } else if (window.ref && window.set && window.db) {
                     set(ref(db, `users/${uid}/exp`), stats.exp);
@@ -1276,7 +1281,7 @@ function renderRankCardHtml() {
 
 /**
  * Render Lộ trình Cảnh giới Tu Tiên (Roadmap)
- * Mặc định CHỈ render từ Cấp 1 (Gà mờ) đến Cấp 6 (Chí tôn thần).
+ * Mặc định CHỈ render từ Cấp 1 (Phàm cảnh) đến Cấp 6 (Chí tôn thần).
  * Chỉ khi người dùng đạt Cấp 6 hoặc Cấp 7 mới hiển thị Cấp 7:
  * - Cấp 6: Hiển thị "Cực Cảnh", ghi chú "Đã đủ điều kiện Độ Kiếp" kèm nút kích hoạt triggerDoKiep().
  * - Cấp 7: Hiển thị "Chí Tôn Cực Đạo" (Đã đạt).
@@ -3046,11 +3051,23 @@ function renderLearnCurrentQuestionDetail() {
         }
     }
 
-    // Nút trước / sau
+    // Nút trước / sau & Nộp bài
     const prevBtn = document.getElementById('btn-learn-prev');
     const nextBtn = document.getElementById('btn-learn-next');
+    const isLast = (appState.currentIndex === total - 1);
+
     if (prevBtn) prevBtn.disabled = appState.currentIndex === 0;
-    if (nextBtn) nextBtn.disabled = appState.currentIndex === total - 1;
+    if (nextBtn) {
+        if (isLast) {
+            nextBtn.innerHTML = `<span>Kết thúc / Nộp bài</span> <i class="fa-solid fa-flag-checkered"></i>`;
+            nextBtn.title = 'Bấm để kết thúc và nộp bài ôn tập';
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.innerHTML = `Câu tiếp theo <i class="fa-solid fa-chevron-right"></i>`;
+            nextBtn.title = '';
+            nextBtn.disabled = false;
+        }
+    }
 
     // Cập nhật Mobile Quick Navigation Strip (Hiển thị trên điện thoại)
     const stripEl = document.getElementById('learn-mobile-q-strip');
@@ -3823,8 +3840,130 @@ function learnNextQuestion() {
             const detailCard = document.querySelector('.learn-detail-card');
             if (detailCard) detailCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    } else if (appState.currentIndex === appState.filteredQuestions.length - 1) {
+        // Đã đến câu cuối cùng trong danh sách, click tiếp sẽ kích hoạt nộp bài ôn tập
+        finishLearnTopic();
     }
 }
+
+/**
+ * Kiểm tra xem một câu hỏi đã được trả lời hay chưa (hỗ trợ đầy đủ mọi loại câu)
+ */
+function isQuestionAnswered(q, userAns) {
+    if (userAns === undefined || userAns === null) return false;
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        return Object.keys(userAns).length >= (q.subQuestions ? q.subQuestions.length : 4);
+    }
+    if (q.type === 'drag_drop' && q.pairs) {
+        if (typeof userAns !== 'object' || Array.isArray(userAns)) return false;
+        return Object.keys(userAns).length >= q.pairs.length;
+    }
+    if (Array.isArray(userAns)) {
+        return userAns.length > 0;
+    }
+    if (typeof userAns === 'string') {
+        return userAns.trim().length > 0;
+    }
+    return true;
+}
+
+/**
+ * Xử lý khi người dùng click "Kết thúc / Nộp bài" trong phần Ôn tập theo Chủ đề (Bế quan):
+ * - Tính tổng số câu hỏi đã được chọn đáp án.
+ * - NẾU answeredQuestions === totalQuestions: cộng thêm +30 EXP vào Firebase của user.
+ * - Hiển thị thông báo: "Bế quan viên mãn! Đạo hữu hoàn thành trọn vẹn chủ đề, thu hoạch +30 EXP tu vi."
+ * - Nếu chưa làm hết thì cảnh báo không nhận được thưởng.
+ */
+function finishLearnTopic() {
+    if (appState.mode !== 'learn') return;
+    saveCurrentLearnProgress();
+
+    const totalQuestions = appState.allQuestions ? appState.allQuestions.length : 0;
+    let answeredQuestions = 0;
+    if (Array.isArray(appState.allQuestions)) {
+        appState.allQuestions.forEach(q => {
+            const uAns = appState.userAnswers ? appState.userAnswers[q.id] : undefined;
+            if (isQuestionAnswered(q, uAns)) {
+                answeredQuestions++;
+            }
+        });
+    }
+
+    if (totalQuestions > 0 && answeredQuestions === totalQuestions) {
+        // Hoàn thành đủ 100% câu hỏi -> Cộng +30 EXP lên Firebase và localStorage
+        const expResult = addExp(30);
+        showFloatingExpBadge(30);
+        showToast('Bế quan viên mãn! Đạo hữu hoàn thành trọn vẹn chủ đề, thu hoạch +30 EXP tu vi.', 'success');
+
+        showModal({
+            title: '🧘 BẾ QUAN VIÊN MÃN 🧘',
+            icon: 'fa-solid fa-mountain-sun',
+            content: `
+                <div style="text-align: center; padding: 14px 6px;">
+                    <div style="font-size: 52px; margin-bottom: 12px; filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.45));">🌟</div>
+                    <h3 style="font-size: 19px; font-weight: 900; color: #047857; margin-bottom: 8px;">CÔNG ĐỨC VIÊN MÃN!</h3>
+                    <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-bottom: 16px;">
+                        Bế quan viên mãn! Đạo hữu hoàn thành trọn vẹn chủ đề (<strong>${answeredQuestions}/${totalQuestions}</strong> câu), thu hoạch <strong style="color: #059669; font-size: 16px;">+30 EXP tu vi</strong>.
+                    </p>
+                    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 18px; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 9999px; color: #065f46; font-weight: 800; font-size: 13.5px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #059669;"></i>
+                        <span>Cảnh giới: ${getUserStats().rank.name}</span>
+                    </div>
+                </div>
+            `,
+            actionText: 'Rời khỏi bí cảnh',
+            actionCallback: () => {
+                closeModal();
+                if (expResult.leveledUp) {
+                    showLevelUpModal(expResult.newRank, expResult.oldRank, () => {
+                        window.location.href = 'index.html';
+                    });
+                } else {
+                    window.location.href = 'index.html';
+                }
+            },
+            cancelText: 'Ở lại xem lại bài',
+            cancelCallback: () => {
+                closeModal();
+            }
+        });
+    } else {
+        const remaining = totalQuestions - answeredQuestions;
+        const msg = `Chưa hoàn thành toàn bộ câu hỏi (${answeredQuestions}/${totalQuestions} câu, còn thiếu ${remaining} câu). Đạo hữu chưa đủ điều kiện nhận thưởng Bế quan (+30 EXP tu vi)!`;
+        showToast(msg, 'warning');
+        alert('Cảnh báo: Đạo hữu chưa hoàn thành hết toàn bộ câu hỏi (' + answeredQuestions + '/' + totalQuestions + ' câu). Hệ thống chỉ ban thưởng +30 EXP Tu vi khi làm đủ 100% câu hỏi trong chủ đề!');
+
+        showModal({
+            title: '⚠️ CHƯA ĐẠT ĐIỀU KIỆN BẾ QUAN',
+            icon: 'fa-solid fa-triangle-exclamation',
+            content: `
+                <div style="text-align: center; padding: 14px 6px;">
+                    <div style="font-size: 46px; margin-bottom: 10px;">⏳</div>
+                    <h3 style="font-size: 17px; font-weight: 800; color: #b45309; margin-bottom: 8px;">TU VI CHƯA ĐẠT VIÊN MÃN</h3>
+                    <p style="font-size: 13.5px; color: #475569; line-height: 1.6; margin-bottom: 14px;">
+                        Đạo hữu mới trả lời <strong>${answeredQuestions}/${totalQuestions}</strong> câu hỏi (còn thiếu <strong>${remaining}</strong> câu).<br>
+                        Hệ thống quy định: <strong>Chỉ thưởng +30 EXP Tu vi khi làm đủ 100% câu hỏi</strong>!
+                    </p>
+                    <p style="font-size: 12.5px; color: #ef4444; font-weight: 700;">
+                        Nếu kết thúc ngay bây giờ, đạo hữu sẽ KHÔNG nhận được điểm thưởng Bế quan.
+                    </p>
+                </div>
+            `,
+            actionText: 'Tiếp tục ôn luyện',
+            actionCallback: () => {
+                closeModal();
+            },
+            cancelText: 'Vẫn muốn thoát (Không nhận thưởng)',
+            cancelCallback: () => {
+                closeModal();
+                window.location.href = 'index.html';
+            }
+        });
+    }
+}
+window.finishLearnTopic = finishLearnTopic;
+window.submitLearn = finishLearnTopic;
 
 // ==========================================================================
 // CHẾ ĐỘ 2: KIỂM TRA (mode=test) - 1 CỘT TẬP TRUNG, KHÔNG GIẢI THÍCH, TÍNH ĐIỂM
@@ -4401,6 +4540,17 @@ function submitTest() {
     let correctCount = 0;
     const total = appState.allQuestions.length;
 
+    // Đếm số câu hỏi thực tế đã được trả lời đầy đủ (chống gian lận bỏ câu)
+    let answeredCount = 0;
+    if (Array.isArray(appState.allQuestions)) {
+        appState.allQuestions.forEach(q => {
+            const uAns = appState.userAnswers ? appState.userAnswers[q.id] : undefined;
+            if (isQuestionAnswered(q, uAns)) {
+                answeredCount++;
+            }
+        });
+    }
+
     appState.allQuestions.forEach(q => {
         const userAns = appState.userAnswers[q.id];
         if (userAns === undefined || userAns === null) return;
@@ -4452,10 +4602,24 @@ function submitTest() {
     const passed = score >= 5.0;
     const isPerfect = parseFloat(score) === 10.0;
 
-    // === GAMIFICATION: TÍNH ĐIỂM EXP TRONG CHẾ ĐỘ KIỂM TRA ===
-    // Mỗi câu đúng +10 EXP, sai không trừ, thưởng thêm +50 EXP nếu đạt điểm 10 tuyệt đối
-    const earnedExp = (correctCount * 10) + (isPerfect ? 50 : 0);
-    const expResult = addExp(earnedExp);
+    // === GAMIFICATION: TÍNH ĐIỂM EXP TRONG CHẾ ĐỘ THI MÔ PHỎNG (VƯỢT ẢI BÍ CẢNH) ===
+    // 1. Thưởng hoàn thành (Base): Nếu người dùng trả lời đủ 100% số câu hỏi (answeredCount === total) -> +50 EXP
+    const isFullCompleted = (total > 0 && answeredCount === total);
+    const completionReward = isFullCompleted ? 50 : 0;
+
+    // 2. Thưởng điểm số: Mỗi câu trả lời đúng cộng +10 EXP
+    const scoreReward = Math.round(correctCount * 10);
+
+    // 3. Thưởng Ngộ Đạo (Bonus): Nếu làm đúng từ 40 câu trở lên (hoặc điểm thi >= 8.0) -> thưởng thêm +100 EXP
+    const isNgoDaoBonus = (correctCount >= 40 || parseFloat(score) >= 8.0);
+    const ngoDaoReward = isNgoDaoBonus ? 100 : 0;
+
+    // Tổng tu vi nhận được và cập nhật vào Firebase & localStorage
+    const totalGainedExp = completionReward + scoreReward + ngoDaoReward;
+    const expResult = addExp(totalGainedExp);
+    if (totalGainedExp > 0) {
+        showFloatingExpBadge(totalGainedExp);
+    }
 
     // === ĐỘC LẬP DỮ LIỆU (DATA ISOLATION): LƯU KẾT QUẢ THI THEO UID TRÊN FIREBASE ===
     const currentUser = getCurrentUser();
@@ -4524,12 +4688,21 @@ function submitTest() {
                     Số câu đúng: <strong>${correctCount}/${total}</strong> câu (${Math.round((correctCount / total) * 100)}%)
                 </p>
 
-                <!-- Thẻ Thưởng EXP Gamification -->
-                <div class="test-exp-reward-card">
-                    <div class="ter-icon"><i class="fa-solid fa-bolt"></i></div>
-                    <div class="ter-info">
-                        <div class="ter-title">Điểm kinh nghiệm nhận được: <strong>+${earnedExp} EXP</strong></div>
-                        <div class="ter-desc">${correctCount} câu đúng (+${correctCount * 10} EXP)${isPerfect ? ' &bull; <strong>Thưởng điểm 10 tuyệt đối (+50 EXP)!</strong>' : ''}</div>
+                <!-- Thẻ Thưởng EXP Gamification Tu Tiên (Vượt Ải Bí Cảnh) -->
+                <div class="test-exp-reward-card" style="display: flex; flex-direction: column; align-items: stretch; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="ter-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="ter-info" style="flex: 1;">
+                            <div class="ter-title" style="font-size: 13.5px; font-weight: 800; color: #92400e;">
+                                🎁 Chiến lợi phẩm Vượt Ải Bí Cảnh
+                            </div>
+                            <div class="ter-desc" style="font-size: 12px; color: #b45309;">
+                                Trả lời: ${answeredCount}/${total} câu &bull; Đúng: ${correctCount}/${total} câu (${score}/10 điểm)
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(254, 243, 199, 0.75); border: 1px dashed #f59e0b; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #92400e; line-height: 1.5; text-align: left;">
+                        Chiến lợi phẩm: Thưởng hoàn thành (+${completionReward}) | Trả lời đúng (+${scoreReward}) | Thưởng Ngộ đạo (+${ngoDaoReward}) -&gt; <strong>Tổng tu vi nhận được: +${totalGainedExp} EXP</strong>
                     </div>
                 </div>
 
@@ -4975,7 +5148,7 @@ window.submitTest = submitTest;
  * Xác định chính xác Cấp độ (Rank / Level) của người dùng trên Bảng xếp hạng.
  * BẮT BUỘC: Dùng chung một hàm tính toán Cấp độ từ số EXP (getRankByExp)
  * cho cả Bảng xếp hạng và Giao diện Profile cá nhân để bảo đảm 100% đồng nhất.
- * (Ví dụ: Kien có 0 EXP thì cả ở Profile và Bảng xếp hạng đều phải là "Gà mờ")
+ * (Ví dụ: Kien có 0 EXP thì cả ở Profile và Bảng xếp hạng đều phải là "Phàm cảnh")
  */
 function getLeaderboardUserRank(u, calculatedExp) {
     if (!u) return RANK_LEVELS[0];
@@ -4998,7 +5171,7 @@ function getLeaderboardUserRank(u, calculatedExp) {
 
 /**
  * Chuẩn hóa Khung viền Avatar (Universal Avatar Frame)
- * Dù user ở Cảnh giới nào (từ Gà mờ đến Chí Tôn Cực Đạo, hay Admin),
+ * Dù user ở Cảnh giới nào (từ Phàm cảnh đến Chí Tôn Cực Đạo, hay Admin),
  * avatar luôn phải được bọc trong một Wrapper chuẩn:
  * <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12">
  *   <img src="...avatar..." class="rounded-full..." />
@@ -5191,7 +5364,7 @@ async function renderLeaderboard(usersData) {
     listBody.innerHTML = `
         <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-3" style="text-align: center; padding: 40px 20px;">
             <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-400"></i>
-            <p style="font-size: 13.5px; color: #94a3b8;">Đang triệu tập các cao thủ trên Bảng Phong Thần...</p>
+            <p style="font-size: 13.5px; color: #94a3b8;">Đang triệu tập các đạo hữu trên Bảng Phong Thần...</p>
         </div>
     `;
 
