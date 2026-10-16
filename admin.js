@@ -857,6 +857,10 @@ function renderUserTable(searchKeyword = '') {
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                                 <span>✨ Ban tạo hóa</span>
                             </button>
+                            <button type="button" class="btn-action btn-penalty-exp" onclick="openThienKiepModal('${escapeHtml(userId)}')" title="Giáng thiên kiếp trừ EXP của ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; border: 1px solid #ef4444; font-weight: 700; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.45); display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                <i class="fa-solid fa-bolt-lightning"></i>
+                                <span>⚡ Giáng Thiên Kiếp</span>
+                            </button>
                         ` : ''}
                         <button type="button" class="btn-action btn-edit-pwd" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}">
                             <i class="fa-solid fa-key"></i>
@@ -1169,6 +1173,187 @@ async function executeBuffExp(amount, buffName) {
 window.openBuffExpModal = openBuffExpModal;
 window.closeBuffExpModal = closeBuffExpModal;
 window.executeBuffExp = executeBuffExp;
+
+let currentThienKiepTargetUser = null;
+
+/**
+ * Mở Modal "Giáng hạ Lôi Kiếp" (Giáng Thiên Kiếp trừ EXP) cho học viên
+ */
+function openThienKiepModal(userIdOrName) {
+    if (!userIdOrName) return;
+    const users = getUserList();
+    const user = users.find(u => 
+        u.userId === userIdOrName || 
+        ('u_' + (u.username || '').toLowerCase()) === userIdOrName ||
+        (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+    );
+    if (!user) {
+        showToast('Không tìm thấy tài khoản người dùng!', 'error');
+        return;
+    }
+
+    currentThienKiepTargetUser = user;
+    const modal = document.getElementById('thienKiepModal');
+    if (!modal) return;
+
+    const subtitleEl = document.getElementById('thienKiepModalSubtitle');
+    const targetInfoEl = document.getElementById('thienKiepTargetInfo');
+
+    const curExp = getUserExp(user.username, user);
+    const userRank = getResolvedUserRank(user);
+    const initialChar = (user.username || 'U').charAt(0).toUpperCase();
+
+    if (subtitleEl) {
+        subtitleEl.textContent = `Giáng lôi kiếp trừng phạt đệ tử: ${user.username}`;
+    }
+
+    if (targetInfoEl) {
+        targetInfoEl.innerHTML = `
+            <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #180d1b; border: 2px solid ${userRank.borderColor || '#ef4444'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; overflow: hidden; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);">
+                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${initialChar}';">` : initialChar}
+                </div>
+                <div>
+                    <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                        <strong class="text-white text-sm md:text-base font-bold">${escapeHtml(user.username)}</strong>
+                        <span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 9999px; font-size: 10.5px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor};">
+                            <i class="${userRank.icon}" style="font-size: 9.5px;"></i>
+                            <span>${userRank.displayName || userRank.name} (Cấp ${userRank.level})</span>
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-0.5" style="font-size: 11.5px; color: #94a3b8;">
+                        UID: <span class="font-mono text-slate-300">${escapeHtml(user.userId || 'N/A')}</span>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="text-[11px] text-red-300/80 uppercase tracking-wider font-semibold">Tu vi hiện tại</div>
+                <div class="text-red-400 font-black text-base md:text-lg flex items-center justify-end gap-1.5" style="color: #f87171; font-weight: 900;">
+                    <i class="fa-solid fa-bolt-lightning text-xs text-red-400"></i>
+                    <span>${curExp.toLocaleString('vi-VN')} EXP</span>
+                </div>
+            </div>
+        `;
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+/**
+ * Đóng Modal "Giáng hạ Lôi Kiếp"
+ */
+function closeThienKiepModal() {
+    const modal = document.getElementById('thienKiepModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+    currentThienKiepTargetUser = null;
+}
+
+/**
+ * Thực hiện "Giáng Thiên Kiếp" trừ EXP trực tiếp:
+ * 1. Lấy EXP hiện tại - số EXP tương ứng.
+ * 2. Logic an toàn: Math.max(0, currentExp - penalty) đảm bảo EXP không bao giờ âm.
+ * 3. Nếu tài khoản đang ở Chí Tôn Cực Đạo (isAscended: true) mà EXP tụt dưới 1500 -> BẮT BUỘC đổi isAscended = false (đánh rớt cảnh giới ẩn).
+ * 4. Gọi lại hàm tính toán Cấp độ (getRankByExp) để tự động giáng cấp.
+ * 5. Cập nhật dữ liệu mới lên Firebase (users/{userId}) và LocalStorage.
+ * 6. Hiển thị thông báo (Toast/Alert) màu đỏ: "Thiên kiếp đã giáng xuống! Đạo hữu này vừa bị hao tổn [X] tu vi."
+ */
+async function executeThienKiep(amount, kiepName) {
+    if (!currentThienKiepTargetUser) return;
+    const target = currentThienKiepTargetUser;
+    const targetUid = target.userId;
+    if (!targetUid) {
+        showToast('Không xác định được UID của tài khoản!', 'error');
+        return;
+    }
+
+    try {
+        const currentExp = getUserExp(target.username, target);
+        // Logic an toàn: Đảm bảo EXP không bao giờ bị âm
+        const newExp = Math.max(0, currentExp - amount);
+
+        // Kiểm tra xem tài khoản có đang ở cảnh giới "Chí Tôn Cực Đạo" không
+        const wasCucDao = !!(
+            target.isAscended === true || 
+            target.isAscended === 'true' || 
+            target.level === 7 || 
+            (target.rank && typeof target.rank === 'string' && target.rank.toLowerCase().includes('cực đạo')) ||
+            (target.rank && target.rank.level === 7) ||
+            localStorage.getItem('isAscended_' + targetUid) === 'true' ||
+            (target.username && localStorage.getItem('isAscended_' + target.username) === 'true')
+        );
+
+        // NẾU đang ở "Chí Tôn Cực Đạo" mà bị đánh tụt EXP xuống dưới ngưỡng 1500:
+        // BẮT BUỘC phải đổi cờ isAscended về false (Đánh rớt cảnh giới ẩn).
+        let newIsAscended = wasCucDao;
+        if (wasCucDao && newExp < 1500) {
+            newIsAscended = false;
+        }
+
+        // Gọi lại hàm tính toán Cấp độ (Rank) để hệ thống tự động giáng cấp (nếu có)
+        const newRank = getRankByExp(newExp, newIsAscended);
+        const newLevel = newRank.level || 1;
+        const newRankName = newRank.name || 'PHÀM CẢNH';
+
+        const updateData = {
+            exp: newExp,
+            level: newLevel,
+            rank: newRankName,
+            rankId: newRank.id || 'gamo',
+            isAscended: newIsAscended,
+            updatedAt: Date.now()
+        };
+
+        // 1. Cập nhật dữ liệu mới lên Firebase Realtime Database (users/{userId})
+        if (window.update && window.ref && window.db) {
+            await update(ref(db, `users/${targetUid}`), updateData);
+        } else if (window.FirebaseService && typeof FirebaseService.updateUserStats === 'function') {
+            await FirebaseService.updateUserStats(targetUid, updateData);
+        }
+
+        // 2. Cập nhật localStorage tương ứng
+        localStorage.setItem('exp_' + targetUid, newExp.toString());
+        localStorage.setItem('isAscended_' + targetUid, newIsAscended ? 'true' : 'false');
+        if (target.username) {
+            localStorage.setItem('exp_' + target.username, newExp.toString());
+            localStorage.setItem('isAscended_' + target.username, newIsAscended ? 'true' : 'false');
+        }
+
+        // 3. Cập nhật đối tượng user trong bộ nhớ admin
+        target.exp = newExp;
+        target.level = newLevel;
+        target.rank = newRankName;
+        target.rankId = newRank.id;
+        target.isAscended = newIsAscended;
+
+        const cachedIdx = adminUsersList.findIndex(u => u.userId === targetUid);
+        if (cachedIdx !== -1) {
+            adminUsersList[cachedIdx].exp = newExp;
+            adminUsersList[cachedIdx].level = newLevel;
+            adminUsersList[cachedIdx].rank = newRankName;
+            adminUsersList[cachedIdx].rankId = newRank.id;
+            adminUsersList[cachedIdx].isAscended = newIsAscended;
+        }
+
+        // 4. Đóng modal và render lại bảng quản lý
+        closeThienKiepModal();
+        renderUserTable();
+
+        // 5. Hiển thị thông báo (Toast/Alert) màu đỏ đúng chuẩn
+        const penaltyMsg = `Thiên kiếp đã giáng xuống! Đạo hữu này vừa bị hao tổn ${amount} tu vi.`;
+        showToast(penaltyMsg, 'error');
+        console.log(`[Admin] Giáng thiên kiếp (${kiepName} -${amount} EXP) cho ${target.username}. EXP mới: ${newExp}, Cảnh giới mới: Cấp ${newLevel} (${newRankName}), isAscended: ${newIsAscended}`);
+    } catch (err) {
+        console.error('[Admin] Lỗi khi giáng thiên kiếp:', err);
+        showToast(`Lỗi khi giáng thiên kiếp: ${err.message || err}`, 'error');
+    }
+}
+window.openThienKiepModal = openThienKiepModal;
+window.closeThienKiepModal = closeThienKiepModal;
+window.executeThienKiep = executeThienKiep;
 
 /**
  * Đổi tên người dùng (Task 3: Admin User Rename)
@@ -1544,15 +1729,30 @@ function showToast(message, type = 'success') {
     const toast = document.getElementById('toast-message');
     if (!toast) return;
 
-    const iconClass = (type === 'error') ? 'fa-circle-xmark' : 'fa-circle-check';
-    const iconColor = (type === 'error') ? '#f87171' : '#38bdf8';
+    const isError = (type === 'error' || type === 'danger');
+    const isWarning = (type === 'warning');
+    const iconClass = isError ? 'fa-solid fa-bolt-lightning' : (isWarning ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check');
+    const iconColor = isError ? '#f87171' : (isWarning ? '#f59e0b' : '#38bdf8');
 
-    toast.innerHTML = `<i class="fa-solid ${iconClass}" style="color: ${iconColor};"></i> <span>${message}</span>`;
+    toast.innerHTML = `<i class="${iconClass}" style="color: ${iconColor}; font-size: 15px;"></i> <span>${message}</span>`;
+    
+    if (isError) {
+        toast.style.background = '#450a0a';
+        toast.style.color = '#fecaca';
+        toast.style.border = '1.5px solid #ef4444';
+        toast.style.boxShadow = '0 10px 25px rgba(220, 38, 38, 0.5), 0 0 15px rgba(239, 68, 68, 0.4)';
+    } else {
+        toast.style.background = '';
+        toast.style.color = '';
+        toast.style.border = '';
+        toast.style.boxShadow = '';
+    }
+
     toast.classList.remove('hidden');
 
     setTimeout(() => {
         toast.classList.add('hidden');
-    }, 2400);
+    }, 2800);
 }
 
 function openAdminNotification() {

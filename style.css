@@ -3117,6 +3117,32 @@ body.mode-test .test-layout-view {
     color: #94a3b8;
 }
 
+.btn-action.btn-buff-exp {
+    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    border: 1px solid #f97316;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+}
+
+.btn-action.btn-buff-exp:hover {
+    background: linear-gradient(135deg, #d97706 0%, #c2410c 100%);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.5);
+    transform: translateY(-1px);
+}
+
+.btn-action.btn-penalty-exp {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    border: 1px solid #ef4444;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.45);
+}
+
+.btn-action.btn-penalty-exp:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.65);
+    transform: translateY(-1px);
+}
+
 /* Trạng thái hoạt động Online / Offline cho Admin */
 .user-activity-status {
     display: inline-flex;

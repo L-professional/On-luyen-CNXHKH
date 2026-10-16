@@ -631,6 +631,92 @@
         </div>
     </div>
 
+    <!-- Modal "Giáng hạ Lôi Kiếp" (Giáng Thiên Kiếp trừ EXP) -->
+    <div id="thienKiepModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden modal-backdrop" onclick="if(event.target.id === 'thienKiepModal') closeThienKiepModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(10, 10, 20, 0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+        <div class="bg-slate-950 text-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden border border-red-600/50 flex flex-col modal-card" style="background: #090d16; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(220, 38, 38, 0.35); border: 1.5px solid rgba(220, 38, 38, 0.6); display: flex; flex-direction: column;">
+            
+            <!-- Modal Header: Sắc thái hắc ám, tia sét -->
+            <div class="px-6 py-4 border-b border-red-600/30 bg-gradient-to-r from-red-950/80 via-slate-950 to-purple-950/80 flex items-center justify-between" style="padding: 16px 24px; border-bottom: 1px solid rgba(220, 38, 38, 0.3); background: linear-gradient(90deg, rgba(127, 29, 29, 0.5) 0%, rgba(9, 13, 22, 0.95) 50%, rgba(88, 28, 135, 0.4) 100%); display: flex; align-items: center; justify-content: space-between;">
+                <div class="flex items-center gap-3">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #ef4444, #7f1d1d); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); border: 1px solid #f87171;">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black uppercase tracking-wide bg-gradient-to-r from-red-400 via-rose-300 to-amber-400 bg-clip-text text-transparent" style="margin: 0; font-size: 18px; font-weight: 800; background: linear-gradient(90deg, #f87171 0%, #fb7185 50%, #fca5a5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            Giáng hạ Lôi Kiếp
+                        </h3>
+                        <p class="text-xs text-red-300/80" id="thienKiepModalSubtitle" style="margin: 2px 0 0 0; font-size: 12px; color: #fca5a5;">
+                            Quyền lực Thiên Đạo: Trừng phạt tiêu giảm tu vi EXP của đệ tử
+                        </p>
+                    </div>
+                </div>
+                <button type="button" class="w-8 h-8 rounded-lg bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-800 cursor-pointer" onclick="closeThienKiepModal()" style="width: 32px; height: 32px; border-radius: 8px; background: #1e1b2e; border: 1px solid #3b2d54; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                <!-- Thông tin người chịu phạt -->
+                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-red-900/40 flex items-center justify-between" id="thienKiepTargetInfo" style="padding: 14px 16px; border-radius: 12px; background: rgba(20, 15, 28, 0.85); border: 1px solid rgba(220, 38, 38, 0.35); display: flex; align-items: center; justify-content: space-between;">
+                    <!-- Injected dynamically by admin.js -->
+                </div>
+
+                <!-- 3 Lựa chọn Lôi Kiếp Trừng Phạt -->
+                <div class="space-y-3" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Lựa chọn 1: Thái Thanh Thần Lôi (Trừ 100 EXP) -->
+                    <button type="button" class="w-full p-4 rounded-xl border border-red-500/40 bg-gradient-to-r from-red-950/40 via-slate-900 to-purple-950/30 hover:from-red-900/60 hover:to-slate-800 transition flex items-center justify-between group cursor-pointer" onclick="executeThienKiep(100, 'Thái Thanh Thần Lôi')" style="width: 100%; padding: 14px 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4); background: linear-gradient(90deg, rgba(127, 29, 29, 0.3) 0%, rgba(20, 15, 28, 0.9) 100%); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl" style="filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));">⚡</span>
+                            <div style="text-align: left;">
+                                <div class="font-bold text-red-300 text-sm md:text-base group-hover:text-red-200 transition">Thái Thanh Thần Lôi</div>
+                                <div class="text-xs text-slate-400">Thần lôi cảnh cáo, hao tổn căn cơ tu vi</div>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-red-950/60 text-red-300 font-extrabold text-sm border border-red-500/50 group-hover:bg-red-600 group-hover:text-white transition shadow-sm" style="padding: 4px 12px; border-radius: 9999px; background: rgba(127, 29, 29, 0.4); color: #fca5a5; font-weight: 800; font-size: 13px; border: 1px solid rgba(239, 68, 68, 0.5);">
+                            -100 EXP
+                        </span>
+                    </button>
+
+                    <!-- Lựa chọn 2: Tử Tiêu Hỗn Độn Lôi (Trừ 500 EXP) -->
+                    <button type="button" class="w-full p-4 rounded-xl border border-purple-500/50 bg-gradient-to-r from-purple-950/50 via-slate-900 to-red-950/40 hover:from-purple-900/70 hover:to-slate-800 transition flex items-center justify-between group cursor-pointer shadow-md shadow-purple-950/30" onclick="executeThienKiep(500, 'Tử Tiêu Hỗn Độn Lôi')" style="width: 100%; padding: 14px 18px; border-radius: 12px; border: 1.5px solid rgba(168, 85, 247, 0.45); background: linear-gradient(90deg, rgba(88, 28, 135, 0.35) 0%, rgba(20, 15, 28, 0.9) 100%); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; box-shadow: 0 4px 12px rgba(88, 28, 135, 0.2);">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl" style="filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.7));">🌩️</span>
+                            <div style="text-align: left;">
+                                <div class="font-bold text-purple-300 text-sm md:text-base group-hover:text-purple-200 transition">Tử Tiêu Hỗn Độn Lôi</div>
+                                <div class="text-xs text-slate-400">Hỗn độn lôi kiếp, kinh mạch tổn hao trầm trọng</div>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-purple-950/60 text-purple-300 font-extrabold text-sm border border-purple-500/50 group-hover:bg-purple-600 group-hover:text-white transition shadow-sm" style="padding: 4px 12px; border-radius: 9999px; background: rgba(88, 28, 135, 0.4); color: #d8b4fe; font-weight: 800; font-size: 13px; border: 1px solid rgba(168, 85, 247, 0.5);">
+                            -500 EXP
+                        </span>
+                    </button>
+
+                    <!-- Lựa chọn 3: Vạn Đạo Diệt Thế Kiếp (Trừ 2000 EXP) -->
+                    <button type="button" class="w-full p-4 rounded-xl border border-red-600/70 bg-gradient-to-r from-red-950/80 via-black to-slate-900 hover:from-red-900/90 hover:to-slate-800 transition flex items-center justify-between group cursor-pointer shadow-lg shadow-red-600/30" onclick="executeThienKiep(2000, 'Vạn Đạo Diệt Thế Kiếp')" style="width: 100%; padding: 14px 18px; border-radius: 12px; border: 1.5px solid rgba(220, 38, 38, 0.75); background: linear-gradient(90deg, rgba(153, 27, 27, 0.5) 0%, rgba(9, 13, 22, 0.95) 100%); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; box-shadow: 0 4px 18px rgba(220, 38, 38, 0.3);">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl" style="filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.9));">🔥</span>
+                            <div style="text-align: left;">
+                                <div class="font-bold text-red-400 text-sm md:text-base group-hover:text-red-300 transition">Vạn Đạo Diệt Thế Kiếp</div>
+                                <div class="text-xs text-red-300/70">Diệt thế thiên kiếp, đạo tâm tan biến, giáng cấp tàn khốc</div>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-red-600 text-white font-black text-sm border border-red-400 group-hover:bg-red-700 transition shadow-md shadow-red-600/50" style="padding: 4px 12px; border-radius: 9999px; background: #dc2626; color: #ffffff; font-weight: 900; font-size: 13px; border: 1px solid #ef4444; box-shadow: 0 0 10px rgba(220, 38, 38, 0.6);">
+                            -2000 EXP
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-slate-950 border-t border-slate-900 flex justify-end" style="padding: 12px 24px; background: #05070e; border-top: 1px solid #1e1b2e; display: flex; justify-content: flex-end;">
+                <button type="button" class="px-5 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-xs font-bold cursor-pointer" onclick="closeThienKiepModal()" style="padding: 8px 18px; border-radius: 10px; background: #1a1726; color: #cbd5e1; border: 1px solid #3b2d54; font-weight: 700; cursor: pointer; font-size: 13px;">
+                    Thu hồi lôi kiếp (Đóng)
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Reusable Modal Window -->
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeAdminModalOnBackdrop(event)">
         <div class="modal-card" id="modal-card">
