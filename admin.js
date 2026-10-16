@@ -605,10 +605,69 @@ function renderUserTable(searchKeyword = '') {
         const userRank = getResolvedUserRank(u);
         const rankLevel = userRank.level;
 
-        // Render Avatar: Kiểm tra nếu user có photoURL thì render thẻ <img>, nếu không mới dùng Avatar chữ cái đầu
-        const avatarImgHtml = u.photoURL
-            ? `<img src="${escapeHtml(u.photoURL)}" alt="${escapeHtml(u.username)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='${(u.username || 'U').charAt(0).toUpperCase()}';">`
-            : (u.username || 'U').charAt(0).toUpperCase();
+        // Nhận diện tài khoản Google (User_Google hoặc user đăng nhập Google)
+        const isGoogleUser = (u.username && (u.username.toLowerCase().includes('google') || u.username.startsWith('User_Google'))) ||
+                             (u.photoURL && (u.photoURL.includes('googleusercontent') || u.photoURL.includes('google'))) ||
+                             (u.email && u.email.includes('@') && u.photoURL);
+
+        // Khung viền Avatar phong cách viễn tưởng (Avatar Frames) 3D lấp lánh
+        let frameImgSrc = `images/frame-${rankLevel}.png`;
+        let innerBorderClass = '';
+        let innerBorderStyle = '';
+        let glowClass = `avatar-frame-glow-rank-${rankLevel}`;
+        let glowStyle = '';
+
+        if (isGoogleUser) {
+            // Tài khoản Google: Khung viền ánh xanh ngọc (Cyan/Green-Blue)
+            frameImgSrc = 'images/avatar-frame-cyan.png';
+            innerBorderClass = 'border-2 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.7)] animate-pulse';
+            innerBorderStyle = 'border: 2px solid #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.7);';
+            glowClass = 'avatar-frame-glow-google';
+            glowStyle = 'filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.85)) drop-shadow(0 0 10px rgba(16, 185, 129, 0.55));';
+        } else {
+            switch (rankLevel) {
+                case 1:
+                    innerBorderClass = 'border-2 border-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.45)]';
+                    innerBorderStyle = 'border: 2px solid #94a3b8; box-shadow: 0 0 8px rgba(148, 163, 184, 0.45);';
+                    glowStyle = 'filter: drop-shadow(0 0 4px rgba(148, 163, 184, 0.5));';
+                    break;
+                case 2:
+                    innerBorderClass = 'border-2 border-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse';
+                    innerBorderStyle = 'border: 2px solid #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);';
+                    glowStyle = 'filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.6));';
+                    break;
+                case 3:
+                    innerBorderClass = 'border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse';
+                    innerBorderStyle = 'border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);';
+                    glowStyle = 'filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));';
+                    break;
+                case 4:
+                    innerBorderClass = 'border-2 border-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.7)] animate-pulse';
+                    innerBorderStyle = 'border: 2px solid #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.7);';
+                    glowStyle = 'filter: drop-shadow(0 0 7px rgba(168, 85, 247, 0.75));';
+                    break;
+                case 5:
+                    innerBorderClass = 'border-2 border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse';
+                    innerBorderStyle = 'border: 2px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);';
+                    glowStyle = 'filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));';
+                    break;
+                case 6:
+                    innerBorderClass = 'border-2 border-rose-500 shadow-[0_0_14px_rgba(239,68,68,0.9)] animate-pulse';
+                    innerBorderStyle = 'border: 2px solid #ef4444; box-shadow: 0 0 14px rgba(239, 68, 68, 0.9), 0 0 20px rgba(245, 158, 11, 0.6);';
+                    glowStyle = 'filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 14px rgba(245, 158, 11, 0.7));';
+                    break;
+                default:
+                    innerBorderClass = 'border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse';
+                    innerBorderStyle = 'border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);';
+                    glowStyle = 'filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));';
+            }
+        }
+
+        // Render nội dung Avatar (ảnh thật hoặc chữ cái đầu)
+        const initialChar = (u.username || 'U').charAt(0).toUpperCase();
+        const avatarContentHtml = u.photoURL
+            ? `<img src="${escapeHtml(u.photoURL)}" alt="${escapeHtml(u.username)}" class="w-full h-full rounded-full object-cover" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-weight: 800; font-size: 13.5px; text-transform: uppercase;\\'>${initialChar}</span>';">`
+            : `<span style="font-weight: 800; font-size: 13.5px; text-transform: uppercase;">${initialChar}</span>`;
 
         // Trạng thái hoạt động Online / Offline (Tách thành cột riêng)
         const isOnline = u.status === 'online';
@@ -647,21 +706,28 @@ function renderUserTable(searchKeyword = '') {
             <tr>
                 <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
                 <td>
-                    <div class="user-row-name" style="display: flex; align-items: center; gap: 10px;">
-                        <div class="avatar-wrapper rank-${rankLevel} avatar-mini" style="overflow: hidden; flex-shrink: 0;" title="Cấp ${rankLevel}: ${userRank.displayName || userRank.name}">
-                            ${avatarImgHtml}
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                <strong style="color: #1e293b; font-size: 14px;">${escapeHtml(u.username)}</strong>
-                                ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
+                    <div class="user-row-name" style="display: flex; align-items: center; gap: 12px;">
+                        <!-- Container Khung viền Avatar Sci-Fi (w-12 h-12) -->
+                        <div class="relative flex items-center justify-center w-12 h-12 avatar-frame-container" style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0;" title="Cấp ${rankLevel}: ${userRank.displayName || userRank.name}${isGoogleUser ? ' (Tài khoản Google)' : ''}">
+                            <!-- Avatar tròn bên trong -->
+                            <div class="avatar-inner-circle relative flex items-center justify-center w-8 h-8 rounded-full overflow-hidden ${innerBorderClass}" style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); color: #ffffff; font-weight: 800; font-size: 13.5px; ${innerBorderStyle}">
+                                ${avatarContentHtml}
                             </div>
-                            <div>
-                                <span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor};">
+                            <!-- Thẻ ảnh lớp phủ (Overlay Image) tuyệt đối bên trên hiển thị khung viền 3D lấp lánh -->
+                            <img src="${frameImgSrc}" alt="Avatar Frame" class="avatar-frame-overlay absolute inset-0 w-full h-full pointer-events-none z-10 ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; ${glowStyle}" onerror="this.style.display='none'" />
+                        </div>
+
+                        <!-- Cột Tên đăng nhập và Badge cấp độ bên cạnh -->
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <strong style="color: #1e293b; font-size: 14.5px; font-weight: 700;">${escapeHtml(u.username)}</strong>
+                                ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
+                                <span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor}; white-space: nowrap;">
                                     <i class="${userRank.icon}" style="font-size: 10px;"></i>
                                     <span>${userRank.displayName || userRank.name}</span>
                                 </span>
                             </div>
+                            ${(isGoogleUser && u.email) ? `<div style="font-size: 11px; color: #64748b; line-height: 1;"><i class="fa-solid fa-envelope" style="font-size: 9.5px; margin-right: 3px;"></i>${escapeHtml(u.email)}</div>` : ''}
                         </div>
                     </div>
                 </td>
