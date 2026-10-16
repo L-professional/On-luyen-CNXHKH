@@ -467,6 +467,13 @@ function checkAdminMenu() {
         }
     });
 
+    // Nút "Huyết chiến đoạt vị" phải được hiển thị cho TẤT CẢ người dùng đã đăng nhập (User và Admin).
+    // Tuyệt đối không chặn role === 'Admin' hay bất kỳ quyền nào ở nút này.
+    const leaderboardBtns = document.querySelectorAll('#btnLeaderboard, .btn-leaderboard');
+    leaderboardBtns.forEach(btn => {
+        if (btn) btn.style.display = 'flex';
+    });
+
     updateHeaderUserPill(user);
 }
 
@@ -4964,6 +4971,54 @@ function getLeaderboardUserRank(u, calculatedExp) {
 }
 
 /**
+ * Chuẩn hóa Khung viền Avatar (Universal Avatar Frame)
+ * Dù user ở Cảnh giới nào (từ Gà mờ đến Chí Tôn Cực Đạo, hay Admin),
+ * avatar luôn phải được bọc trong một Wrapper chuẩn:
+ * <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12">
+ *   <img src="...avatar..." class="rounded-full..." />
+ *   <img src="...avatar-frame.png..." class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110" />
+ * </div>
+ */
+function renderUniversalAvatarHtml(u, rankLevel, isAdm) {
+    if (!u) u = {};
+    const username = u.username || u.displayName || 'User';
+    const initialChar = username.charAt(0).toUpperCase();
+    const photoURL = u.photoURL;
+
+    const isGoogleUser = (username && (username.toLowerCase().includes('google') || username.startsWith('User_Google'))) ||
+                         (photoURL && (photoURL.includes('googleusercontent') || photoURL.includes('google'))) ||
+                         (u.email && u.email.includes('@') && photoURL);
+
+    let frameImgSrc = 'images/frame-1.png';
+    let glowClass = '';
+
+    if (isAdm) {
+        frameImgSrc = 'images/frame-6.png';
+        glowClass = 'avatar-frame-glow-admin';
+    } else if (isGoogleUser) {
+        frameImgSrc = 'images/avatar-frame-cyan.png';
+        glowClass = 'avatar-frame-glow-google';
+    } else {
+        const lvl = Math.min(6, Math.max(1, parseInt(rankLevel, 10) || 1));
+        frameImgSrc = `images/frame-${lvl}.png`;
+        glowClass = `avatar-frame-glow-rank-${lvl}`;
+    }
+
+    const fallbackLetterHtml = `<div class="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${initialChar}</div>`;
+
+    const avatarInnerHtml = photoURL
+        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${fallbackLetterHtml}';" />`
+        : fallbackLetterHtml;
+
+    return `
+        <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0" style="position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+            ${avatarInnerHtml}
+            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110 object-contain ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; transform: scale(1.1);" onerror="this.style.display='none'" />
+        </div>
+    `.trim();
+}
+
+/**
  * Đọc tổng điểm EXP của một tài khoản:
  * Ưu tiên dữ liệu mới nhất nếu là user hiện tại, sau đó kiểm tra Firebase và LocalStorage
  */
@@ -5090,19 +5145,23 @@ function closeLeaderboardModal() {
  * 2. Tách Admin lên thẻ "Chúa Tể Không Gian" độc tôn ở TRÊN CÙNG, bên ngoài khung cuộn.
  * 3. Người chơi xếp hạng từ #1 Quán Quân 👑, #2 Á Quân 🥈, #3 Quý Quân 🥉 trong khung cuộn.
  */
-async function renderLeaderboard() {
+async function renderLeaderboard(usersData) {
     const listBody = document.getElementById('leaderboardListBody');
     const adminSection = document.getElementById('leaderboardAdminSection');
     const userSummaryEl = document.getElementById('leaderboardUserSummary');
     if (!listBody) return;
 
-    // Reset admin section và hiển thị trạng thái đang tải cho listBody
+    // 1. Việc đầu tiên phải làm: Clear sạch DOM cũ trước khi map dữ liệu mới
+    listBody.innerHTML = '';
+
+    // Reset admin section
     if (adminSection) {
         adminSection.classList.add('hidden');
         adminSection.style.display = 'none';
         adminSection.innerHTML = '';
     }
 
+    // Hiển thị trạng thái đang tải
     listBody.innerHTML = `
         <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-3" style="text-align: center; padding: 40px 20px;">
             <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-400"></i>
@@ -5111,52 +5170,65 @@ async function renderLeaderboard() {
     `;
 
     try {
-        const rawUsers = await fetchLeaderboardUsers();
+        const rawUsers = (Array.isArray(usersData) && usersData.length) ? usersData : await fetchLeaderboardUsers();
         const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
         const currentUid = typeof getCurrentUserUID === 'function' ? getCurrentUserUID() : null;
-        const currentUsername = currentUser ? currentUser.username : null;
 
-        // Chuẩn hóa, tính điểm EXP & Rank theo hàm chung getRankByExp(), loại bỏ tài khoản ảo / mock / rác
-        const validUsers = rawUsers.filter(u => {
-            if (!u || typeof u !== 'object') return false;
-            if (u.userId === 'u_student_loc_2026' || u.username === 'Loc') return false;
-            const hasValidName = (u.username && typeof u.username === 'string' && u.username.trim().length > 0) ||
-                                 (u.displayName && typeof u.displayName === 'string' && u.displayName.trim().length > 0);
-            const hasValidId = (u.userId && typeof u.userId === 'string' && u.userId.trim().length > 0) ||
-                               (u.id && typeof u.id === 'string' && u.id.trim().length > 0);
-            return hasValidName && hasValidId;
-        });
+        // 2. DEDUPLICATION: Sử dụng Map theo username chữ thường để chống duplicate tuyệt đối
+        const userMap = new Map();
 
-        let usersList = validUsers.map(u => {
+        (rawUsers || []).forEach(u => {
+            if (!u || typeof u !== 'object') return;
+            const uname = (u.username || u.displayName || '').trim();
+            if (!uname) return;
+
+            const key = uname.toLowerCase();
             const exp = getLeaderboardUserExp(u);
             const rank = getLeaderboardUserRank(u, exp);
-            return {
-                ...u,
-                calculatedExp: exp,
-                calculatedRank: rank
-            };
+
+            const existing = userMap.get(key);
+            if (!existing || exp > (existing.calculatedExp || 0) || (rank.level > (existing.calculatedRank ? existing.calculatedRank.level : 0))) {
+                userMap.set(key, {
+                    ...u,
+                    username: u.username || uname,
+                    calculatedExp: exp,
+                    calculatedRank: rank
+                });
+            }
         });
 
         // Đảm bảo user hiện tại có trong danh sách nếu chưa có
-        if (currentUser && !usersList.some(u => (currentUid && u.userId === currentUid) || (u.username && currentUsername && u.username.toLowerCase() === currentUsername.toLowerCase()))) {
-            const exp = getLeaderboardUserExp(currentUser);
-            const rank = getLeaderboardUserRank(currentUser, exp);
-            usersList.push({
-                ...currentUser,
-                userId: currentUid,
-                calculatedExp: exp,
-                calculatedRank: rank
-            });
+        if (currentUser && currentUser.username) {
+            const curKey = currentUser.username.trim().toLowerCase();
+            const curExp = getLeaderboardUserExp(currentUser);
+            const curRank = getLeaderboardUserRank(currentUser, curExp);
+            const existing = userMap.get(curKey);
+            if (!existing) {
+                userMap.set(curKey, {
+                    ...currentUser,
+                    userId: currentUid || currentUser.userId,
+                    calculatedExp: curExp,
+                    calculatedRank: curRank
+                });
+            } else if (curExp > (existing.calculatedExp || 0)) {
+                existing.calculatedExp = curExp;
+                existing.calculatedRank = curRank;
+            }
         }
 
-        // TÁCH BIỆT ADMIN - "CHÚA TỂ KHÔNG GIAN"
-        // Trước khi sắp xếp và render danh sách Bảng xếp hạng, hãy filter (tách) tài khoản Admin ra khỏi mảng users
-        const isAdminCheck = u => (u.role && u.role.toLowerCase() === 'admin') || 
-                                  (u.username && u.username.toLowerCase() === 'admin') || 
-                                  !!u.isRoot;
+        const usersList = Array.from(userMap.values());
 
-        const adminUser = usersList.find(isAdminCheck);
-        const mortalUsers = usersList.filter(u => !isAdminCheck(u));
+        // 3. TÁCH BIỆT ADMIN - CHỈ LOẠI BỎ TÀI KHOẢN ADMIN:
+        // CHỈ loại bỏ tài khoản Admin (user.username !== 'Admin'). Tuyệt đối không filter bỏ đi rank Chí Tôn Cực Đạo hay bất kỳ rank hợp lệ nào khác.
+        // Đảm bảo tài khoản "Loc" (Cấp 7) luôn nằm trong mortalUsers và leo Top BXH theo đúng số EXP.
+        const isAdminUser = u => {
+            const uname = (u.username || '').trim().toLowerCase();
+            const role = (u.role || '').trim().toLowerCase();
+            return uname === 'admin' || role === 'admin' || !!u.isRoot;
+        };
+
+        const adminUser = usersList.find(isAdminUser);
+        const mortalUsers = usersList.filter(u => !isAdminUser(u));
 
         // Sắp xếp mảng người chơi thường theo thứ tự giảm dần của EXP
         mortalUsers.sort((a, b) => {
@@ -5173,14 +5245,14 @@ async function renderLeaderboard() {
             return (a.username || '').localeCompare(b.username || '');
         });
 
-        // 1. RENDER THẺ CỦA ADMIN NẰM Ở VỊ TRÍ TRÊN CÙNG, BÊN NGOÀI KHUNG CUỘN CỦA BẢNG XẾP HẠNG
+        // 4. RENDER THẺ CỦA ADMIN NẰM Ở VỊ TRÍ TRÊN CÙNG, BÊN NGOÀI KHUNG CUỘN CỦA BẢNG XẾP HẠNG
         if (adminSection) {
             if (adminUser) {
                 adminSection.classList.remove('hidden');
                 adminSection.style.display = 'block';
 
                 const adminDisplayName = adminUser.displayName || adminUser.username || 'Admin';
-                const isCurrentAdmin = (currentUser && isAdminCheck(currentUser));
+                const isCurrentAdmin = (currentUser && isAdminUser(currentUser));
 
                 adminSection.innerHTML = `
                     <div class="admin-sovereign-card relative flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-red-950/70 via-slate-900 to-amber-950/60 border-2 border-red-500/70 shadow-lg shadow-red-500/25 text-white transition mb-1" style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.75) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.65) 100%); border: 2px solid rgba(239, 68, 68, 0.75); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4); display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; position: relative;">
@@ -5192,13 +5264,8 @@ async function renderLeaderboard() {
                             </span>
                         </div>
 
-                        <!-- Khung viền Avatar Sci-Fi Admin (w-12 h-12) lấp lánh đỏ kim -->
-                        <div class="relative flex items-center justify-center w-12 h-12 avatar-frame-container" style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0;" title="Thiên Địa Pháp Tắc - Tối Cao Vô Thượng">
-                            <div class="avatar-inner-circle relative flex items-center justify-center w-8 h-8 rounded-full overflow-hidden border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.9)] animate-pulse" style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5; background: radial-gradient(circle at center, #7f1d1d 0%, #0f172a 100%); color: #ffffff; font-weight: 800; font-size: 13.5px; border: 2px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.9);">
-                                ${adminUser.photoURL ? `<img src="${escapeHtml(adminUser.photoURL)}" alt="Admin" class="w-full h-full rounded-full object-cover" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-weight: 800; font-size: 13.5px;\\'>A</span>';">` : '<span style="font-weight: 800; font-size: 13.5px;">A</span>'}
-                            </div>
-                            <img src="images/frame-6.png" alt="Admin Frame" class="avatar-frame-overlay absolute inset-0 w-full h-full pointer-events-none z-10 avatar-frame-glow-admin" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 15px rgba(245, 158, 11, 0.85));" onerror="this.style.display='none'" />
-                        </div>
+                        <!-- Universal Avatar Frame Wrapper chuẩn cho Admin -->
+                        ${renderUniversalAvatarHtml(adminUser, 99, true)}
 
                         <!-- Tên Admin & Cảnh giới Thiên Địa Pháp Tắc -->
                         <div class="flex-1 min-w-0" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;">
@@ -5241,10 +5308,10 @@ async function renderLeaderboard() {
 
         // Cập nhật thông tin tóm tắt của user hiện tại
         if (userSummaryEl) {
-            const isCurAdm = (currentUser && isAdminCheck(currentUser));
+            const isCurAdm = (currentUser && isAdminUser(currentUser));
             const myRankIndex = mortalUsers.findIndex(u => 
                 (currentUid && u.userId === currentUid) || 
-                (currentUsername && u.username && u.username.toLowerCase() === currentUsername.toLowerCase())
+                (currentUser && currentUser.username && u.username && u.username.toLowerCase() === currentUser.username.toLowerCase())
             );
             const myStats = typeof getUserStats === 'function' ? getUserStats() : { exp: 0 };
             const myExp = isCurAdm ? Infinity : (myRankIndex !== -1 ? mortalUsers[myRankIndex].calculatedExp : myStats.exp);
@@ -5273,6 +5340,9 @@ async function renderLeaderboard() {
             `;
         }
 
+        // Clear sạch DOM cũ trước khi map dữ liệu mới
+        listBody.innerHTML = '';
+
         if (!mortalUsers.length) {
             listBody.innerHTML = `
                 <div class="text-center py-12 text-slate-400">
@@ -5290,74 +5360,7 @@ async function renderLeaderboard() {
             const rankLevel = userRank.level || 1;
 
             const isCurrentPlayer = (currentUid && u.userId === currentUid) ||
-                                    (currentUsername && u.username && u.username.toLowerCase() === currentUsername.toLowerCase());
-
-            const isGoogleUser = (u.username && (u.username.toLowerCase().includes('google') || u.username.startsWith('User_Google'))) ||
-                                 (u.photoURL && (u.photoURL.includes('googleusercontent') || u.photoURL.includes('google'))) ||
-                                 (u.email && u.email.includes('@') && u.photoURL);
-
-            // Cấu hình Khung viền Avatar Sci-Fi (Avatar Frames) 3D lấp lánh khớp chuẩn với admin
-            let frameImgSrc = `images/frame-${rankLevel >= 7 ? 6 : rankLevel}.png`;
-            let innerBorderClass = '';
-            let innerBorderStyle = '';
-            let glowClass = `avatar-frame-glow-rank-${rankLevel >= 7 ? 6 : rankLevel}`;
-            let glowStyle = '';
-
-            if (isGoogleUser) {
-                frameImgSrc = 'images/avatar-frame-cyan.png';
-                innerBorderClass = 'border-2 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.7)] animate-pulse';
-                innerBorderStyle = 'border: 2px solid #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.7);';
-                glowClass = 'avatar-frame-glow-google';
-                glowStyle = 'filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.85)) drop-shadow(0 0 10px rgba(16, 185, 129, 0.55));';
-            } else {
-                switch (rankLevel) {
-                    case 1:
-                        innerBorderClass = 'border-2 border-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.45)]';
-                        innerBorderStyle = 'border: 2px solid #94a3b8; box-shadow: 0 0 8px rgba(148, 163, 184, 0.45);';
-                        glowStyle = 'filter: drop-shadow(0 0 4px rgba(148, 163, 184, 0.5));';
-                        break;
-                    case 2:
-                        innerBorderClass = 'border-2 border-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);';
-                        glowStyle = 'filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.6));';
-                        break;
-                    case 3:
-                        innerBorderClass = 'border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);';
-                        glowStyle = 'filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));';
-                        break;
-                    case 4:
-                        innerBorderClass = 'border-2 border-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.7)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.7);';
-                        glowStyle = 'filter: drop-shadow(0 0 7px rgba(168, 85, 247, 0.75));';
-                        break;
-                    case 5:
-                        innerBorderClass = 'border-2 border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);';
-                        glowStyle = 'filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));';
-                        break;
-                    case 6:
-                        innerBorderClass = 'border-2 border-rose-500 shadow-[0_0_14px_rgba(239,68,68,0.9)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #ef4444; box-shadow: 0 0 14px rgba(239, 68, 68, 0.9), 0 0 20px rgba(245, 158, 11, 0.6);';
-                        glowStyle = 'filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 14px rgba(245, 158, 11, 0.7));';
-                        break;
-                    case 7:
-                        innerBorderClass = 'border-2 border-rose-500 shadow-[0_0_16px_rgba(244,63,94,0.9)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #f43f5e; box-shadow: 0 0 16px rgba(244, 63, 94, 0.9);';
-                        glowStyle = 'filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.9)) drop-shadow(0 0 15px rgba(251, 113, 133, 0.8));';
-                        break;
-                    default:
-                        innerBorderClass = 'border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse';
-                        innerBorderStyle = 'border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);';
-                        glowStyle = 'filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));';
-                }
-            }
-
-            // Render Avatar hình ảnh hoặc chữ cái đầu
-            const initialChar = (u.username || 'U').charAt(0).toUpperCase();
-            const avatarContentHtml = u.photoURL
-                ? `<img src="${escapeHtml(u.photoURL)}" alt="${escapeHtml(u.username)}" class="w-full h-full rounded-full object-cover" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-weight: 800; font-size: 13.5px; text-transform: uppercase;\\'>${initialChar}</span>';">`
-                : `<span style="font-weight: 800; font-size: 13.5px; text-transform: uppercase;">${initialChar}</span>`;
+                                    (currentUser && currentUser.username && u.username && u.username.toLowerCase() === currentUser.username.toLowerCase());
 
             // Áp dụng class Tailwind & Style riêng biệt theo chỉ số index cho Top 1, Top 2, Top 3, Top 4+
             let rowClasses = '';
@@ -5432,13 +5435,8 @@ async function renderLeaderboard() {
                     <!-- Cột Hạng / Thứ tự (Crown / Medals / Numbers) -->
                     ${rankBadgeHtml}
 
-                    <!-- Khung viền Avatar Sci-Fi (w-12 h-12) với overlay image và hiệu ứng lấp lánh -->
-                    <div class="relative flex items-center justify-center w-12 h-12 avatar-frame-container" style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0;" title="Cấp ${rankLevel}: ${userRank.displayName || userRank.name}${isGoogleUser ? ' (Tài khoản Google)' : ''}">
-                        <div class="avatar-inner-circle relative flex items-center justify-center w-8 h-8 rounded-full overflow-hidden ${innerBorderClass}" style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); color: #ffffff; font-weight: 800; font-size: 13.5px; ${innerBorderStyle}">
-                            ${avatarContentHtml}
-                        </div>
-                        <img src="${frameImgSrc}" alt="Avatar Frame" class="avatar-frame-overlay absolute inset-0 w-full h-full pointer-events-none z-10 ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; ${glowStyle}" onerror="this.style.display='none'" />
-                    </div>
+                    <!-- Universal Avatar Frame Wrapper chuẩn -->
+                    ${renderUniversalAvatarHtml(u, rankLevel, false)}
 
                     <!-- Tên người chơi & Huy hiệu Cấp độ -->
                     <div class="flex-1 min-w-0" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;">
@@ -5447,7 +5445,6 @@ async function renderLeaderboard() {
                                 ${escapeHtml(displayName)}
                             </strong>
                             ${isCurrentPlayer ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #2563eb; color: #fff;">Bạn</span>' : ''}
-                            ${isGoogleUser ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cyan-100 text-cyan-800 border border-cyan-300" style="padding: 1px 6px; border-radius: 4px; font-size: 10px; background: #cffafe; color: #155e75; border: 1px solid #a5f3fc;" title="Đăng nhập Google"><i class="fa-brands fa-google" style="font-size: 9px;"></i></span>' : ''}
                             ${userRankBadgeHtml}
                         </div>
                         ${subtitleHtml}

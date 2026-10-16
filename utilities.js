@@ -1132,6 +1132,10 @@ function checkAdminMenu(user) {
     if (adminMenuItem) {
         adminMenuItem.style.display = (user && user.role === 'admin') ? 'block' : 'none';
     }
+    const leaderboardBtns = document.querySelectorAll('#btnLeaderboard, .btn-leaderboard');
+    leaderboardBtns.forEach(btn => {
+        if (btn) btn.style.display = 'flex';
+    });
 }
 
 // ==========================================================================

@@ -475,6 +475,54 @@ function renderRankContainerHtml(level, username, options = {}) {
     return `<div class="avatar-wrapper rank-${safeLevel}${miniClass}"${titleAttr}>${innerContent}</div>`;
 }
 
+/**
+ * Chuẩn hóa Khung viền Avatar (Universal Avatar Frame)
+ * Dù user ở Cảnh giới nào (từ Gà mờ đến Chí Tôn Cực Đạo, hay Admin),
+ * avatar luôn phải được bọc trong một Wrapper chuẩn:
+ * <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12">
+ *   <img src="...avatar..." class="rounded-full..." />
+ *   <img src="...avatar-frame.png..." class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110" />
+ * </div>
+ */
+function renderUniversalAvatarHtml(u, rankLevel, isAdm) {
+    if (!u) u = {};
+    const username = u.username || u.displayName || 'User';
+    const initialChar = username.charAt(0).toUpperCase();
+    const photoURL = u.photoURL;
+
+    const isGoogleUser = (username && (username.toLowerCase().includes('google') || username.startsWith('User_Google'))) ||
+                         (photoURL && (photoURL.includes('googleusercontent') || photoURL.includes('google'))) ||
+                         (u.email && u.email.includes('@') && photoURL);
+
+    let frameImgSrc = 'images/frame-1.png';
+    let glowClass = '';
+
+    if (isAdm) {
+        frameImgSrc = 'images/frame-6.png';
+        glowClass = 'avatar-frame-glow-admin';
+    } else if (isGoogleUser) {
+        frameImgSrc = 'images/avatar-frame-cyan.png';
+        glowClass = 'avatar-frame-glow-google';
+    } else {
+        const lvl = Math.min(6, Math.max(1, parseInt(rankLevel, 10) || 1));
+        frameImgSrc = `images/frame-${lvl}.png`;
+        glowClass = `avatar-frame-glow-rank-${lvl}`;
+    }
+
+    const fallbackLetterHtml = `<div class="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${initialChar}</div>`;
+
+    const avatarInnerHtml = photoURL
+        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${fallbackLetterHtml}';" />`
+        : fallbackLetterHtml;
+
+    return `
+        <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0" style="position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+            ${avatarInnerHtml}
+            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110 object-contain ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; transform: scale(1.1);" onerror="this.style.display='none'" />
+        </div>
+    `.trim();
+}
+
 function updateAdminHeaderInfo() {
     const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (!userStr) return;
@@ -744,15 +792,8 @@ function renderUserTable(searchKeyword = '') {
                 <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
                 <td>
                     <div class="user-row-name" style="display: flex; align-items: center; gap: 12px;">
-                        <!-- Container Khung viền Avatar Sci-Fi (w-12 h-12) -->
-                        <div class="relative flex items-center justify-center w-12 h-12 avatar-frame-container" style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0;" title="Cấp ${rankLevel}: ${userRank.displayName || userRank.name}${isGoogleUser ? ' (Tài khoản Google)' : ''}">
-                            <!-- Avatar tròn bên trong -->
-                            <div class="avatar-inner-circle relative flex items-center justify-center w-8 h-8 rounded-full overflow-hidden ${innerBorderClass}" style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); color: #ffffff; font-weight: 800; font-size: 13.5px; ${innerBorderStyle}">
-                                ${avatarContentHtml}
-                            </div>
-                            <!-- Thẻ ảnh lớp phủ (Overlay Image) tuyệt đối bên trên hiển thị khung viền 3D lấp lánh -->
-                            <img src="${frameImgSrc}" alt="Avatar Frame" class="avatar-frame-overlay absolute inset-0 w-full h-full pointer-events-none z-10 ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; ${glowStyle}" onerror="this.style.display='none'" />
-                        </div>
+                        <!-- Universal Avatar Frame Wrapper chuẩn -->
+                        ${renderUniversalAvatarHtml(u, rankLevel, isUserAdmin)}
 
                         <!-- Cột Tên đăng nhập và Badge cấp độ bên cạnh -->
                         <div style="display: flex; flex-direction: column; gap: 3px;">
