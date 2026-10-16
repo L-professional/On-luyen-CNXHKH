@@ -138,16 +138,36 @@ function protectAdminRoute() {
 }
 
 /**
+ * Sắp xếp danh sách người dùng theo tiêu chí kép:
+ * 1. Ưu tiên status === 'online' lên đầu
+ * 2. Sắp xếp theo vần A-Z của username (localeCompare)
+ */
+function sortUsers(usersArray) {
+    if (!Array.isArray(usersArray)) return [];
+    return [...usersArray].sort((a, b) => {
+        const aOnline = (a.status === 'online') ? 1 : 0;
+        const bOnline = (b.status === 'online') ? 1 : 0;
+        if (bOnline !== aOnline) {
+            return bOnline - aOnline;
+        }
+        const nameA = (a.username || a.displayName || '').toString().trim();
+        const nameB = (b.username || b.displayName || '').toString().trim();
+        return nameA.localeCompare(nameB, 'vi', { sensitivity: 'base' });
+    });
+}
+
+/**
  * Khởi tạo dữ liệu người dùng trên Firebase / Fallback
  */
 async function ensureUserListInitialized() {
     if (window.FirebaseService) {
         await FirebaseService.ensureInitialData();
-        adminUsersList = await FirebaseService.getAllUsers();
+        const users = await FirebaseService.getAllUsers();
+        adminUsersList = sortUsers(users);
     } else {
         if (!localStorage.getItem('userList')) {
             localStorage.setItem('userList', JSON.stringify(DEFAULT_USERS));
-            adminUsersList = [...DEFAULT_USERS];
+            adminUsersList = sortUsers([...DEFAULT_USERS]);
         } else {
             try {
                 const list = JSON.parse(localStorage.getItem('userList') || '[]');
@@ -156,9 +176,9 @@ async function ensureUserListInitialized() {
                     list.unshift(DEFAULT_USERS[0]);
                     localStorage.setItem('userList', JSON.stringify(list));
                 }
-                adminUsersList = list;
+                adminUsersList = sortUsers(list);
             } catch (e) {
-                adminUsersList = [...DEFAULT_USERS];
+                adminUsersList = sortUsers([...DEFAULT_USERS]);
             }
         }
     }
@@ -183,10 +203,11 @@ function initAdminFirebaseRealtimeListeners() {
 
                 if (snapshot && snapshot.exists() && snapshot.val()) {
                     const data = snapshot.val();
-                    adminUsersList = Object.keys(data).map(uid => ({
+                    const arr = Object.keys(data).map(uid => ({
                         ...data[uid],
                         userId: uid
                     }));
+                    adminUsersList = sortUsers(arr);
                 } else {
                     adminUsersList = [];
                 }
@@ -253,12 +274,12 @@ async function saveUserList(list) {
 // HỆ THỐNG CẤP ĐỘ GAMIFICATION (RANKING & EXP POINTS) CHO ADMIN
 // ==========================================================================
 const RANK_LEVELS = [
-    { level: 1, id: 'gamo', name: 'GÀ MỜ', minExp: 0, maxExp: 100, color: '#475569', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo' },
-    { level: 2, id: 'tapsu', name: 'TẬP SỰ', minExp: 101, maxExp: 300, color: '#15803d', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu' },
-    { level: 3, id: 'tanbinh', name: 'TÂN BINH', minExp: 301, maxExp: 600, color: '#1d4ed8', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh' },
-    { level: 4, id: 'caothu', name: 'CAO THỦ', minExp: 601, maxExp: 1000, color: '#7e22ce', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu' },
-    { level: 5, id: 'daide', name: 'ĐẠI ĐẾ', minExp: 1001, maxExp: 1500, color: '#b45309', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide' },
-    { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', minExp: 1501, maxExp: Infinity, color: '#ffffff', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' }
+    { level: 1, id: 'gamo', name: 'GÀ MỜ', displayName: 'Gà mờ', minExp: 0, maxExp: 100, color: '#475569', bgColor: '#f1f5f9', textColor: '#475569', borderColor: '#cbd5e1', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo' },
+    { level: 2, id: 'tapsu', name: 'TẬP SỰ', displayName: 'Tập sự', minExp: 101, maxExp: 300, color: '#15803d', bgColor: '#dcfce7', textColor: '#15803d', borderColor: '#86efac', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu' },
+    { level: 3, id: 'tanbinh', name: 'TÂN BINH', displayName: 'Tân binh', minExp: 301, maxExp: 600, color: '#1d4ed8', bgColor: '#dbeafe', textColor: '#1d4ed8', borderColor: '#93c5fd', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh' },
+    { level: 4, id: 'caothu', name: 'CAO THỦ', displayName: 'Cao thủ', minExp: 601, maxExp: 1000, color: '#7e22ce', bgColor: '#f3e8ff', textColor: '#7e22ce', borderColor: '#d8b4fe', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu' },
+    { level: 5, id: 'daide', name: 'ĐẠI ĐẾ', displayName: 'Đại đế', minExp: 1001, maxExp: 1500, color: '#b45309', bgColor: '#fef3c7', textColor: '#92400e', borderColor: '#fcd34d', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide' },
+    { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ea580c', bgColor: '#ffedd5', textColor: '#ea580c', borderColor: '#fdba74', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' }
 ];
 
 /**
@@ -319,6 +340,113 @@ function getRankByExp(exp) {
 
 function getRankLevelByExp(exp) {
     return getRankByExp(exp).level;
+}
+
+/**
+ * Xác định chính xác Cấp độ (Rank / Level) của người dùng:
+ * Ưu tiên user.rank (chuỗi "Tập sự", "Cao thủ" hoặc object), user.level, sau đó fallback theo EXP
+ */
+function getResolvedUserRank(u) {
+    if (!u) return RANK_LEVELS[0];
+
+    // 1. Kiểm tra trường rank (string hoặc object)
+    if (u.rank) {
+        if (typeof u.rank === 'string') {
+            const rawRank = u.rank.trim().toLowerCase();
+            const matched = RANK_LEVELS.find(r => 
+                r.name.toLowerCase() === rawRank || 
+                r.displayName.toLowerCase() === rawRank || 
+                r.id.toLowerCase() === rawRank
+            );
+            if (matched) return matched;
+        } else if (typeof u.rank === 'object') {
+            if (u.rank.level) {
+                const matched = RANK_LEVELS.find(r => r.level === parseInt(u.rank.level, 10));
+                if (matched) return matched;
+            }
+            if (u.rank.name) {
+                const rawRank = u.rank.name.trim().toLowerCase();
+                const matched = RANK_LEVELS.find(r => 
+                    r.name.toLowerCase() === rawRank || 
+                    r.displayName.toLowerCase() === rawRank || 
+                    r.id.toLowerCase() === rawRank
+                );
+                if (matched) return matched;
+            }
+        }
+    }
+
+    // 2. Kiểm tra trường level (1..6)
+    if (u.level) {
+        const lvlNum = parseInt(u.level, 10);
+        const matched = RANK_LEVELS.find(r => r.level === lvlNum);
+        if (matched) return matched;
+    }
+
+    // 3. Fallback theo điểm kinh nghiệm EXP
+    const exp = getUserExp(u.username, u);
+    return getRankByExp(exp);
+}
+
+/**
+ * Lấy danh sách lịch sử thi/làm bài của người dùng từ object u hoặc localStorage
+ */
+function getUserHistoryList(u) {
+    if (!u) return [];
+    let history = [];
+    if (u.history) {
+        if (Array.isArray(u.history)) {
+            history = u.history;
+        } else if (typeof u.history === 'object') {
+            history = Object.values(u.history);
+        }
+    }
+    if (history.length === 0) {
+        const uid = u.userId || ('u_' + (u.username || '').toLowerCase());
+        const raw = localStorage.getItem('history_' + uid) || (u.username ? localStorage.getItem('history_' + u.username) : null);
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) history = parsed;
+                else if (typeof parsed === 'object') history = Object.values(parsed);
+            } catch (e) {}
+        }
+    }
+    return history.filter(item => item && typeof item === 'object');
+}
+
+/**
+ * Tính toán tiến độ học tập: đếm tổng số lượt ôn tập và số lần thi mô phỏng
+ */
+function getUserProgressSummary(u) {
+    const history = getUserHistoryList(u);
+    let mockCount = 0;
+    let practiceCount = 0;
+
+    history.forEach(item => {
+        const tId = (item.topicId !== undefined && item.topicId !== null) ? String(item.topicId).toLowerCase() : '';
+        const tName = (item.topicName || '').toLowerCase();
+        const isMock = tId === 'mock' || tName.includes('mô phỏng') || item.isMockExam;
+        if (isMock) {
+            mockCount++;
+        } else {
+            practiceCount++;
+        }
+    });
+
+    // Nếu user chưa có lịch sử làm bài dạng bản ghi nhưng có progress ở các chủ đề
+    if (practiceCount === 0 && u.progress && typeof u.progress === 'object') {
+        const progKeys = Object.keys(u.progress);
+        let completedTopics = 0;
+        progKeys.forEach(k => {
+            if (Number(u.progress[k]) > 0) completedTopics++;
+        });
+        if (completedTopics > 0) {
+            practiceCount = completedTopics;
+        }
+    }
+
+    return { practiceCount, mockCount, history };
 }
 
 /**
@@ -414,7 +542,8 @@ function renderUserTable(searchKeyword = '') {
     // BẮT BUỘC: Dọn dẹp nội dung cũ trước khi render danh sách (Clear before Render / Append)
     tbody.innerHTML = '';
 
-    let users = getUserList();
+    // Thu thập và sắp xếp: ưu tiên status === 'online' trước, sau đó theo vần A-Z của username (localeCompare)
+    let users = sortUsers(getUserList());
 
     // Loại bỏ trùng lặp UID hoặc username nếu có bản ghi tạo đúp
     const seenUids = new Set();
@@ -430,6 +559,20 @@ function renderUserTable(searchKeyword = '') {
         return true;
     });
 
+    // Cập nhật thống kê số lượng Online / Offline lên Thẻ (Card)
+    const onlineCount = users.filter(u => u.status === 'online').length;
+    const offlineCount = users.length - onlineCount;
+
+    const statOnlineCard = document.getElementById('stat-online-card');
+    const statOfflineCard = document.getElementById('stat-offline-card');
+    if (statOnlineCard) statOnlineCard.innerHTML = `🟢 Đang Online: <span id="online-users-count">${onlineCount}</span> tài khoản`;
+    if (statOfflineCard) statOfflineCard.innerHTML = `⚪ Đang Offline: <span id="offline-users-count">${offlineCount}</span> tài khoản`;
+
+    const onlineCountEl = document.getElementById('online-users-count');
+    const offlineCountEl = document.getElementById('offline-users-count');
+    if (onlineCountEl) onlineCountEl.textContent = onlineCount;
+    if (offlineCountEl) offlineCountEl.textContent = offlineCount;
+
     if (countBadge) {
         countBadge.textContent = users.length;
     }
@@ -442,7 +585,7 @@ function renderUserTable(searchKeyword = '') {
     if (users.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 13.5px;">
+                <td colspan="8" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 13.5px;">
                     <i class="fa-solid fa-user-slash" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
                     Không tìm thấy tài khoản nào phù hợp.
                 </td>
@@ -458,10 +601,14 @@ function renderUserTable(searchKeyword = '') {
         const roleClass = u.role === 'admin' ? 'role-admin' : 'role-user';
         const roleIcon = u.role === 'admin' ? 'fa-shield-halved' : 'fa-user';
 
-        // Đọc tổng điểm EXP và xác định Cấp độ MOBA (rank-1 .. rank-6)
-        const userExp = getUserExp(u.username, u);
-        const userRank = getRankByExp(userExp);
+        // Xác định chính xác cấp độ (Rank / Level)
+        const userRank = getResolvedUserRank(u);
         const rankLevel = userRank.level;
+
+        // Render Avatar: Kiểm tra nếu user có photoURL thì render thẻ <img>, nếu không mới dùng Avatar chữ cái đầu
+        const avatarImgHtml = u.photoURL
+            ? `<img src="${escapeHtml(u.photoURL)}" alt="${escapeHtml(u.username)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='${(u.username || 'U').charAt(0).toUpperCase()}';">`
+            : (u.username || 'U').charAt(0).toUpperCase();
 
         // Trạng thái hoạt động Online / Offline (Tách thành cột riêng)
         const isOnline = u.status === 'online';
@@ -474,6 +621,15 @@ function renderUserTable(searchKeyword = '') {
                    <span class="status-indicator-dot offline"></span>
                    <span class="status-indicator-text offline text-xs font-medium">${formatLastActiveTime(u.lastActive)}</span>
                </div>`;
+
+        // Tính toán Tiến độ: Đọc dữ liệu lịch sử làm bài, đếm tổng "Số lượt ôn tập" và "Số lần thi mô phỏng"
+        const { practiceCount, mockCount } = getUserProgressSummary(u);
+        const progressCellHtml = `
+            <button type="button" class="btn-progress-detail" onclick="openStatsDetailModal('${escapeHtml(userId)}')" title="Bấm để xem chi tiết 6 chủ đề của ${escapeHtml(u.username)}">
+                <i class="fa-solid fa-chart-line" style="font-size: 11px;"></i>
+                <span>Ôn tập: ${practiceCount} | Thi: ${mockCount}</span>
+            </button>
+        `;
 
         // Cột Mật khẩu: Root Admin được bảo vệ ([Đã mã hóa]), các User khác có nút mắt xem/ẩn
         const passwordCellHtml = isRootAdmin
@@ -491,18 +647,29 @@ function renderUserTable(searchKeyword = '') {
             <tr>
                 <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
                 <td>
-                    <div class="user-row-name">
-                        <div class="avatar-wrapper rank-${rankLevel} avatar-mini" title="Cấp ${rankLevel}: ${userRank.name} (${userExp} EXP)">
-                            ${(u.username || 'U').charAt(0).toUpperCase()}
+                    <div class="user-row-name" style="display: flex; align-items: center; gap: 10px;">
+                        <div class="avatar-wrapper rank-${rankLevel} avatar-mini" style="overflow: hidden; flex-shrink: 0;" title="Cấp ${rankLevel}: ${userRank.displayName || userRank.name}">
+                            ${avatarImgHtml}
                         </div>
-                        <div>
-                            <strong style="color: #1e293b; font-size: 14px;">${escapeHtml(u.username)}</strong>
-                            ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <strong style="color: #1e293b; font-size: 14px;">${escapeHtml(u.username)}</strong>
+                                ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
+                            </div>
+                            <div>
+                                <span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor};">
+                                    <i class="${userRank.icon}" style="font-size: 10px;"></i>
+                                    <span>${userRank.displayName || userRank.name}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </td>
                 <td style="white-space: nowrap;">
                     ${statusHtml}
+                </td>
+                <td>
+                    ${progressCellHtml}
                 </td>
                 <td>
                     ${passwordCellHtml}
@@ -544,6 +711,136 @@ function renderUserTable(searchKeyword = '') {
         `;
     }).join('');
 }
+
+/**
+ * Mở Modal chi tiết tiến độ 6 chủ đề của học viên (statsDetailModal)
+ * @param {string} userIdOrName UID hoặc username
+ */
+function openStatsDetailModal(userIdOrName) {
+    const modal = document.getElementById('statsDetailModal');
+    if (!modal) return;
+
+    const users = getUserList();
+    const user = users.find(u => 
+        u.userId === userIdOrName || 
+        ('u_' + (u.username || '').toLowerCase()) === userIdOrName || 
+        (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+    );
+
+    if (!user) {
+        showToast('Không tìm thấy tài khoản người dùng!', 'error');
+        return;
+    }
+
+    const modalTitle = document.getElementById('statsDetailModalTitle');
+    const modalSubtitle = document.getElementById('statsDetailModalSubtitle');
+    const modalBody = document.getElementById('statsDetailModalBody');
+
+    const userRank = getResolvedUserRank(user);
+    const { practiceCount, mockCount, history } = getUserProgressSummary(user);
+
+    if (modalTitle) {
+        modalTitle.textContent = `Tiến độ học tập: ${user.username}`;
+    }
+    if (modalSubtitle) {
+        modalSubtitle.innerHTML = `Cấp độ: <span style="color: ${userRank.color}; font-weight: 700;">${userRank.displayName || userRank.name}</span> | Ôn tập: <strong>${practiceCount}</strong> lượt | Thi mô phỏng: <strong>${mockCount}</strong> lần`;
+    }
+
+    // 6 Chủ đề chuẩn của học phần
+    const topics = [
+        { id: 1, title: "Chủ đề 1", name: "Đối tượng, chức năng, phương pháp nghiên cứu của CNXH khoa học" },
+        { id: 2, title: "Chủ đề 2", name: "Sự ra đời và phát triển của CNXH khoa học" },
+        { id: 3, title: "Chủ đề 3", name: "Sứ mệnh lịch sử của giai cấp công nhân" },
+        { id: 4, title: "Chủ đề 4", name: "Những đặc trưng cơ bản của CNXH và con đường đi lên CNXH ở Việt Nam" },
+        { id: 5, title: "Chủ đề 5", name: "Các hình thái kinh tế - xã hội" },
+        { id: 6, title: "Chủ đề 6", name: "Thời kỳ quá độ lên CNXH" }
+    ];
+
+    if (modalBody) {
+        modalBody.innerHTML = topics.map(t => {
+            const topicHistory = history.filter(h => {
+                const hId = String(h.topicId !== undefined && h.topicId !== null ? h.topicId : '').toLowerCase();
+                const hName = (h.topicName || '').toLowerCase();
+                return hId === String(t.id) || 
+                       hId === ('topic_' + t.id) || 
+                       hId === ('topic' + t.id) || 
+                       hName.includes('chủ đề ' + t.id) || 
+                       hName.includes('chu de ' + t.id);
+            });
+
+            const topicAttempts = topicHistory.length;
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+            let bestScore = 0;
+
+            topicHistory.forEach(h => {
+                const c = parseInt(h.correctCount, 10) || 0;
+                const tot = parseInt(h.totalQuestions, 10) || 0;
+                const sc = parseFloat(h.score) || 0;
+                totalCorrect += c;
+                totalQuestions += tot;
+                if (sc > bestScore) bestScore = sc;
+            });
+
+            let directProgress = 0;
+            if (user.progress && typeof user.progress === 'object') {
+                const pVal = user.progress[t.id] || user.progress['topic' + t.id] || user.progress['topic_' + t.id];
+                if (pVal !== undefined && pVal !== null) {
+                    directProgress = parseInt(pVal, 10) || 0;
+                }
+            }
+
+            const totalIncorrect = Math.max(0, totalQuestions - totalCorrect);
+            const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+            return `
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition-all" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;">
+                    <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                            <span class="px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-full" style="padding: 2px 10px; font-size: 11px; font-weight: 700; background: #dbeafe; color: #1d4ed8; border-radius: 9999px;">
+                                ${t.title}
+                            </span>
+                            <span class="text-sm font-semibold text-slate-800" style="font-size: 13.5px; font-weight: 600; color: #1e293b;">
+                                ${t.name}
+                            </span>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded" style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; ${topicAttempts > 0 ? 'background: #dcfce7; color: #15803d;' : 'background: #f1f5f9; color: #64748b;'}">
+                            ${topicAttempts} lượt làm
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-xs" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 12px;">
+                        <div style="color: #16a34a; font-weight: 600;">
+                            <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Số câu đúng: <strong>${totalCorrect}</strong>
+                        </div>
+                        <div style="color: #dc2626; font-weight: 600;">
+                            <i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Số câu sai: <strong>${totalIncorrect}</strong>
+                        </div>
+                        <div style="color: #2563eb; font-weight: 600; text-align: right;">
+                            <i class="fa-solid fa-bullseye" style="margin-right: 4px;"></i> Tỉ lệ đúng: <strong>${accuracy}%</strong> ${topicAttempts > 0 ? `(Cao nhất: ${bestScore}/10)` : (directProgress > 0 ? `(${directProgress} câu)` : '')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+/**
+ * Đóng Modal chi tiết thống kê 6 chủ đề
+ */
+function closeStatsDetailModal() {
+    const modal = document.getElementById('statsDetailModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+window.openStatsDetailModal = openStatsDetailModal;
+window.closeStatsDetailModal = closeStatsDetailModal;
 
 /**
  * Đổi tên người dùng (Task 3: Admin User Rename)
@@ -1231,6 +1528,20 @@ function updateAdminStatsBadges() {
     const totalUsers = document.getElementById('total-users-count');
     if (badgeUsers) badgeUsers.textContent = users.length;
     if (totalUsers) totalUsers.textContent = users.length;
+
+    // Cập nhật thẻ Online / Offline
+    const onlineCount = users.filter(u => u.status === 'online').length;
+    const offlineCount = users.length - onlineCount;
+
+    const statOnlineCard = document.getElementById('stat-online-card');
+    const statOfflineCard = document.getElementById('stat-offline-card');
+    if (statOnlineCard) statOnlineCard.innerHTML = `🟢 Đang Online: <span id="online-users-count">${onlineCount}</span> tài khoản`;
+    if (statOfflineCard) statOfflineCard.innerHTML = `⚪ Đang Offline: <span id="offline-users-count">${offlineCount}</span> tài khoản`;
+
+    const onlineCountEl = document.getElementById('online-users-count');
+    const offlineCountEl = document.getElementById('offline-users-count');
+    if (onlineCountEl) onlineCountEl.textContent = onlineCount;
+    if (offlineCountEl) offlineCountEl.textContent = offlineCount;
 
     const badgeFeedbacks = document.getElementById('badge-feedbacks-count');
     if (badgeFeedbacks) {

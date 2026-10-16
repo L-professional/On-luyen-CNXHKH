@@ -236,9 +236,143 @@ function togglePasswordVisibility(inputId, btn) {
 }
 window.togglePasswordVisibility = togglePasswordVisibility;
 
+/**
+ * Hàm signInWithPopup bọc chuẩn Firebase Auth
+ * Cho phép gọi dạng signInWithPopup(auth, provider) theo đúng đặc tả
+ */
+async function signInWithPopup(authInstance, providerInstance) {
+    if (authInstance && typeof authInstance.signInWithPopup === 'function') {
+        return await authInstance.signInWithPopup(providerInstance);
+    }
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        return await firebase.auth().signInWithPopup(providerInstance);
+    }
+    throw new Error('Firebase Auth không khả dụng trên trình duyệt!');
+}
+window.signInWithPopup = signInWithPopup;
+
 async function handleSocialLogin(provider) {
     const rememberMeCheckbox = document.getElementById('remember-me');
     const rememberMe = rememberMeCheckbox ? rememberMeCheckbox.checked : true;
+
+    if (provider === 'Google') {
+        try {
+            if (typeof firebase === 'undefined' || !firebase.auth) {
+                showToast('Firebase Auth chưa được khởi tạo, vui lòng thử lại sau giây lát!', 'error');
+                return;
+            }
+
+            const auth = firebase.auth();
+            const googleProvider = new firebase.auth.GoogleAuthProvider();
+            googleProvider.addScope('profile');
+            googleProvider.addScope('email');
+
+            // Gọi signInWithPopup(auth, provider) theo đúng đặc tả
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result ? result.user : null;
+            if (!user) {
+                showToast('Không lấy được dữ liệu tài khoản từ Google!', 'error');
+                return;
+            }
+
+            // Lấy chính xác user.displayName (nếu null thì lấy phần trước @ của user.email) và user.photoURL
+            const displayName = (user.displayName && user.displayName.trim())
+                ? user.displayName.trim()
+                : (user.email ? user.email.split('@')[0] : 'Google User');
+            const photoURL = user.photoURL || '';
+            const email = user.email || '';
+            const uid = user.uid;
+
+            const token = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+            const today = new Date();
+            const dateFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+
+            // Kiểm tra xem tài khoản đã tồn tại trong Realtime Database chưa
+            let existingUser = null;
+            if (window.get && window.ref && window.db) {
+                try {
+                    const snap = await get(ref(db, `users/${uid}`));
+                    if (snap && snap.exists()) {
+                        existingUser = snap.val();
+                    }
+                } catch (e) {
+                    console.warn('Lỗi đọc user Google từ Firebase:', e);
+                }
+            }
+
+            // Lưu (update) các thông tin này vào Firebase Realtime Database (users/{uid}) cùng với các field cơ bản
+            const userUpdateData = {
+                userId: uid,
+                username: displayName,
+                displayName: displayName,
+                photoURL: photoURL,
+                email: email,
+                role: (existingUser && existingUser.role) ? existingUser.role : 'user',
+                status: 'online',
+                lastActive: Date.now(),
+                sessionToken: token,
+                activeSession: token,
+                updatedAt: Date.now()
+            };
+
+            if (!existingUser) {
+                userUpdateData.createdAt = dateFormatted;
+                userUpdateData.isRoot = false;
+                userUpdateData.exp = 0;
+                userUpdateData.progress = {};
+                userUpdateData.maxProgress = {};
+                userUpdateData.history = [];
+            }
+
+            if (window.update && window.ref && window.db) {
+                await update(ref(db, `users/${uid}`), userUpdateData);
+            }
+
+            const currentSession = {
+                userId: uid,
+                username: displayName,
+                displayName: displayName,
+                photoURL: photoURL,
+                email: email,
+                role: userUpdateData.role,
+                loginAt: Date.now(),
+                sessionId: token,
+                sessionToken: token
+            };
+
+            if (rememberMe) {
+                localStorage.setItem('currentUser', JSON.stringify(currentSession));
+                localStorage.setItem('sessionToken', token);
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.removeItem('sessionToken');
+            } else {
+                sessionStorage.setItem('currentUser', JSON.stringify(currentSession));
+                sessionStorage.setItem('sessionToken', token);
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionToken');
+            }
+
+            showToast(`Đăng nhập Google thành công! Xin chào ${displayName}`, 'success');
+            setTimeout(() => {
+                if (userUpdateData.role === 'admin') {
+                    window.location.replace('admin.html');
+                } else {
+                    window.location.replace('index.html');
+                }
+            }, 500);
+            return;
+        } catch (err) {
+            console.error('Lỗi Google Auth:', err);
+            if (err.code === 'auth/popup-closed-by-user') {
+                showToast('Đã hủy đăng nhập Google (đóng popup).', 'error');
+            } else if (err.code === 'auth/cancelled-popup-request') {
+                // Popup request cancelled
+            } else {
+                showToast(`Lỗi đăng nhập Google: ${err.message || err}`, 'error');
+            }
+            return;
+        }
+    }
 
     showToast(`Đang kết nối tài khoản ${provider}... (Tính năng Demo)`, 'success');
     setTimeout(async () => {
@@ -266,23 +400,32 @@ async function handleSocialLogin(provider) {
             sessionToken: token
         };
 
-        update(ref(db, 'users/' + userId), {
-            sessionToken: token,
-            activeSession: token,
-            status: 'online',
-            lastActive: Date.now()
-        })
-          .then(() => {
-              localStorage.setItem('currentUser', JSON.stringify(currentSession));
-              localStorage.setItem('sessionToken', token);
-              sessionStorage.removeItem('currentUser');
-              sessionStorage.removeItem('sessionToken');
-              window.location.replace('index.html');
-          })
-          .catch(err => {
-              console.error(err);
-              alert("Lỗi mạng!");
-          });
+        if (window.update && window.ref && window.db) {
+            update(ref(db, 'users/' + userId), {
+                sessionToken: token,
+                activeSession: token,
+                status: 'online',
+                lastActive: Date.now()
+            })
+              .then(() => {
+                  if (rememberMe) {
+                      localStorage.setItem('currentUser', JSON.stringify(currentSession));
+                      localStorage.setItem('sessionToken', token);
+                      sessionStorage.removeItem('currentUser');
+                      sessionStorage.removeItem('sessionToken');
+                  } else {
+                      sessionStorage.setItem('currentUser', JSON.stringify(currentSession));
+                      sessionStorage.setItem('sessionToken', token);
+                      localStorage.removeItem('currentUser');
+                      localStorage.removeItem('sessionToken');
+                  }
+                  window.location.replace('index.html');
+              })
+              .catch(err => {
+                  console.error(err);
+                  alert("Lỗi mạng!");
+              });
+        }
     }, 300);
 }
 

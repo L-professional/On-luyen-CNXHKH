@@ -7409,3 +7409,93 @@ body.sidebar-open .sidebar-backdrop {
     }
 }
 
+/* ==========================================================================
+   ADMIN DASHBOARD ENHANCEMENTS: STATS CARDS, PROGRESS PILL & USER RANK BADGE
+   ========================================================================== */
+.user-status-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 0 0 16px 0;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+.status-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.user-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+}
+.user-rank-badge.rank-gamo {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+.user-rank-badge.rank-tapsu {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+.user-rank-badge.rank-tanbinh {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #93c5fd;
+}
+.user-rank-badge.rank-caothu {
+    background: #f3e8ff;
+    color: #7e22ce;
+    border: 1px solid #d8b4fe;
+}
+.user-rank-badge.rank-daide {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+.user-rank-badge.rank-chitonthan {
+    background: #ffedd5;
+    color: #ea580c;
+    border: 1px solid #fdba74;
+}
+.btn-progress-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05);
+}
+.btn-progress-detail:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.15);
+}
+.btn-progress-detail:active {
+    transform: translateY(0);
+}
+
