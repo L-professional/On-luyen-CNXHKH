@@ -216,30 +216,42 @@ function getUserStats() {
             exp = 0;
         }
 
-        // Kiểm tra xem user đã đột phá cảnh giới Chí Tôn Cực Đạo chưa
-        const isCucDao = (user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || (user.level === 7);
-        if (isCucDao) {
+        // Kiểm tra xem user đã đột phá cảnh giới Chí Tôn Cực Đạo chưa (flag isAscended)
+        const isAscended = !!(user.isAscended === true || user.isAscended === 'true' || 
+                              localStorage.getItem('isAscended_' + uid) === 'true' || 
+                              (user.username && localStorage.getItem('isAscended_' + user.username) === 'true') ||
+                              (user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || 
+                              (user.level === 7));
+        if (isAscended) {
             return {
                 exp: exp,
                 level: 7,
                 rankId: 'chitoncucdao',
-                rank: CUC_DAO_RANK
+                rank: CUC_DAO_RANK,
+                isAscended: true
             };
         }
 
-        const rank = getRankByExp(exp);
-        return { exp: exp, level: rank.level, rankId: rank.id, rank: rank };
+        const rank = getRankByExp(exp, false);
+        return { exp: exp, level: rank.level, rankId: rank.id, rank: rank, isAscended: false };
     } catch (e) {
-        return { exp: 0, level: 1, rankId: 'gamo', rank: RANK_LEVELS[0] };
+        return { exp: 0, level: 1, rankId: 'gamo', rank: RANK_LEVELS[0], isAscended: false };
     }
 }
 
-function getRankByExp(exp) {
+function getRankByExp(exp, isAscended = false) {
+    if (isAscended === true || isAscended === 'true') {
+        return CUC_DAO_RANK;
+    }
     const safeExp = Math.max(0, parseInt(exp, 10) || 0);
     for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
         if (safeExp >= RANK_LEVELS[i].minExp) return RANK_LEVELS[i];
     }
     return RANK_LEVELS[0];
+}
+
+function getRank(exp, isAscended = false) {
+    return getRankByExp(exp, isAscended);
 }
 
 function getRankProgress(exp) {
@@ -814,12 +826,14 @@ async function executeDoKiepBreakthrough() {
                     await update(ref(db, `users/${uid}`), {
                         rank: newRankName,
                         level: 7,
+                        isAscended: true,
                         updatedAt: Date.now()
                     });
                 } else if (window.FirebaseService) {
                     await FirebaseService.updateUser(uid, {
                         rank: newRankName,
-                        level: 7
+                        level: 7,
+                        isAscended: true
                     });
                 }
             }
@@ -829,12 +843,18 @@ async function executeDoKiepBreakthrough() {
 
         user.rank = newRankName;
         user.level = 7;
+        user.isAscended = true;
         try {
             localStorage.setItem('currentUser', JSON.stringify(user));
             sessionStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('isAscended_' + uid, 'true');
+            if (user.username) {
+                localStorage.setItem('isAscended_' + user.username, 'true');
+            }
             const curStats = getUserStats();
             curStats.rank = CUC_DAO_RANK;
             curStats.level = 7;
+            curStats.isAscended = true;
             localStorage.setItem('userStats_' + uid, JSON.stringify(curStats));
         } catch (e) {}
 

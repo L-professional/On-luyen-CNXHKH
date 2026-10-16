@@ -141,11 +141,24 @@ async function handleLogin(e) {
     if (matchedUser) {
         // Đảm bảo lấy đúng UID trên Firebase cho Admin và User
         let userId = matchedUser.userId;
-        if (!userId && window.FirebaseService) {
+        let isAscended = false;
+        let photoURL = matchedUser.photoURL || null;
+        let displayName = matchedUser.displayName || matchedUser.username;
+        let userExp = matchedUser.exp || 0;
+        let userRank = matchedUser.rank || null;
+        let userLevel = matchedUser.level || 1;
+
+        if (window.FirebaseService) {
             try {
                 const fbUser = await FirebaseService.findUserByUsername(matchedUser.username);
-                if (fbUser && fbUser.userId) {
-                    userId = fbUser.userId;
+                if (fbUser) {
+                    if (fbUser.userId) userId = fbUser.userId;
+                    if (fbUser.isAscended) isAscended = true;
+                    if (fbUser.photoURL) photoURL = fbUser.photoURL;
+                    if (fbUser.displayName) displayName = fbUser.displayName;
+                    if (typeof fbUser.exp !== 'undefined') userExp = fbUser.exp;
+                    if (fbUser.rank) userRank = fbUser.rank;
+                    if (fbUser.level) userLevel = fbUser.level;
                 }
             } catch (err) {}
         }
@@ -157,16 +170,42 @@ async function handleLogin(e) {
             }
         }
 
+        // Bổ sung lấy trực tiếp từ Firebase node users/{userId} nếu có db
+        if (userId && window.get && window.ref && window.db) {
+            try {
+                const snap = await get(ref(db, 'users/' + userId));
+                if (snap && snap.exists()) {
+                    const val = snap.val();
+                    if (val.isAscended) isAscended = true;
+                    if (val.photoURL) photoURL = val.photoURL;
+                    if (val.displayName) displayName = val.displayName;
+                    if (typeof val.exp !== 'undefined') userExp = val.exp;
+                    if (val.rank) userRank = val.rank;
+                    if (val.level) userLevel = val.level;
+                }
+            } catch (err) {}
+        }
+
+        if (matchedUser.isAscended || userLevel === 7 || (typeof userRank === 'string' && userRank.toLowerCase().includes('cực đạo'))) {
+            isAscended = true;
+        }
+
         // BẮT BUỘC: Dù là Admin (hardcode/Firebase) hay User thường, đều phải sinh sessionToken ngẫu nhiên
         const token = Date.now().toString() + Math.random().toString(36).substr(2);
 
         const userData = {
             userId: userId,
             username: matchedUser.username,
+            displayName: displayName,
+            photoURL: photoURL,
             role: matchedUser.role || (matchedUser.username.toLowerCase() === 'admin' ? 'admin' : 'user'),
             loginAt: Date.now(),
             sessionId: token,
-            sessionToken: token
+            sessionToken: token,
+            isAscended: isAscended, // <-- Kéo theo cả thuộc tính isAscended từ Firebase
+            exp: userExp,
+            rank: userRank,
+            level: userLevel
         };
 
         // Phải Update sessionToken đó lên Firebase của user/admin đó
@@ -180,6 +219,10 @@ async function handleLogin(e) {
               // Lưu sessionToken đó vào localStorage cùng với currentUser rồi mới cho phép window.location.replace()
               localStorage.setItem('currentUser', JSON.stringify(userData));
               localStorage.setItem('sessionToken', token);
+              if (isAscended) {
+                  localStorage.setItem('isAscended_' + userId, 'true');
+                  localStorage.setItem('isAscended_' + matchedUser.username, 'true');
+              }
               sessionStorage.removeItem('currentUser');
               sessionStorage.removeItem('sessionToken');
               window.location.replace('index.html');

@@ -137,6 +137,20 @@
                 filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 18px rgba(245, 158, 11, 0.85));
             }
         }
+
+        /* Scale Admin Dashboard to fit laptop/PC desktop screens cleanly */
+        .admin-main-content {
+            zoom: 0.9;
+        }
+        @supports not (zoom: 0.9) {
+            @media (min-width: 1024px) {
+                .admin-main-content {
+                    transform: scale(0.92);
+                    transform-origin: top left;
+                    width: 108.7%;
+                }
+            }
+        }
     </style>
 </head>
 
@@ -295,7 +309,7 @@
         <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Dashboard Quản lý tài khoản & Hòm thư Góp ý) -->
-        <main class="main-content admin-main-content">
+        <main class="main-content admin-main-content" style="zoom: 0.9;">
             <!-- Header Thông tin trang -->
             <div class="admin-header-box">
                 <div class="admin-header-info">

@@ -195,7 +195,7 @@ function initAdminFirebaseRealtimeListeners() {
                         ...data[uid],
                         userId: uid
                     }));
-                    adminUsersList = sortUsers(arr);
+                    adminUsersList = sortUsers(cleanAndFilterUsers(arr));
                 } else {
                     adminUsersList = [];
                 }
@@ -229,16 +229,42 @@ function initAdminFirebaseRealtimeListeners() {
     }
 }
 
+/**
+ * Lọc sạch danh sách người dùng trước khi đếm và hiển thị:
+ * 1. Bỏ qua các bản ghi rác (null, undefined, không có username hoặc userId rỗng)
+ * 2. Bỏ qua các bản ghi trùng lặp (trùng userId hoặc trùng username viết thường)
+ */
+function cleanAndFilterUsers(rawList) {
+    if (!Array.isArray(rawList)) return [];
+    const seenUids = new Set();
+    const seenNames = new Set();
+    return rawList.filter(u => {
+        if (!u) return false;
+        const uname = (u.username || u.displayName || '').toString().trim().toLowerCase();
+        if (!uname) return false;
+        const uid = (u.userId || ('u_' + uname)).toString().trim().toLowerCase();
+        if (seenUids.has(uid) || seenNames.has(uname)) {
+            return false;
+        }
+        seenUids.add(uid);
+        seenNames.add(uname);
+        return true;
+    });
+}
+
 function getUserList() {
+    let list = [];
     if (adminUsersList && adminUsersList.length > 0) {
-        return adminUsersList;
+        list = adminUsersList;
+    } else {
+        try {
+            const listStr = localStorage.getItem('userList');
+            list = listStr ? JSON.parse(listStr) : [...DEFAULT_USERS];
+        } catch (e) {
+            list = [...DEFAULT_USERS];
+        }
     }
-    try {
-        const listStr = localStorage.getItem('userList');
-        return listStr ? JSON.parse(listStr) : [...DEFAULT_USERS];
-    } catch (e) {
-        return [...DEFAULT_USERS];
-    }
+    return cleanAndFilterUsers(list);
 }
 
 async function saveUserList(list) {
@@ -297,8 +323,7 @@ const RANK_LEVELS = [
     { level: 3, id: 'tanbinh', name: 'TÂN BINH', displayName: 'Tân binh', minExp: 301, maxExp: 600, color: '#1d4ed8', bgColor: '#dbeafe', textColor: '#1d4ed8', borderColor: '#93c5fd', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh' },
     { level: 4, id: 'caothu', name: 'CAO THỦ', displayName: 'Cao thủ', minExp: 601, maxExp: 1000, color: '#7e22ce', bgColor: '#f3e8ff', textColor: '#7e22ce', borderColor: '#d8b4fe', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu' },
     { level: 5, id: 'daide', name: 'ĐẠI ĐẾ', displayName: 'Đại đế', minExp: 1001, maxExp: 1500, color: '#b45309', bgColor: '#fef3c7', textColor: '#92400e', borderColor: '#fcd34d', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide' },
-    { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ea580c', bgColor: '#ffedd5', textColor: '#ea580c', borderColor: '#fdba74', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' },
-    CUC_DAO_RANK
+    { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ea580c', bgColor: '#ffedd5', textColor: '#ea580c', borderColor: '#fdba74', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' }
 ];
 
 /**
@@ -351,8 +376,16 @@ function getUserExp(username, userObj = null) {
     return 0;
 }
 
-function getRankByExp(exp) {
+/**
+ * Tính Cấp độ dựa trên EXP và flag isAscended.
+ * Mốc EXP tối đa (> 1500) chỉ trả về tối đa Cấp 6 ("Chí tôn thần").
+ * CHỈ KHI isAscended === true thì hàm mới trả về Cấp 7 ("Chí Tôn Cực Đạo").
+ */
+function getRankByExp(exp, isAscended = false) {
     if (exp === Infinity || exp >= 99999999) return ADMIN_RANK;
+    if (isAscended === true || isAscended === 'true') {
+        return CUC_DAO_RANK;
+    }
     const safeExp = Math.max(0, parseInt(exp, 10) || 0);
     for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
         if (safeExp >= RANK_LEVELS[i].minExp) {
@@ -362,8 +395,12 @@ function getRankByExp(exp) {
     return RANK_LEVELS[0];
 }
 
-function getRankLevelByExp(exp) {
-    return getRankByExp(exp).level;
+function getRank(exp, isAscended = false) {
+    return getRankByExp(exp, isAscended);
+}
+
+function getRankLevelByExp(exp, isAscended = false) {
+    return getRankByExp(exp, isAscended).level;
 }
 
 /**
@@ -382,16 +419,14 @@ function getResolvedUserRank(u) {
     }
 
     // Kiểm tra Cảnh giới sau khi Nghịch Thiên Độ Kiếp: Chí Tôn Cực Đạo (Cấp 7)
-    const isCucDao = (u.level === 7 || u.level === '7') || 
-                     (typeof u.rank === 'string' && (u.rank.toLowerCase().includes('cực đạo') || u.rank.toLowerCase() === 'chitoncucdao')) ||
-                     (u.rank && typeof u.rank === 'object' && (u.rank.level === 7 || (u.rank.name && u.rank.name.toLowerCase().includes('cực đạo'))));
-    if (isCucDao) {
-        return CUC_DAO_RANK;
-    }
+    const isAscended = !!(u.isAscended === true || u.isAscended === 'true' ||
+                          u.level === 7 || u.level === '7' || 
+                          (typeof u.rank === 'string' && (u.rank.toLowerCase().includes('cực đạo') || u.rank.toLowerCase() === 'chitoncucdao')) ||
+                          (u.rank && typeof u.rank === 'object' && (u.rank.level === 7 || (u.rank.name && u.rank.name.toLowerCase().includes('cực đạo')))));
 
-    // Người dùng bình thường: Luôn tính toán Cấp độ trực tiếp từ số EXP
+    // Người dùng bình thường: Luôn tính toán Cấp độ trực tiếp từ số EXP, cap ở Cấp 6 nếu chưa độ kiếp
     const exp = getUserExp(u.username, u);
-    return getRankByExp(exp);
+    return getRankByExp(exp, isAscended);
 }
 
 
@@ -605,23 +640,9 @@ function renderUserTable(searchKeyword = '') {
     tbody.innerHTML = '';
 
     // Thu thập và sắp xếp: ưu tiên status === 'online' trước, sau đó theo vần A-Z của username (localeCompare)
-    let users = sortUsers(getUserList());
+    let users = sortUsers(cleanAndFilterUsers(getUserList()));
 
-    // Loại bỏ trùng lặp UID hoặc username nếu có bản ghi tạo đúp
-    const seenUids = new Set();
-    const seenNames = new Set();
-    users = users.filter(u => {
-        const uid = u.userId || ('u_' + (u.username || '').toLowerCase());
-        const uname = (u.username || '').toLowerCase().trim();
-        if (seenUids.has(uid) || (uname && seenNames.has(uname))) {
-            return false;
-        }
-        seenUids.add(uid);
-        if (uname) seenNames.add(uname);
-        return true;
-    });
-
-    // Cập nhật thống kê số lượng Online / Offline lên Thẻ (Card)
+    // Cập nhật thống kê số lượng Online / Offline lên Thẻ (Card) và Badge
     const onlineCount = users.filter(u => u.status === 'online').length;
     const offlineCount = users.length - onlineCount;
 
@@ -637,6 +658,10 @@ function renderUserTable(searchKeyword = '') {
 
     if (countBadge) {
         countBadge.textContent = users.length;
+    }
+    const badgeUsers = document.getElementById('badge-users-count');
+    if (badgeUsers) {
+        badgeUsers.textContent = users.length;
     }
 
     if (searchKeyword.trim()) {
@@ -1087,9 +1112,9 @@ async function executeBuffExp(amount, buffName) {
         const currentExp = getUserExp(target.username, target);
         const newExp = currentExp + amount;
 
-        // Tính toán lại Cấp độ (Rank) dựa trên số EXP mới
-        const isCucDao = target.level === 7 || (target.rank && typeof target.rank === 'string' && target.rank.toLowerCase().includes('cực đạo'));
-        const newRank = isCucDao ? CUC_DAO_RANK : getRankByExp(newExp);
+        // Tính toán lại Cấp độ (Rank) dựa trên số EXP mới (chỉ Cấp 7 nếu isCucDao/isAscended)
+        const isCucDao = !!(target.isAscended === true || target.isAscended === 'true' || target.level === 7 || (target.rank && typeof target.rank === 'string' && target.rank.toLowerCase().includes('cực đạo')));
+        const newRank = getRankByExp(newExp, isCucDao);
         const newLevel = newRank.level || 1;
         const newRankName = newRank.name || 'GÀ MỜ';
 
@@ -1823,7 +1848,7 @@ async function saveSystemFeedbacks(list) {
  * Cập nhật các badge số lượng trên header và tab buttons
  */
 function updateAdminStatsBadges() {
-    const users = getUserList();
+    const users = cleanAndFilterUsers(getUserList());
     const feedbacks = getSystemFeedbacks();
     const pendingCount = feedbacks.filter(f => (f.status || 'Chờ duyệt') === 'Chờ duyệt').length;
 

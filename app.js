@@ -681,26 +681,32 @@ function getUserStats() {
             exp = 0;
         }
 
-        // Kiểm tra xem user đã đột phá cảnh giới Chí Tôn Cực Đạo chưa
-        const isCucDao = (user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || (user.level === 7);
-        if (isCucDao) {
+        // Kiểm tra xem user đã đột phá cảnh giới Chí Tôn Cực Đạo chưa (sử dụng flag isAscended)
+        const isAscended = !!(user.isAscended === true || user.isAscended === 'true' || 
+                              localStorage.getItem('isAscended_' + uid) === 'true' || 
+                              (user.username && localStorage.getItem('isAscended_' + user.username) === 'true') ||
+                              (user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || 
+                              (user.level === 7));
+        if (isAscended) {
             return {
                 exp: exp,
                 level: 7,
                 rankId: 'chitoncucdao',
-                rank: CUC_DAO_RANK
+                rank: CUC_DAO_RANK,
+                isAscended: true
             };
         }
 
-        const rank = getRankByExp(exp);
+        const rank = getRankByExp(exp, false);
         return {
             exp: exp,
             level: rank.level,
             rankId: rank.id,
-            rank: rank
+            rank: rank,
+            isAscended: false
         };
     } catch (e) {
-        return { exp: 0, level: 1, rankId: 'gamo', rank: RANK_LEVELS[0] };
+        return { exp: 0, level: 1, rankId: 'gamo', rank: RANK_LEVELS[0], isAscended: false };
     }
 }
 
@@ -714,21 +720,22 @@ function initExp() {
 
     let stats = getUserStats();
     let exp = stats.exp;
+    const isAscended = !!(stats.isAscended || user.isAscended || localStorage.getItem('isAscended_' + uid) === 'true');
 
     localStorage.setItem('exp_' + uid, exp.toString());
     if (user.username) {
         localStorage.setItem('exp_' + user.username, exp.toString());
     }
-    const rank = getRankByExp(exp);
-    saveUserStats({ exp: exp, level: rank.level, rankId: rank.id });
+    const rank = getRankByExp(exp, isAscended);
+    saveUserStats({ exp: exp, level: rank.level, rankId: rank.id, isAscended: isAscended });
 
     // Đồng bộ tức thời từ Firebase Realtime Database
     if (uid !== 'guest' && window.FirebaseService) {
         FirebaseService.getExp(uid).then(fbExp => {
             if (fbExp > 0 && fbExp !== exp) {
                 localStorage.setItem('exp_' + uid, fbExp.toString());
-                const updatedRank = getRankByExp(fbExp);
-                saveUserStats({ exp: fbExp, level: updatedRank.level, rankId: updatedRank.id });
+                const updatedRank = getRankByExp(fbExp, isAscended);
+                saveUserStats({ exp: fbExp, level: updatedRank.level, rankId: updatedRank.id, isAscended: isAscended });
                 updateHeaderRankDisplay();
             }
         }).catch(() => {});
@@ -766,9 +773,14 @@ function saveUserStats(stats) {
 }
 
 /**
- * Xác định Cấp độ Rank dựa trên số điểm EXP
+ * Xác định Cấp độ Rank dựa trên số điểm EXP và cờ Đột phá (isAscended)
+ * CHỈ KHI isAscended === true thì hàm mới trả về Cấp 7 ("Chí Tôn Cực Đạo").
+ * Dù EXP có cao bao nhiêu (> 1500), nếu chưa đột phá thì cao nhất chỉ là Cấp 6 ("Chí tôn thần").
  */
-function getRankByExp(exp) {
+function getRankByExp(exp, isAscended = false) {
+    if (isAscended === true || isAscended === 'true') {
+        return CUC_DAO_RANK;
+    }
     const safeExp = Math.max(0, parseInt(exp, 10) || 0);
     for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
         if (safeExp >= RANK_LEVELS[i].minExp) {
@@ -776,6 +788,10 @@ function getRankByExp(exp) {
         }
     }
     return RANK_LEVELS[0];
+}
+
+function getRank(exp, isAscended = false) {
+    return getRankByExp(exp, isAscended);
 }
 
 /**
@@ -794,7 +810,9 @@ function getRankProgress(exp) {
         };
     }
 
-    const isCucDao = user && ((user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || user.level === 7);
+    const isCucDao = user && (user.isAscended === true || user.isAscended === 'true' || 
+                    (user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || 
+                    user.level === 7);
     if (isCucDao) {
         return {
             percent: 100,
@@ -805,7 +823,7 @@ function getRankProgress(exp) {
         };
     }
 
-    const rank = getRankByExp(exp);
+    const rank = getRankByExp(exp, false);
     if (rank.id === 'chitonthan' || rank.level === 6) {
         return {
             percent: 100,
@@ -842,15 +860,17 @@ function addExp(points) {
     const uid = getCurrentUserUID();
 
     const stats = getUserStats();
+    const isAscended = !!(stats.isAscended || user.isAscended || localStorage.getItem('isAscended_' + uid) === 'true');
     const oldExp = stats.exp;
-    const oldRank = getRankByExp(oldExp);
+    const oldRank = isAscended ? CUC_DAO_RANK : getRankByExp(oldExp, false);
 
     const newExp = oldExp + points;
-    const newRank = getRankByExp(newExp);
+    const newRank = isAscended ? CUC_DAO_RANK : getRankByExp(newExp, false);
 
     stats.exp = newExp;
     stats.level = newRank.level;
     stats.rankId = newRank.id;
+    stats.isAscended = isAscended;
 
     // Lưu điểm EXP theo UID và đồng bộ Firebase
     localStorage.setItem('exp_' + uid, newExp.toString());
@@ -1470,12 +1490,14 @@ async function executeDoKiepBreakthrough() {
                     await update(ref(db, `users/${uid}`), {
                         rank: newRankName,
                         level: 7,
+                        isAscended: true,
                         updatedAt: Date.now()
                     });
                 } else if (window.FirebaseService) {
                     await FirebaseService.updateUser(uid, {
                         rank: newRankName,
-                        level: 7
+                        level: 7,
+                        isAscended: true
                     });
                 }
             }
@@ -1485,12 +1507,18 @@ async function executeDoKiepBreakthrough() {
 
         user.rank = newRankName;
         user.level = 7;
+        user.isAscended = true;
         try {
             localStorage.setItem('currentUser', JSON.stringify(user));
             sessionStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('isAscended_' + uid, 'true');
+            if (user.username) {
+                localStorage.setItem('isAscended_' + user.username, 'true');
+            }
             const curStats = getUserStats();
             curStats.rank = CUC_DAO_RANK;
             curStats.level = 7;
+            curStats.isAscended = true;
             localStorage.setItem('userStats_' + uid, JSON.stringify(curStats));
         } catch (e) {}
 
@@ -4958,16 +4986,14 @@ function getLeaderboardUserRank(u, calculatedExp) {
         return ADMIN_RANK;
     }
 
-    // Ngoại lệ duy nhất ngoài EXP: Đã Độ Kiếp thành công lên Cực Đạo (Cấp 7)
-    const isCucDao = (u.level === 7 || u.level === '7') || 
-                     (typeof u.rank === 'string' && (u.rank.toLowerCase().includes('cực đạo') || u.rank.toLowerCase() === 'chitoncucdao')) ||
-                     (u.rank && typeof u.rank === 'object' && (u.rank.level === 7 || (u.rank.name && u.rank.name.toLowerCase().includes('cực đạo'))));
-    if (isCucDao) {
-        return CUC_DAO_RANK;
-    }
+    // Ngoại lệ duy nhất ngoài EXP: Đã Độ Kiếp thành công lên Cực Đạo (Cấp 7) có flag isAscended
+    const isAscended = !!(u.isAscended === true || u.isAscended === 'true' || 
+                       (u.level === 7 || u.level === '7') || 
+                       (typeof u.rank === 'string' && (u.rank.toLowerCase().includes('cực đạo') || u.rank.toLowerCase() === 'chitoncucdao')) ||
+                       (u.rank && typeof u.rank === 'object' && (u.rank.level === 7 || (u.rank.name && u.rank.name.toLowerCase().includes('cực đạo')))));
 
-    // Bắt buộc: Tính toán Cấp độ trực tiếp từ số EXP bằng getRankByExp()
-    return getRankByExp(calculatedExp);
+    // Bắt buộc: Tính toán Cấp độ trực tiếp từ số EXP bằng getRankByExp(exp, isAscended)
+    return getRankByExp(calculatedExp, isAscended);
 }
 
 /**
@@ -5255,40 +5281,45 @@ async function renderLeaderboard(usersData) {
                 const isCurrentAdmin = (currentUser && isAdminUser(currentUser));
 
                 adminSection.innerHTML = `
-                    <div class="admin-sovereign-card relative flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-red-950/70 via-slate-900 to-amber-950/60 border-2 border-red-500/70 shadow-lg shadow-red-500/25 text-white transition mb-1" style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.75) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.65) 100%); border: 2px solid rgba(239, 68, 68, 0.75); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4); display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; position: relative;">
+                    <div class="admin-sovereign-card relative flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden p-4 rounded-2xl bg-gradient-to-r from-red-950/80 via-slate-900 to-amber-950/70 border-2 border-red-500/70 shadow-lg shadow-red-500/25 text-white transition mb-2" style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.85) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.75) 100%); border: 2px solid rgba(239, 68, 68, 0.75); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4); border-radius: 16px; position: relative; overflow: hidden; width: 100%;">
                         
-                        <!-- Tại vị trí đáng lẽ hiển thị #1, thay thế bằng dòng chữ/Badge rực rỡ: "👑 Chúa Tể Không Gian" -->
-                        <div class="leaderboard-pos flex items-center justify-center shrink-0" title="Chúa Tể Không Gian - Độc Tôn Toàn Server">
-                            <span class="admin-sovereign-badge px-3 py-1.5 rounded-xl font-black text-xs md:text-sm tracking-wide bg-gradient-to-r from-amber-400 via-rose-500 to-yellow-400 text-slate-950 shadow-md shadow-rose-500/50 uppercase flex items-center gap-1.5 animate-pulse" style="padding: 6px 12px; border-radius: 10px; font-weight: 900; font-size: 12.5px; background: linear-gradient(90deg, #fbbf24 0%, #f43f5e 50%, #facc15 100%); color: #020617; box-shadow: 0 0 14px rgba(244, 63, 94, 0.6); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid #fef08a;">
-                                <span>👑 Chúa Tể Không Gian</span>
-                            </span>
-                        </div>
-
-                        <!-- Universal Avatar Frame Wrapper chuẩn cho Admin -->
-                        ${renderUniversalAvatarHtml(adminUser, 99, true)}
-
-                        <!-- Tên Admin & Cảnh giới Thiên Địa Pháp Tắc -->
-                        <div class="flex-1 min-w-0" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;">
-                            <div class="flex items-center gap-2 flex-wrap" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <strong class="text-sm md:text-base font-black truncate text-amber-200" style="font-size: 15px; font-weight: 800; color: #fef08a;">
-                                    ${escapeHtml(adminDisplayName)}
-                                </strong>
-                                ${isCurrentAdmin ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #dc2626; color: #fff;">Bạn</span>' : ''}
-                                <span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #fde047; white-space: nowrap;">
-                                    <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 10px;"></i> 
-                                    <span>Thiên Địa Pháp Tắc</span>
+                        <!-- Cụm trái: Badge Chúa Tể Không Gian + Avatar + Tên & Rank -->
+                        <div class="flex flex-col sm:flex-row items-center gap-3.5 w-full md:w-auto min-w-0" style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                            <!-- Tại vị trí đáng lẽ hiển thị #1, thay thế bằng dòng chữ/Badge rực rỡ: "👑 Chúa Tể Không Gian" -->
+                            <div class="leaderboard-pos flex items-center justify-center shrink-0" title="Chúa Tể Không Gian - Độc Tôn Toàn Server">
+                                <span class="admin-sovereign-badge px-3 py-1.5 rounded-xl font-black text-xs md:text-sm tracking-wide bg-gradient-to-r from-amber-400 via-rose-500 to-yellow-400 text-slate-950 shadow-md shadow-rose-500/50 uppercase flex items-center gap-1.5 animate-pulse" style="padding: 6px 12px; border-radius: 10px; font-weight: 900; font-size: 12px; background: linear-gradient(90deg, #fbbf24 0%, #f43f5e 50%, #facc15 100%); color: #020617; box-shadow: 0 0 14px rgba(244, 63, 94, 0.6); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid #fef08a;">
+                                    <span>👑 Chúa Tể Không Gian</span>
                                 </span>
                             </div>
-                            <div class="text-[11px] text-amber-300/80" style="font-size: 11.5px; line-height: 1.2; color: #fde68a;">
-                                <span>Cảnh giới: <strong>Thiên Địa Pháp Tắc</strong> &bull; Lịch sử: <strong>Vạn Kiếp Luân Hồi</strong></span>
+
+                            <!-- Universal Avatar Frame Wrapper chuẩn cho Admin -->
+                            <div class="shrink-0 flex items-center justify-center">
+                                ${renderUniversalAvatarHtml(adminUser, 99, true)}
+                            </div>
+
+                            <!-- Tên Admin & Cảnh giới Thiên Địa Pháp Tắc -->
+                            <div class="flex flex-col items-center sm:items-start text-center sm:text-left min-w-0" style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                                <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <strong class="text-sm md:text-base font-black truncate text-amber-200" style="font-size: 15px; font-weight: 800; color: #fef08a; max-width: 180px;">
+                                        ${escapeHtml(adminDisplayName)}
+                                    </strong>
+                                    ${isCurrentAdmin ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #dc2626; color: #fff;">Bạn</span>' : ''}
+                                    <span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #fde047; white-space: nowrap;">
+                                        <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 10px;"></i> 
+                                        <span>Thiên Địa Pháp Tắc</span>
+                                    </span>
+                                </div>
+                                <div class="text-[11px] text-amber-300/80" style="font-size: 11.5px; line-height: 1.3; color: #fde68a;">
+                                    <span>Cảnh giới: <strong>Thiên Địa Pháp Tắc</strong> &bull; Lịch sử: <strong>Vạn Kiếp Luân Hồi</strong></span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Chỉ số Vô Cực ∞ Bất Tử Bất Diệt -->
-                        <div class="flex items-center gap-1.5 shrink-0 text-red-400 font-black" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; text-align: right;">
-                            <i class="fa-solid fa-infinity text-red-400 animate-pulse" style="font-size: 18px; color: #f87171;"></i>
-                            <span class="text-lg md:text-xl font-black text-red-400" style="font-size: 20px; font-weight: 900; color: #f87171;" title="Bất Tử Bất Diệt">∞</span>
-                            <span class="text-[11px] font-bold text-amber-300 hidden sm:inline" style="font-size: 11px; color: #fde047;">Bất Tử Bất Diệt</span>
+                        <!-- Cụm phải: Chỉ số Vô Cực ∞ Bất Tử Bất Diệt -->
+                        <div class="flex items-center justify-center md:justify-end gap-2 shrink-0 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-red-500/20 text-red-400 font-black" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                            <i class="fa-solid fa-infinity text-red-400 animate-pulse" style="font-size: 20px; color: #f87171;"></i>
+                            <span class="text-xl md:text-2xl font-black text-red-400" style="font-size: 22px; font-weight: 900; color: #f87171;" title="Bất Tử Bất Diệt">∞</span>
+                            <span class="text-xs font-bold text-amber-300 px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/30" style="font-size: 11px; color: #fde047; padding: 2px 8px; border-radius: 6px; background: rgba(120, 53, 15, 0.4); border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">Bất Tử Bất Diệt</span>
                         </div>
                     </div>
                     
