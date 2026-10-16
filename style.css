@@ -2041,6 +2041,56 @@ body.mode-test .test-layout-view {
     box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
 }
 
+/* Khi ô câu hỏi hiện tại đã hoàn thành đáp án -> Đổi sang màu xanh báo hiệu trạng thái hoàn thành */
+.q-circle.active.answered {
+    background-color: #10b981 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* Utility classes cho ranh giới và tránh che khuất bởi footer */
+.pb-24 {
+    padding-bottom: 6rem !important; /* 96px */
+}
+
+.mb-24 {
+    margin-bottom: 6rem !important; /* 96px */
+}
+
+.practice-option-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    margin: 0;
+}
+
+.practice-fill-blank-container {
+    width: 100%;
+    margin: 16px 0 24px 0;
+}
+
+.practice-fill-blank-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text-main);
+    background-color: #ffffff;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.practice-fill-blank-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .q-circle.flagged::after {
     content: '';
     position: absolute;

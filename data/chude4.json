@@ -826,7 +826,7 @@
     {
         "id": 100,
         "type": "drag_drop",
-        "question": "Câu kéo thả cuối cùng: Kéo thả tương ứng:[cite: 9]",
+        "question": "Câu kéo thả cuối cùng: Kéo thả tương ứng:",
         "pairs": [
             {
                 "dropZone": "Phương hướng cơ bản để xây dựng liên minh giai cấp, tầng lớp",

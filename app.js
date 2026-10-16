@@ -2241,12 +2241,20 @@ async function loadMockExamData() {
     };
 
     let allQuestions = [];
-    for (let url of fileUrls) {
+    for (let i = 0; i < fileUrls.length; i++) {
+        const url = fileUrls[i];
+        const topicNum = i + 1;
         try {
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
-                allQuestions = allQuestions.concat(groupQuestions(data));
+                const grouped = groupQuestions(data).map(q => ({
+                    ...q,
+                    id: `cd${topicNum}_${q.id}`,
+                    origId: q.id,
+                    sourceTopic: topicNum
+                }));
+                allQuestions = allQuestions.concat(grouped);
             }
         } catch (e) {
             console.warn(`Lỗi đọc file ${url}:`, e);
@@ -2259,9 +2267,13 @@ async function loadMockExamData() {
         return;
     }
 
-    // Trộn ngẫu nhiên câu hỏi và lấy 50 câu
+    // Trộn ngẫu nhiên câu hỏi và lấy 50 câu, bảo đảm mỗi câu có ID độc nhất tuyệt đối
     allQuestions.sort(() => 0.5 - Math.random());
-    const examQuestions = allQuestions.slice(0, 50);
+    const examQuestions = allQuestions.slice(0, 50).map((q, idx) => ({
+        ...q,
+        examIndex: idx,
+        id: `mock_${idx}_${q.id}`
+    }));
 
     appState.allQuestions = examQuestions;
     appState.filteredQuestions = examQuestions;
@@ -3009,7 +3021,7 @@ function onDragDropAnswerUpdated(q) {
             }
         }
     } else {
-        renderTestProgressSection();
+        updateTestNavigationUI(q.id);
         renderTestQuestionCard();
     }
 }
@@ -3198,7 +3210,7 @@ function handleSelectGroupedTfAnswer(qId, subIdx, choiceVal) {
             }
         }
     } else {
-        renderTestProgressSection();
+        updateTestNavigationUI(q.id);
         renderTestQuestionCard();
     }
 }
@@ -3334,10 +3346,101 @@ function renderTestHeader() {
     if (titleEl) titleEl.innerHTML = meta.headerDisplay;
 }
 
+/**
+ * Chuẩn hóa chuỗi đáp án (bỏ khoảng trắng đầu đuôi, đưa về chữ thường)
+ * để đối chiếu chính xác, tránh lỗi sai lệch kiểu dữ liệu hoặc khoảng trắng
+ */
+function normalizeAnswer(val) {
+    if (val === undefined || val === null) return '';
+    return val.toString().trim().toLowerCase();
+}
+
+/**
+ * Kiểm tra câu hỏi đã có câu trả lời hay chưa trong chế độ kiểm tra
+ */
+function isTestQuestionAnswered(q) {
+    if (!q) return false;
+    const ans = appState.userAnswers[q.id];
+    if (ans === undefined || ans === null) return false;
+
+    if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
+        if (typeof ans !== 'object' || Array.isArray(ans)) return false;
+        return Object.keys(ans).length > 0;
+    }
+    if (q.type === 'drag_drop' || (q.pairs && q.pairs.length > 0)) {
+        if (typeof ans !== 'object' || Array.isArray(ans)) return false;
+        return Object.keys(ans).length > 0;
+    }
+    if (q.type === 'multiple' || detectQuestionType(q).id === 'multiple') {
+        return Array.isArray(ans) && ans.length > 0;
+    }
+    if (typeof ans === 'string') {
+        return ans.trim().length > 0;
+    }
+    return true;
+}
+
+/**
+ * Cập nhật màu sắc ô số trên thanh điều hướng và thanh tiến độ theo thời gian thực
+ * Gắn class CSS 'answered' (xanh lá) ngay khi lưu dữ liệu
+ */
+function updateTestNavigationUI(targetQId = null) {
+    const total = appState.allQuestions.length;
+    let answeredCount = 0;
+    appState.allQuestions.forEach(q => {
+        if (isTestQuestionAnswered(q)) answeredCount++;
+    });
+    const percent = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
+
+    const curNumEl = document.getElementById('test-current-q-num');
+    const totNumEl = document.getElementById('test-total-q-num');
+    const fillEl = document.getElementById('test-progress-bar-fill');
+    const pctEl = document.getElementById('test-progress-percent');
+
+    if (curNumEl) curNumEl.textContent = `Câu ${appState.currentIndex + 1}`;
+    if (totNumEl) totNumEl.textContent = `/ ${total}`;
+    if (fillEl) fillEl.style.width = `${percent}%`;
+    if (pctEl) pctEl.textContent = `${percent}%`;
+
+    appState.allQuestions.forEach((q, idx) => {
+        if (targetQId && String(q.id) !== String(targetQId) && idx !== appState.currentIndex) {
+            return;
+        }
+        const navEl = document.getElementById(`test-nav-q-${idx}`);
+        if (!navEl) return;
+
+        const isAnswered = isTestQuestionAnswered(q);
+        const isCurrent = idx === appState.currentIndex;
+        const isFlagged = !!appState.flaggedQuestions[q.id];
+
+        navEl.classList.toggle('answered', isAnswered);
+        navEl.classList.toggle('unanswered', !isAnswered);
+        navEl.classList.toggle('active', isCurrent);
+        navEl.classList.toggle('flagged', isFlagged);
+    });
+}
+
+/**
+ * Xử lý sự kiện nhập dữ liệu (onblur, onchange) cho dạng câu hỏi điền từ
+ */
+function handleTextInputAnswer(qId, val) {
+    if (appState.isReviewMode) return;
+    const cleanVal = (val || '').trim();
+    if (cleanVal) {
+        appState.userAnswers[qId] = cleanVal;
+    } else {
+        delete appState.userAnswers[qId];
+    }
+    updateTestNavigationUI(qId);
+}
+
 function renderTestProgressSection() {
     const total = appState.allQuestions.length;
     const currentNum = appState.currentIndex + 1;
-    const answeredCount = Object.keys(appState.userAnswers).length;
+    let answeredCount = 0;
+    appState.allQuestions.forEach(q => {
+        if (isTestQuestionAnswered(q)) answeredCount++;
+    });
     const percent = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
 
     const curNumEl = document.getElementById('test-current-q-num');
@@ -3355,16 +3458,15 @@ function renderTestProgressSection() {
 
     stripEl.innerHTML = appState.allQuestions.map((q, idx) => {
         const isCurrent = idx === appState.currentIndex;
-        const isAnswered = appState.userAnswers[q.id] !== undefined;
+        const isAnswered = isTestQuestionAnswered(q);
         const isFlagged = !!appState.flaggedQuestions[q.id];
 
-        let stateClass = 'unanswered';
-        if (isAnswered) stateClass = 'answered';
-        if (isCurrent) stateClass = 'active';
+        let stateClass = isAnswered ? 'answered' : 'unanswered';
+        if (isCurrent) stateClass += ' active';
         if (isFlagged) stateClass += ' flagged';
 
         return `
-            <div class="q-circle ${stateClass}" onclick="goToTestQuestion(${idx})" title="Câu ${idx + 1}">
+            <div class="q-circle ${stateClass}" id="test-nav-q-${idx}" data-qid="${q.id}" onclick="goToTestQuestion(${idx})" title="Câu ${idx + 1}">
                 ${idx + 1}
             </div>
         `;
@@ -3376,6 +3478,7 @@ function renderTestQuestionCard() {
     if (!q) return;
 
     const qInfo = detectQuestionType(q);
+    const isLast = appState.currentIndex === appState.allQuestions.length - 1;
 
     // Tags
     ['single', 'multiple', 'drag_drop', 'true_false', 'fill_blank'].forEach(t => {
@@ -3393,9 +3496,17 @@ function renderTestQuestionCard() {
         }
     }
 
-    // Đáp án (CHỈ HIGHLIGHT XANH NHẠT KHI CHỌN - KHÔNG HIỆN ĐÚNG/SAI)
+    // Container câu hỏi: Thêm class pb-24 và mb-24 vào khối câu hỏi cuối cùng để tránh bị thanh footer che khuất
+    const questionCard = document.getElementById('test-question-card');
+    if (questionCard) {
+        questionCard.classList.toggle('pb-24', isLast);
+        questionCard.classList.toggle('mb-24', isLast);
+    }
+
+    // Đáp án
     const optionsContainer = document.getElementById('test-options-list');
     if (optionsContainer) {
+        optionsContainer.classList.toggle('pb-24', isLast);
         optionsContainer.innerHTML = renderTestOptionsHtml(q, qInfo);
     }
 
@@ -3404,7 +3515,6 @@ function renderTestQuestionCard() {
     const nextBtn = document.getElementById('btn-test-next');
     if (prevBtn) prevBtn.disabled = appState.currentIndex === 0;
     if (nextBtn) {
-        const isLast = appState.currentIndex === appState.allQuestions.length - 1;
         nextBtn.innerHTML = isLast ? `<span>Nộp bài</span> <i class="fa-solid fa-check"></i>` : `<span>Câu tiếp theo</span> <i class="fa-solid fa-chevron-right"></i>`;
     }
 
@@ -3415,6 +3525,8 @@ function renderTestOptionsHtml(q, qInfo) {
     const savedAnswer = appState.userAnswers[q.id];
     const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
     const correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [0];
+    const questionIndex = appState.currentIndex;
+    const isMultiple = (qInfo.id === 'multiple') || (getQuestionCorrectAnswers(q).length > 1);
 
     // Dạng câu hỏi Đúng / Sai 4 ý trong chế độ kiểm tra (Grouped True/False)
     if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
@@ -3424,6 +3536,43 @@ function renderTestOptionsHtml(q, qInfo) {
     // Dạng kéo thả ghép cặp trong chế độ kiểm tra (HTML5 Drag & Drop)
     if (qInfo.id === 'drag_drop' && q.pairs) {
         return renderDragDropHtml(q, savedAnswer, appState.isReviewMode);
+    }
+
+    // Dạng điền từ nếu không có options danh sách
+    if (qInfo.id === 'fill_blank' && (!q.options || q.options.length === 0)) {
+        const valStr = (savedAnswer !== undefined && savedAnswer !== null) ? escapeHtml(savedAnswer.toString()) : '';
+        if (appState.isReviewMode) {
+            const correctStr = escapeHtml(correctAnswers[0] !== undefined ? correctAnswers[0].toString() : '');
+            const isCorrect = normalizeAnswer(savedAnswer) === normalizeAnswer(correctAnswers[0]);
+            return `
+                <div class="practice-fill-blank-container">
+                    <label for="q_${questionIndex}_fill" class="practice-fill-label" style="font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block;">Câu trả lời của bạn:</label>
+                    <input type="text" 
+                           name="question_${questionIndex}_answer" 
+                           id="q_${questionIndex}_fill" 
+                           class="practice-fill-blank-input" 
+                           value="${valStr}" 
+                           disabled 
+                           style="border-color: ${isCorrect ? '#10b981' : '#ef4444'}; background: ${isCorrect ? '#ecfdf5' : '#fef2f2'};">
+                    <div style="margin-top: 8px; font-size: 13.5px; font-weight: 600; color: ${isCorrect ? '#059669' : '#dc2626'};">
+                        ${isCorrect ? '<i class="fa-solid fa-circle-check"></i> Chính xác' : `<i class="fa-solid fa-circle-xmark"></i> Đáp án đúng: <strong>${correctStr}</strong>`}
+                    </div>
+                </div>
+            `;
+        }
+        return `
+            <div class="practice-fill-blank-container">
+                <label for="q_${questionIndex}_fill" class="practice-fill-label" style="font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block;">Điền câu trả lời của bạn:</label>
+                <input type="text" 
+                       name="question_${questionIndex}_answer" 
+                       id="q_${questionIndex}_fill" 
+                       class="practice-fill-blank-input" 
+                       value="${valStr}" 
+                       placeholder="Nhập đáp án tại đây..." 
+                       onblur="handleTextInputAnswer('${q.id}', this.value)" 
+                       onchange="handleTextInputAnswer('${q.id}', this.value)">
+            </div>
+        `;
     }
 
     // Sau khi nộp bài và đang ở chế độ Xem lại đáp án (Review Mode)
@@ -3443,13 +3592,20 @@ function renderTestOptionsHtml(q, qInfo) {
             }
 
             return `
-                <div class="practice-option-item ${styleClass}" style="cursor: default;">
+                <label class="practice-option-item ${styleClass}" for="q_${questionIndex}_opt_${oIdx}" style="cursor: default;">
+                    <input type="${isMultiple ? 'checkbox' : 'radio'}" 
+                           name="question_${questionIndex}_answer" 
+                           id="q_${questionIndex}_opt_${oIdx}" 
+                           value="${oIdx}" 
+                           ${isUserSelected ? 'checked' : ''} 
+                           disabled 
+                           class="practice-option-input">
                     <div class="option-radio-ring">
                         ${isActuallyCorrect ? '<i class="fa-solid fa-check" style="font-size: 11px;"></i>' : (isUserSelected ? '<i class="fa-solid fa-xmark" style="font-size: 12px;"></i>' : '')}
                     </div>
                     <span class="option-prefix">${letters[oIdx]}.</span>
                     <span class="option-content">${cleanOptionText(opt)}</span>
-                </div>
+                </label>
             `;
         }).join('') + `
             <div class="learn-explanation-box" style="margin-top: 14px; display: block;">
@@ -3459,7 +3615,7 @@ function renderTestOptionsHtml(q, qInfo) {
         `;
     }
 
-    // Khi đang làm bài bình thường: CHỈ BÔI XANH NHẠT ĐÃ CHỌN
+    // Khi đang làm bài bình thường: Nội suy questionIndex và oIdx vào name và id của input & label
     const options = (qInfo.id === 'true_false') ? ((q.options && q.options.length >= 2) ? q.options : ['Đúng', 'Sai']) : (q.options || []);
 
     return options.map((opt, oIdx) => {
@@ -3468,13 +3624,21 @@ function renderTestOptionsHtml(q, qInfo) {
         );
 
         return `
-            <div class="practice-option-item ${isSelected ? 'selected' : ''}" onclick="handleSelectAnswer(${oIdx})">
+            <label class="practice-option-item ${isSelected ? 'selected' : ''}" 
+                   for="q_${questionIndex}_opt_${oIdx}">
+                <input type="${isMultiple ? 'checkbox' : 'radio'}" 
+                       name="question_${questionIndex}_answer" 
+                       id="q_${questionIndex}_opt_${oIdx}" 
+                       value="${oIdx}" 
+                       ${isSelected ? 'checked' : ''} 
+                       class="practice-option-input" 
+                       onchange="handleSelectAnswer(${oIdx})">
                 <div class="option-radio-ring">
                     <div class="option-radio-dot"></div>
                 </div>
                 <span class="option-prefix">${letters[oIdx]}.</span>
                 <span class="option-content">${cleanOptionText(opt)}</span>
-            </div>
+            </label>
         `;
     }).join('');
 }
@@ -3482,7 +3646,7 @@ function renderTestOptionsHtml(q, qInfo) {
 function goToTestQuestion(index) {
     if (index >= 0 && index < appState.allQuestions.length) {
         appState.currentIndex = index;
-        renderTestProgressSection();
+        updateTestNavigationUI();
         renderTestQuestionCard();
         if (window.innerWidth <= 900) {
             const card = document.getElementById('test-question-card');
@@ -3494,7 +3658,7 @@ function goToTestQuestion(index) {
 function testPrevQuestion() {
     if (appState.currentIndex > 0) {
         appState.currentIndex--;
-        renderTestProgressSection();
+        updateTestNavigationUI();
         renderTestQuestionCard();
         if (window.innerWidth <= 900) {
             const card = document.getElementById('test-question-card');
@@ -3506,7 +3670,7 @@ function testPrevQuestion() {
 function testNextQuestion() {
     if (appState.currentIndex < appState.allQuestions.length - 1) {
         appState.currentIndex++;
-        renderTestProgressSection();
+        updateTestNavigationUI();
         renderTestQuestionCard();
         if (window.innerWidth <= 900) {
             const card = document.getElementById('test-question-card');
@@ -3519,7 +3683,8 @@ function testNextQuestion() {
 
 function testSaveAnswer() {
     const q = appState.allQuestions[appState.currentIndex];
-    const isAnswered = q && appState.userAnswers[q.id] !== undefined;
+    const isAnswered = q && isTestQuestionAnswered(q);
+    if (q) updateTestNavigationUI(q.id);
     showToast(isAnswered ? `Đã lưu đáp án Câu ${appState.currentIndex + 1}` : `Chưa chọn đáp án Câu ${appState.currentIndex + 1}`);
 
     if (appState.currentIndex < appState.allQuestions.length - 1) {
@@ -3533,7 +3698,7 @@ function testToggleFlagCurrentQuestion() {
 
     appState.flaggedQuestions[q.id] = !appState.flaggedQuestions[q.id];
     updateTestFlagIcon();
-    renderTestProgressSection();
+    updateTestNavigationUI(q.id);
     showToast(appState.flaggedQuestions[q.id] ? `Đã đánh dấu Câu ${appState.currentIndex + 1}` : `Bỏ đánh dấu Câu ${appState.currentIndex + 1}`);
 }
 
@@ -3684,7 +3849,7 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
             appState.userAnswers[q.id] = optionIndex;
         }
 
-        renderTestProgressSection();
+        updateTestNavigationUI(q.id);
         renderTestQuestionCard();
     }
 }
@@ -3694,7 +3859,10 @@ function handleSelectAnswer(optionIndex, customVal = null, isDrag = false) {
 // ==========================================================================
 function openTestSubmitModal() {
     const total = appState.allQuestions.length;
-    const answered = Object.keys(appState.userAnswers).length;
+    let answered = 0;
+    appState.allQuestions.forEach(q => {
+        if (isTestQuestionAnswered(q)) answered++;
+    });
     const unanswered = total - answered;
     const flagged = Object.values(appState.flaggedQuestions).filter(Boolean).length;
 
@@ -3738,14 +3906,16 @@ function submitTest() {
 
     appState.allQuestions.forEach(q => {
         const userAns = appState.userAnswers[q.id];
-        if (userAns === undefined) return;
+        if (userAns === undefined || userAns === null) return;
 
         if (q.type === 'grouped_true_false' || (q.subQuestions && q.subQuestions.length > 0)) {
             let subCorrectCount = 0;
             const subTotal = q.subQuestions.length || 4;
             q.subQuestions.forEach((sq, idx) => {
                 const correctVal = Array.isArray(sq.correctAnswers) ? sq.correctAnswers[0] : (sq.correctAnswer ?? 0);
-                if (userAns && userAns[idx] === correctVal) subCorrectCount++;
+                if (userAns && userAns[idx] !== undefined && normalizeAnswer(userAns[idx]) === normalizeAnswer(correctVal)) {
+                    subCorrectCount++;
+                }
             });
             if (subCorrectCount === subTotal) {
                 correctCount += 1;
@@ -3754,19 +3924,30 @@ function submitTest() {
             }
         } else if (q.type === 'drag_drop' && q.pairs) {
             let isAllCorrect = true;
-            q.pairs.forEach((p, idx) => {
-                if (userAns[idx] !== p.dropZone) isAllCorrect = false;
-            });
+            if (typeof userAns !== 'object' || Array.isArray(userAns) || Object.keys(userAns).length < q.pairs.length) {
+                isAllCorrect = false;
+            } else {
+                q.pairs.forEach((p, idx) => {
+                    const uVal = normalizeAnswer(userAns[idx]);
+                    const targetVal = normalizeAnswer(p.dropZone);
+                    if (!uVal || uVal !== targetVal) {
+                        isAllCorrect = false;
+                    }
+                });
+            }
             if (isAllCorrect) correctCount++;
         } else if (q.type === 'multiple') {
             if (Array.isArray(userAns) && Array.isArray(q.correctAnswers)) {
-                const s1 = [...userAns].sort().join(',');
-                const s2 = [...q.correctAnswers].sort().join(',');
+                const s1 = [...userAns].map(normalizeAnswer).sort().join(',');
+                const s2 = [...q.correctAnswers].map(normalizeAnswer).sort().join(',');
                 if (s1 === s2) correctCount++;
             }
         } else {
-            const correctAns = Array.isArray(q.correctAnswers) ? q.correctAnswers[0] : 0;
-            if (userAns === correctAns) correctCount++;
+            // Chuẩn hóa dữ liệu bằng .toString().trim().toLowerCase() tránh sai lệch kiểu hay khoảng trắng
+            const correctAns = Array.isArray(q.correctAnswers) ? q.correctAnswers[0] : (q.correctAnswer ?? 0);
+            if (normalizeAnswer(userAns) === normalizeAnswer(correctAns)) {
+                correctCount++;
+            }
         }
     });
 
@@ -4253,7 +4434,7 @@ function isAnswerCorrectForQuestion(q, userAns) {
         let isAll = true;
         q.subQuestions.forEach((sq, idx) => {
             const correctVal = Array.isArray(sq.correctAnswers) ? sq.correctAnswers[0] : (sq.correctAnswer ?? 0);
-            if (Number(userAns[idx]) !== Number(correctVal)) isAll = false;
+            if (normalizeAnswer(userAns[idx]) !== normalizeAnswer(correctVal)) isAll = false;
         });
         return isAll;
     }
@@ -4264,7 +4445,7 @@ function isAnswerCorrectForQuestion(q, userAns) {
         if (Object.keys(userAns).length < q.pairs.length) return false;
         let isAll = true;
         q.pairs.forEach((p, idx) => {
-            if (userAns[idx] !== p.dropZone) isAll = false;
+            if (normalizeAnswer(userAns[idx]) !== normalizeAnswer(p.dropZone)) isAll = false;
         });
         return isAll;
     }
@@ -4273,12 +4454,18 @@ function isAnswerCorrectForQuestion(q, userAns) {
     if (qInfo.id === 'multiple' || correctList.length > 1) {
         if (!Array.isArray(userAns)) return false;
         if (userAns.length !== correctList.length) return false;
-        const s1 = [...userAns].map(Number).sort((a, b) => a - b).join(',');
-        const s2 = [...correctList].map(Number).sort((a, b) => a - b).join(',');
+        const s1 = [...userAns].map(normalizeAnswer).sort().join(',');
+        const s2 = [...correctList].map(normalizeAnswer).sort().join(',');
         return s1 === s2;
     }
 
     // Trắc nghiệm 1 đáp án / Đúng Sai 2 lựa chọn / Điền từ
-    const correctAns = correctList[0];
-    return Number(userAns) === Number(correctAns);
+    const correctAns = correctList.length > 0 ? correctList[0] : (Array.isArray(q.correctAnswers) ? q.correctAnswers[0] : (q.correctAnswer ?? 0));
+    return normalizeAnswer(userAns) === normalizeAnswer(correctAns);
 }
+
+function calculateScore() {
+    return submitTest();
+}
+window.calculateScore = calculateScore;
+window.submitTest = submitTest;
