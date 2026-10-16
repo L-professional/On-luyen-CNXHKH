@@ -382,6 +382,43 @@ button {
     transform: translateY(-1px);
 }
 
+.btn-leaderboard {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fde68a;
+    color: #b45309;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
+    text-align: left;
+    outline: none;
+}
+
+.btn-leaderboard i {
+    font-size: 17px;
+    color: #d97706;
+    transition: transform 0.2s ease;
+}
+
+.btn-leaderboard:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+    color: #92400e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.btn-leaderboard:hover i {
+    transform: scale(1.15) rotate(-6deg);
+}
+
 .utilities-section {
     margin-top: auto;
 }
@@ -7598,4 +7635,252 @@ body.sidebar-open .sidebar-backdrop {
         filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 18px rgba(245, 158, 11, 0.85));
     }
 }
+
+/* ==========================================================================
+   BẢNG XẾP HẠNG "HUYẾT CHIẾN ĐOẠT VỊ" (LEADERBOARD) STYLES
+   ========================================================================== */
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+}
+
+/* Top 1: Nền màu Vàng kim (Gold/Yellow), hiệu ứng tỏa sáng (shadow-yellow-500/50), icon Vương miện 👑, chữ nổi bật */
+.leaderboard-row.rank-top1 {
+    background: linear-gradient(135deg, #fef08a 0%, #fde047 35%, #facc15 100%) !important;
+    border: 2px solid #eab308 !important;
+    box-shadow: 0 0 22px rgba(234, 179, 8, 0.55), 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    color: #451a03 !important;
+}
+
+/* Top 2: Nền màu Bạc (Silver/Gray-300), viền sáng (border-gray-400), icon Huy chương bạc 🥈 */
+.leaderboard-row.rank-top2 {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%) !important;
+    border: 2px solid #94a3b8 !important;
+    box-shadow: 0 4px 14px rgba(148, 163, 184, 0.4) !important;
+    color: #0f172a !important;
+}
+
+/* Top 3: Nền màu Đồng (Bronze/Orange-700), icon Huy chương đồng 🥉 */
+.leaderboard-row.rank-top3 {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 40%, #fed7aa 100%) !important;
+    border: 2px solid #c2410c !important;
+    box-shadow: 0 4px 14px rgba(194, 65, 12, 0.35) !important;
+    color: #431407 !important;
+}
+
+/* Top 4 trở đi: Nền trắng/xám nhạt cơ bản, gọn gàng */
+.leaderboard-row.rank-other {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    color: #1e293b !important;
+}
+
+.leaderboard-row.rank-other:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    transform: translateX(2px);
+}
+
+.leaderboard-row.is-current-user {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+}
+
+.leaderboard-pos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+/* ==========================================================================
+   TU TIÊN GAMIFICATION: THIÊN ĐỊA PHÁP TẮC & NGHỊCH THIÊN ĐỘ KIẾP
+   ========================================================================== */
+
+/* Badge Cảnh giới "Thiên Địa Pháp Tắc" (Admin Tối Cao) */
+.user-rank-badge.rank-thien-dia-phap-tac,
+.header-user-rank-badge.rank-thien-dia-phap-tac,
+.urc-badge-pill.rank-thien-dia-phap-tac {
+    background: linear-gradient(90deg, #dc2626 0%, #f59e0b 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #fde047 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), 0 0 5px rgba(245, 158, 11, 0.9) !important;
+    animation: thienDiaPulse 2s infinite alternate ease-in-out !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    letter-spacing: 0.3px;
+}
+
+@keyframes thienDiaPulse {
+    0% {
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.7), 0 0 14px rgba(245, 158, 11, 0.5);
+        transform: scale(1);
+    }
+    100% {
+        box-shadow: 0 0 18px rgba(239, 68, 68, 0.95), 0 0 25px rgba(245, 158, 11, 0.85);
+        transform: scale(1.03);
+    }
+}
+
+/* Badge Cảnh giới "Chí Tôn Cực Đạo" (Thần Thoại sau khi Độ Kiếp) */
+.user-rank-badge.rank-chitoncucdao,
+.header-user-rank-badge.rank-chitoncucdao,
+.urc-badge-pill.rank-chitoncucdao {
+    background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 50%, #f43f5e 100%) !important;
+    color: #881337 !important;
+    border: 1.5px solid #fb7185 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 0 14px rgba(244, 63, 94, 0.65), 0 0 6px rgba(168, 85, 247, 0.5) !important;
+    animation: cucDaoGlow 2.5s infinite alternate ease-in-out !important;
+    letter-spacing: 0.3px;
+}
+
+@keyframes cucDaoGlow {
+    0% {
+        box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 18px rgba(244, 63, 94, 0.9), 0 0 25px rgba(168, 85, 247, 0.6);
+    }
+}
+
+/* Nút Nghịch Thiên Độ Kiếp (Màu đỏ rực, viền sáng, animate-pulse) */
+.btn-do-kiep {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #ea580c 100%);
+    border: 2px solid #fca5a5;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.8), 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.25s ease;
+    animation: doKiepPulse 1.8s infinite ease-in-out;
+}
+
+.btn-do-kiep:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+    border-color: #fef08a;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 1), 0 0 45px rgba(245, 158, 11, 0.8);
+    transform: translateY(-2px) scale(1.02);
+}
+
+@keyframes doKiepPulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(220, 38, 38, 0.7), 0 0 25px rgba(245, 158, 11, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(239, 68, 68, 0.95), 0 0 40px rgba(245, 158, 11, 0.7);
+        transform: scale(1.02);
+    }
+}
+
+/* Huy hiệu Vạn Kiếp Luân Hồi cho Admin */
+.van-kiep-luan-hoi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(245, 158, 11, 0.15) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.1);
+}
+
+.avatar-frame-glow-admin {
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 15px rgba(245, 158, 11, 0.85));
+    animation: rank6PulseGlow 2.4s infinite alternate ease-in-out;
+}
+
+/* Thẻ Chúa Tể Không Gian (Admin Độc Tôn trên Leaderboard) */
+.admin-sovereign-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(69, 10, 10, 0.75) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.65) 100%) !important;
+    border: 2px solid rgba(239, 68, 68, 0.75) !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.3s ease;
+}
+
+.admin-sovereign-card:hover {
+    box-shadow: 0 0 28px rgba(239, 68, 68, 0.55), 0 0 18px rgba(245, 158, 11, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+.admin-sovereign-badge {
+    background: linear-gradient(90deg, #fbbf24 0%, #f43f5e 50%, #facc15 100%) !important;
+    color: #020617 !important;
+    box-shadow: 0 0 14px rgba(244, 63, 94, 0.6), 0 0 8px rgba(251, 191, 36, 0.5) !important;
+    border: 1px solid #fef08a !important;
+    white-space: nowrap;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Nút Độ Kiếp Mini trong Lộ trình Cảnh giới (Roadmap) */
+.btn-do-kiep-mini {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    color: #ffffff;
+    border: 1.5px solid #f87171;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    transition: all 0.2s ease;
+}
+
+.btn-do-kiep-mini:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border-color: #fef08a;
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.9);
+    transform: scale(1.04);
+}
+
+/* Badge Cảnh giới "Cực Cảnh" (Cấp 7 trước khi Độ Kiếp) */
+.user-rank-badge.rank-cuccanh,
+.rmc-icon-badge.rank-cuccanh {
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%) !important;
+    color: #9f1239 !important;
+    border: 1.5px solid #f43f5e !important;
+    font-weight: 800 !important;
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.4) !important;
+}
+
+.roadmap-item.ready-dokiep .roadmap-marker-node {
+    background: #fff1f2 !important;
+    border-color: #f43f5e !important;
+    color: #e11d48 !important;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.6) !important;
+}
+
+.roadmap-item.ready-dokiep .roadmap-content-card {
+    border-color: rgba(244, 63, 94, 0.45) !important;
+    background: linear-gradient(135deg, rgba(255, 241, 242, 0.6) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+}
+
 

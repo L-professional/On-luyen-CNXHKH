@@ -203,18 +203,6 @@ const DEFAULT_ROOT_USERS = [
         lastActive: Date.now(),
         activeSession: null,
         exp: 200
-    },
-    {
-        userId: 'u_student_loc_2026',
-        username: 'Loc',
-        password: '123',
-        role: 'user',
-        createdAt: '08/10/2026',
-        isRoot: false,
-        status: 'offline',
-        lastActive: Date.now(),
-        activeSession: null,
-        exp: 50
     }
 ];
 
@@ -238,7 +226,7 @@ const FirebaseService = {
                     seedMap[u.userId] = u;
                 });
                 await set(ref(db, 'users'), seedMap);
-                console.log('[Firebase] Đã khởi tạo danh sách tài khoản mặc định lên Firebase.');
+                console.log('[Firebase] Đã khởi tạo tài khoản quản trị mặc định lên Firebase.');
             }
         } catch (e) {
             console.warn('[Firebase] Lỗi khởi tạo dữ liệu mặc định:', e);
@@ -246,23 +234,23 @@ const FirebaseService = {
     },
 
     /**
-     * Lấy toàn bộ danh sách người dùng dưới dạng mảng
+     * Lấy toàn bộ danh sách người dùng dưới dạng mảng từ Firebase Realtime Database
      * @returns {Promise<Array>}
      */
     async getAllUsers() {
         try {
             await this.ensureInitialData();
             const snap = await get(ref(db, 'users'));
-            if (!snap || !snap.exists()) return [...DEFAULT_ROOT_USERS];
+            if (!snap || !snap.exists()) return [];
             const data = snap.val();
-            if (!data) return [...DEFAULT_ROOT_USERS];
+            if (!data || typeof data !== 'object') return [];
             return Object.keys(data).map(uid => ({
                 ...data[uid],
                 userId: uid
             }));
         } catch (e) {
             console.warn('[Firebase] getAllUsers error:', e);
-            return [...DEFAULT_ROOT_USERS];
+            return [];
         }
     },
 

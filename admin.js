@@ -16,18 +16,6 @@ const DEFAULT_USERS = [
         lastActive: Date.now(),
         activeSession: null,
         exp: 200
-    },
-    {
-        userId: 'u_student_loc_2026',
-        username: 'Loc',
-        password: '123',
-        role: 'user',
-        createdAt: '08/10/2026',
-        isRoot: false,
-        status: 'offline',
-        lastActive: Date.now(),
-        activeSession: null,
-        exp: 50
     }
 ];
 
@@ -273,13 +261,44 @@ async function saveUserList(list) {
 // ==========================================================================
 // HỆ THỐNG CẤP ĐỘ GAMIFICATION (RANKING & EXP POINTS) CHO ADMIN
 // ==========================================================================
+const ADMIN_RANK = {
+    level: 99,
+    id: 'thiendiaphaptac',
+    name: 'THIÊN ĐỊA PHÁP TẮC',
+    displayName: 'Thiên Địa Pháp Tắc',
+    minExp: Infinity,
+    maxExp: Infinity,
+    color: '#ffffff',
+    bgColor: 'linear-gradient(90deg, #dc2626 0%, #f59e0b 100%)',
+    textColor: '#ffffff',
+    borderColor: '#fde047',
+    icon: 'fa-solid fa-yin-yang',
+    badgeClass: 'rank-thien-dia-phap-tac'
+};
+
+const CUC_DAO_RANK = {
+    level: 7,
+    id: 'chitoncucdao',
+    name: 'CHÍ TÔN CỰC ĐẠO',
+    displayName: 'Chí Tôn Cực Đạo',
+    minExp: 1501,
+    maxExp: Infinity,
+    color: '#f43f5e',
+    bgColor: '#ffe4e6',
+    textColor: '#881337',
+    borderColor: '#fda4af',
+    icon: 'fa-solid fa-dragon',
+    badgeClass: 'rank-chitoncucdao'
+};
+
 const RANK_LEVELS = [
     { level: 1, id: 'gamo', name: 'GÀ MỜ', displayName: 'Gà mờ', minExp: 0, maxExp: 100, color: '#475569', bgColor: '#f1f5f9', textColor: '#475569', borderColor: '#cbd5e1', icon: 'fa-solid fa-egg', badgeClass: 'rank-gamo' },
     { level: 2, id: 'tapsu', name: 'TẬP SỰ', displayName: 'Tập sự', minExp: 101, maxExp: 300, color: '#15803d', bgColor: '#dcfce7', textColor: '#15803d', borderColor: '#86efac', icon: 'fa-solid fa-feather-pointed', badgeClass: 'rank-tapsu' },
     { level: 3, id: 'tanbinh', name: 'TÂN BINH', displayName: 'Tân binh', minExp: 301, maxExp: 600, color: '#1d4ed8', bgColor: '#dbeafe', textColor: '#1d4ed8', borderColor: '#93c5fd', icon: 'fa-solid fa-shield-halved', badgeClass: 'rank-tanbinh' },
     { level: 4, id: 'caothu', name: 'CAO THỦ', displayName: 'Cao thủ', minExp: 601, maxExp: 1000, color: '#7e22ce', bgColor: '#f3e8ff', textColor: '#7e22ce', borderColor: '#d8b4fe', icon: 'fa-solid fa-wand-magic-sparkles', badgeClass: 'rank-caothu' },
     { level: 5, id: 'daide', name: 'ĐẠI ĐẾ', displayName: 'Đại đế', minExp: 1001, maxExp: 1500, color: '#b45309', bgColor: '#fef3c7', textColor: '#92400e', borderColor: '#fcd34d', icon: 'fa-solid fa-crown', badgeClass: 'rank-daide' },
-    { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ea580c', bgColor: '#ffedd5', textColor: '#ea580c', borderColor: '#fdba74', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' }
+    { level: 6, id: 'chitonthan', name: 'CHÍ TÔN THẦN', displayName: 'Chí tôn thần', minExp: 1501, maxExp: Infinity, color: '#ea580c', bgColor: '#ffedd5', textColor: '#ea580c', borderColor: '#fdba74', icon: 'fa-solid fa-fire-flame-curved', badgeClass: 'rank-chitonthan' },
+    CUC_DAO_RANK
 ];
 
 /**
@@ -288,6 +307,10 @@ const RANK_LEVELS = [
  */
 function getUserExp(username, userObj = null) {
     if (!username) return 0;
+    // Admin có chỉ số EXP vô hạn
+    if ((userObj && ((userObj.role && userObj.role.toLowerCase() === 'admin') || userObj.isRoot)) || username.toLowerCase() === 'admin') {
+        return Infinity;
+    }
     try {
         // 1. Kiểm tra trực tiếp trong userStats_${username}
         const statsStr = localStorage.getItem('userStats_' + username);
@@ -329,6 +352,7 @@ function getUserExp(username, userObj = null) {
 }
 
 function getRankByExp(exp) {
+    if (exp === Infinity || exp >= 99999999) return ADMIN_RANK;
     const safeExp = Math.max(0, parseInt(exp, 10) || 0);
     for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
         if (safeExp >= RANK_LEVELS[i].minExp) {
@@ -344,49 +368,32 @@ function getRankLevelByExp(exp) {
 
 /**
  * Xác định chính xác Cấp độ (Rank / Level) của người dùng:
- * Ưu tiên user.rank (chuỗi "Tập sự", "Cao thủ" hoặc object), user.level, sau đó fallback theo EXP
+ * 1. Admin mang cảnh giới độc quyền "Thiên Địa Pháp Tắc"
+ * 2. User đã độ kiếp thành công mang cảnh giới "Chí Tôn Cực Đạo"
+ * 3. Người dùng bình thường tính toán chính xác theo EXP qua getRankByExp()
  */
 function getResolvedUserRank(u) {
     if (!u) return RANK_LEVELS[0];
 
-    // 1. Kiểm tra trường rank (string hoặc object)
-    if (u.rank) {
-        if (typeof u.rank === 'string') {
-            const rawRank = u.rank.trim().toLowerCase();
-            const matched = RANK_LEVELS.find(r => 
-                r.name.toLowerCase() === rawRank || 
-                r.displayName.toLowerCase() === rawRank || 
-                r.id.toLowerCase() === rawRank
-            );
-            if (matched) return matched;
-        } else if (typeof u.rank === 'object') {
-            if (u.rank.level) {
-                const matched = RANK_LEVELS.find(r => r.level === parseInt(u.rank.level, 10));
-                if (matched) return matched;
-            }
-            if (u.rank.name) {
-                const rawRank = u.rank.name.trim().toLowerCase();
-                const matched = RANK_LEVELS.find(r => 
-                    r.name.toLowerCase() === rawRank || 
-                    r.displayName.toLowerCase() === rawRank || 
-                    r.id.toLowerCase() === rawRank
-                );
-                if (matched) return matched;
-            }
-        }
+    // Quyền lực tuyệt đối của Admin: Thiên Địa Pháp Tắc
+    const isAdm = (u.role && u.role.toLowerCase() === 'admin') || (u.username && u.username.toLowerCase() === 'admin') || !!u.isRoot;
+    if (isAdm) {
+        return ADMIN_RANK;
     }
 
-    // 2. Kiểm tra trường level (1..6)
-    if (u.level) {
-        const lvlNum = parseInt(u.level, 10);
-        const matched = RANK_LEVELS.find(r => r.level === lvlNum);
-        if (matched) return matched;
+    // Kiểm tra Cảnh giới sau khi Nghịch Thiên Độ Kiếp: Chí Tôn Cực Đạo (Cấp 7)
+    const isCucDao = (u.level === 7 || u.level === '7') || 
+                     (typeof u.rank === 'string' && (u.rank.toLowerCase().includes('cực đạo') || u.rank.toLowerCase() === 'chitoncucdao')) ||
+                     (u.rank && typeof u.rank === 'object' && (u.rank.level === 7 || (u.rank.name && u.rank.name.toLowerCase().includes('cực đạo'))));
+    if (isCucDao) {
+        return CUC_DAO_RANK;
     }
 
-    // 3. Fallback theo điểm kinh nghiệm EXP
+    // Người dùng bình thường: Luôn tính toán Cấp độ trực tiếp từ số EXP
     const exp = getUserExp(u.username, u);
     return getRankByExp(exp);
 }
+
 
 /**
  * Lấy danh sách lịch sử thi/làm bài của người dùng từ object u hoặc localStorage
@@ -478,8 +485,9 @@ function updateAdminHeaderInfo() {
             nameEl.textContent = user.username;
         }
 
-        const exp = getUserExp(user.username, user);
-        const rank = getRankByExp(exp);
+        const isAdm = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || user.isRoot;
+        const exp = isAdm ? Infinity : getUserExp(user.username, user);
+        const rank = isAdm ? ADMIN_RANK : getRankByExp(exp);
         const rankLevel = rank.level;
 
         // Cập nhật huy hiệu cấp độ cạnh tên Admin trên Header
@@ -492,9 +500,15 @@ function updateAdminHeaderInfo() {
                 nameEl.parentNode.insertBefore(badgeEl, nameEl.nextSibling);
             }
             if (badgeEl) {
-                badgeEl.className = `header-user-rank-badge ${rank.badgeClass}`;
-                badgeEl.innerHTML = `<i class="${rank.icon}"></i> <span>${rank.name}</span>`;
-                badgeEl.title = `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
+                if (isAdm) {
+                    badgeEl.className = 'header-user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]';
+                    badgeEl.innerHTML = `<i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s;"></i> <span>Thiên Địa Pháp Tắc</span>`;
+                    badgeEl.title = `Cảnh giới: Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)`;
+                } else {
+                    badgeEl.className = `header-user-rank-badge ${rank.badgeClass}`;
+                    badgeEl.innerHTML = `<i class="${rank.icon}"></i> <span>${rank.name}</span>`;
+                    badgeEl.title = `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
+                }
             }
         }
 
@@ -502,9 +516,9 @@ function updateAdminHeaderInfo() {
         const frameEl = document.getElementById('header-avatar-frame');
         if (frameEl) {
             const initial = (user.username) ? user.username.charAt(0).toUpperCase() : 'A';
-            frameEl.className = `avatar-wrapper rank-${rankLevel} avatar-mini`;
+            frameEl.className = isAdm ? `avatar-wrapper rank-6 avatar-mini` : `avatar-wrapper rank-${rankLevel} avatar-mini`;
             frameEl.textContent = initial;
-            frameEl.title = `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
+            frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
         }
     } catch (e) {
         console.warn(e);
@@ -681,14 +695,26 @@ function renderUserTable(searchKeyword = '') {
                    <span class="status-indicator-text offline text-xs font-medium">${formatLastActiveTime(u.lastActive)}</span>
                </div>`;
 
-        // Tính toán Tiến độ: Đọc dữ liệu lịch sử làm bài, đếm tổng "Số lượt ôn tập" và "Số lần thi mô phỏng"
-        const { practiceCount, mockCount } = getUserProgressSummary(u);
-        const progressCellHtml = `
-            <button type="button" class="btn-progress-detail" onclick="openStatsDetailModal('${escapeHtml(userId)}')" title="Bấm để xem chi tiết 6 chủ đề của ${escapeHtml(u.username)}">
-                <i class="fa-solid fa-chart-line" style="font-size: 11px;"></i>
-                <span>Ôn tập: ${practiceCount} | Thi: ${mockCount}</span>
-            </button>
-        `;
+        const isUserAdmin = (u.role && u.role.toLowerCase() === 'admin') || (u.username && u.username.toLowerCase() === 'admin') || isRootAdmin;
+
+        // Tính toán Tiến độ: Nếu là Admin, ghi đè thành chuỗi "Vạn Kiếp Luân Hồi", ngược lại đếm "Số lượt ôn tập" và "Số lần thi mô phỏng"
+        let progressCellHtml = '';
+        if (isUserAdmin) {
+            progressCellHtml = `
+                <div class="van-kiep-luan-hoi-badge" title="Tiến trình vô tận: Vạn Kiếp Luân Hồi">
+                    <i class="fa-solid fa-infinity" style="color: #f59e0b; font-size: 13px;"></i>
+                    <span>Vạn Kiếp Luân Hồi</span>
+                </div>
+            `;
+        } else {
+            const { practiceCount, mockCount } = getUserProgressSummary(u);
+            progressCellHtml = `
+                <button type="button" class="btn-progress-detail" onclick="openStatsDetailModal('${escapeHtml(userId)}')" title="Bấm để xem chi tiết 6 chủ đề của ${escapeHtml(u.username)}">
+                    <i class="fa-solid fa-chart-line" style="font-size: 11px;"></i>
+                    <span>Ôn tập: ${practiceCount} | Thi: ${mockCount}</span>
+                </button>
+            `;
+        }
 
         // Cột Mật khẩu: Root Admin được bảo vệ ([Đã mã hóa]), các User khác có nút mắt xem/ẩn
         const passwordCellHtml = isRootAdmin
@@ -701,6 +727,17 @@ function renderUserTable(searchKeyword = '') {
                    <span class="user-pwd-display">••••••••</span>
                    <i class="fas fa-eye user-pwd-eye cursor-pointer text-gray-500 hover:text-blue-500" onclick="toggleTablePassword(this)" data-pwd="${escapeHtml(u.password || '')}" title="Xem mật khẩu"></i>
                </div>`;
+
+        // Badge Cấp độ: Admin hiển thị độc quyền "Thiên Địa Pháp Tắc" cực kỳ nổi bật
+        const rankBadgeHtml = isUserAdmin
+            ? `<span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 9999px; font-size: 11px; font-weight: 800; background: linear-gradient(90deg, #dc2626 0%, #f59e0b 100%); color: #ffffff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.8); border: 1px solid #fde047; white-space: nowrap;">
+                   <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 10px;"></i>
+                   <span>Thiên Địa Pháp Tắc</span>
+               </span>`
+            : `<span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor}; white-space: nowrap;">
+                   <i class="${userRank.icon}" style="font-size: 10px;"></i>
+                   <span>${userRank.displayName || userRank.name}</span>
+               </span>`;
 
         return `
             <tr>
@@ -722,10 +759,7 @@ function renderUserTable(searchKeyword = '') {
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <strong style="color: #1e293b; font-size: 14.5px; font-weight: 700;">${escapeHtml(u.username)}</strong>
                                 ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
-                                <span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor}; white-space: nowrap;">
-                                    <i class="${userRank.icon}" style="font-size: 10px;"></i>
-                                    <span>${userRank.displayName || userRank.name}</span>
-                                </span>
+                                ${rankBadgeHtml}
                             </div>
                             ${(isGoogleUser && u.email) ? `<div style="font-size: 11px; color: #64748b; line-height: 1;"><i class="fa-solid fa-envelope" style="font-size: 9.5px; margin-right: 3px;"></i>${escapeHtml(u.email)}</div>` : ''}
                         </div>
@@ -752,6 +786,12 @@ function renderUserTable(searchKeyword = '') {
                 </td>
                 <td>
                     <div class="action-buttons-group">
+                        ${!isUserAdmin ? `
+                            <button type="button" class="btn-action btn-buff-exp" onclick="openBuffExpModal('${escapeHtml(userId)}')" title="Ban tạo hóa buff EXP cho ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; border: 1px solid #f97316; font-weight: 700; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35); display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>✨ Ban tạo hóa</span>
+                            </button>
+                        ` : ''}
                         <button type="button" class="btn-action btn-edit-pwd" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}">
                             <i class="fa-solid fa-key"></i>
                             <span>Sửa MK</span>
@@ -907,6 +947,162 @@ function closeStatsDetailModal() {
 }
 window.openStatsDetailModal = openStatsDetailModal;
 window.closeStatsDetailModal = closeStatsDetailModal;
+
+let currentBuffTargetUser = null;
+
+/**
+ * Mở Modal "Ban phát Cơ duyên" (Ban tạo hóa buff EXP) cho học viên
+ */
+function openBuffExpModal(userIdOrName) {
+    if (!userIdOrName) return;
+    const users = getUserList();
+    const user = users.find(u => 
+        u.userId === userIdOrName || 
+        ('u_' + (u.username || '').toLowerCase()) === userIdOrName ||
+        (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+    );
+    if (!user) {
+        showToast('Không tìm thấy tài khoản người dùng!', 'error');
+        return;
+    }
+
+    currentBuffTargetUser = user;
+    const modal = document.getElementById('buffExpModal');
+    if (!modal) return;
+
+    const subtitleEl = document.getElementById('buffExpModalSubtitle');
+    const targetInfoEl = document.getElementById('buffExpTargetInfo');
+
+    const curExp = getUserExp(user.username, user);
+    const userRank = getResolvedUserRank(user);
+    const initialChar = (user.username || 'U').charAt(0).toUpperCase();
+
+    if (subtitleEl) {
+        subtitleEl.textContent = `Ban phát cơ duyên cho đệ tử: ${user.username}`;
+    }
+
+    if (targetInfoEl) {
+        targetInfoEl.innerHTML = `
+            <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #1e293b; border: 2px solid ${userRank.borderColor || '#3b82f6'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; overflow: hidden;">
+                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${initialChar}';">` : initialChar}
+                </div>
+                <div>
+                    <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                        <strong class="text-white text-sm md:text-base font-bold">${escapeHtml(user.username)}</strong>
+                        <span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 9999px; font-size: 10.5px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor};">
+                            <i class="${userRank.icon}" style="font-size: 9.5px;"></i>
+                            <span>${userRank.displayName || userRank.name} (Cấp ${userRank.level})</span>
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-0.5" style="font-size: 11.5px; color: #94a3b8;">
+                        UID: <span class="font-mono text-slate-300">${escapeHtml(user.userId || 'N/A')}</span>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Tu vi hiện tại</div>
+                <div class="text-amber-400 font-black text-base md:text-lg flex items-center justify-end gap-1.5" style="color: #f59e0b; font-weight: 900;">
+                    <i class="fa-solid fa-bolt text-xs text-amber-400"></i>
+                    <span>${curExp.toLocaleString('vi-VN')} EXP</span>
+                </div>
+            </div>
+        `;
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+/**
+ * Đóng Modal "Ban phát Cơ duyên"
+ */
+function closeBuffExpModal() {
+    const modal = document.getElementById('buffExpModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+    currentBuffTargetUser = null;
+}
+
+/**
+ * Thực hiện "Ban tạo hóa" buff EXP trực tiếp cho tài khoản:
+ * 1. Lấy EXP hiện tại + mức buff.
+ * 2. Tính toán lại Cấp độ (Rank) để tự động thăng cấp nếu đủ điều kiện.
+ * 3. Update thẳng lên Firebase Realtime Database (users/{userId}).
+ * 4. Hiển thị thông báo: "Đã ban tạo hóa thành công! Đạo hữu này vừa nhận thêm tu vi."
+ */
+async function executeBuffExp(amount, buffName) {
+    if (!currentBuffTargetUser) return;
+    const target = currentBuffTargetUser;
+    const targetUid = target.userId;
+    if (!targetUid) {
+        showToast('Không xác định được UID của tài khoản!', 'error');
+        return;
+    }
+
+    try {
+        const currentExp = getUserExp(target.username, target);
+        const newExp = currentExp + amount;
+
+        // Tính toán lại Cấp độ (Rank) dựa trên số EXP mới
+        const isCucDao = target.level === 7 || (target.rank && typeof target.rank === 'string' && target.rank.toLowerCase().includes('cực đạo'));
+        const newRank = isCucDao ? CUC_DAO_RANK : getRankByExp(newExp);
+        const newLevel = newRank.level || 1;
+        const newRankName = newRank.name || 'GÀ MỜ';
+
+        const updateData = {
+            exp: newExp,
+            level: newLevel,
+            rank: newRankName,
+            rankId: newRank.id || 'gamo',
+            updatedAt: Date.now()
+        };
+
+        // 1. Update thẳng lên Firebase Realtime Database (users/{userId})
+        if (window.update && window.ref && window.db) {
+            await update(ref(db, `users/${targetUid}`), updateData);
+        } else if (window.FirebaseService && typeof FirebaseService.updateUserStats === 'function') {
+            await FirebaseService.updateUserStats(targetUid, updateData);
+        }
+
+        // 2. Cập nhật localStorage tương ứng
+        localStorage.setItem('exp_' + targetUid, newExp.toString());
+        if (target.username) {
+            localStorage.setItem('exp_' + target.username, newExp.toString());
+        }
+
+        // 3. Cập nhật đối tượng user trong bộ nhớ admin
+        target.exp = newExp;
+        target.level = newLevel;
+        target.rank = newRankName;
+        target.rankId = newRank.id;
+
+        const cachedIdx = adminUsersList.findIndex(u => u.userId === targetUid);
+        if (cachedIdx !== -1) {
+            adminUsersList[cachedIdx].exp = newExp;
+            adminUsersList[cachedIdx].level = newLevel;
+            adminUsersList[cachedIdx].rank = newRankName;
+            adminUsersList[cachedIdx].rankId = newRank.id;
+        }
+
+        // 4. Đóng modal và render lại bảng quản lý
+        closeBuffExpModal();
+        renderUserTable();
+
+        // 5. Hiển thị thông báo đúng chuẩn yêu cầu
+        const successMsg = 'Đã ban tạo hóa thành công! Đạo hữu này vừa nhận thêm tu vi.';
+        showToast(successMsg, 'success');
+        console.log(`[Admin] Ban tạo hóa (${buffName} +${amount} EXP) cho ${target.username}. EXP mới: ${newExp}, Cấp độ mới: Cấp ${newLevel} (${newRankName})`);
+    } catch (err) {
+        console.error('[Admin] Lỗi khi ban tạo hóa:', err);
+        showToast(`Lỗi khi ban tạo hóa: ${err.message || err}`, 'error');
+    }
+}
+window.openBuffExpModal = openBuffExpModal;
+window.closeBuffExpModal = closeBuffExpModal;
+window.executeBuffExp = executeBuffExp;
 
 /**
  * Đổi tên người dùng (Task 3: Admin User Rename)

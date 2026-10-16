@@ -34,6 +34,15 @@
     <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <!-- Tailwind CSS (preflight: false để bảo toàn toàn bộ CSS hiện hữu) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
 </head>
 
 <body class="dashboard-body">
@@ -134,6 +143,14 @@
                     <i class="fa-solid fa-bullseye"></i>
                     <span>Thi Mô Phỏng</span>
                 </a>
+            </div>
+
+            <!-- Khối Bảng Xếp Hạng Huyết Chiến Đoạt Vị -->
+            <div class="sidebar-section" style="margin-top: 8px;">
+                <button type="button" class="btn-leaderboard" id="btnLeaderboard" onclick="openLeaderboardModal()" title="Bảng xếp hạng Huyết chiến đoạt vị">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>Huyết chiến đoạt vị</span>
+                </button>
             </div>
 
             <!-- Khối Tiện ích -->
@@ -404,6 +421,67 @@
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
         <div class="modal-card" id="modal-card">
             <!-- Modal Header, Body, Footer injected dynamically by app.js -->
+        </div>
+    </div>
+
+    <!-- Modal Bảng Xếp Hạng "Huyết chiến đoạt vị" (Leaderboard) -->
+    <div id="leaderboardModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden modal-backdrop" onclick="if(event.target.id === 'leaderboardModal') closeLeaderboardModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+        <div class="bg-slate-900 text-white rounded-3xl shadow-2xl w-full max-w-4xl mx-auto overflow-hidden border border-amber-500/40 flex flex-col max-h-[90vh] modal-card" style="background: #0f172a; border-radius: 20px; width: 100%; max-width: 840px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.2); border: 1.5px solid rgba(245, 158, 11, 0.35); display: flex; flex-direction: column; max-height: 90vh;">
+            
+            <!-- Modal Header: E-Sports Competitive Theme -->
+            <div class="relative px-6 py-4 md:py-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 flex items-center justify-between" style="position: relative; padding: 16px 24px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); background: linear-gradient(90deg, rgba(120, 53, 15, 0.25) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(120, 53, 15, 0.25) 100%); display: flex; align-items: center; justify-content: space-between;">
+                <div class="flex items-center gap-3.5" style="display: flex; align-items: center; gap: 14px;">
+                    <div class="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/40 text-2xl font-black shrink-0" style="width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); display: flex; align-items: center; justify-content: center; color: #0f172a; font-size: 22px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); flex-shrink: 0;">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                            <h3 class="text-lg md:text-xl font-extrabold tracking-wide uppercase bg-gradient-to-r from-yellow-300 via-amber-200 to-amber-400 bg-clip-text text-transparent" style="margin: 0; font-size: 19px; font-weight: 800; background: linear-gradient(90deg, #fef08a 0%, #fde047 50%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                HUYẾT CHIẾN ĐOẠT VỊ
+                            </h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40" style="padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: rgba(245, 158, 11, 0.15); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4);">
+                                LEADERBOARD
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5" style="margin: 3px 0 0 0; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                            <span>Bảng xếp hạng Cảnh giới & Điểm kinh nghiệm (EXP) toàn server</span>
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Nút Đóng -->
+                <button type="button" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700 cursor-pointer" onclick="closeLeaderboardModal()" title="Đóng bảng xếp hạng" style="width: 36px; height: 36px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Subheader: Tóm tắt thông tin của người chơi hiện tại -->
+            <div id="leaderboardUserSummary" class="px-6 py-2.5 bg-slate-800/60 border-b border-slate-700/60 flex items-center justify-between text-xs" style="padding: 10px 24px; background: rgba(30, 41, 59, 0.55); border-bottom: 1px solid rgba(51, 65, 85, 0.5); display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
+                <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> Đang tải thông tin xếp hạng...</span>
+            </div>
+
+            <!-- Khu vực Admin độc tôn - "Chúa Tể Không Gian" (Nằm trên cùng, bên ngoài khung cuộn) -->
+            <div id="leaderboardAdminSection" class="px-4 md:px-6 pt-3.5 pb-1 hidden" style="padding: 14px 24px 4px 24px;"></div>
+
+            <!-- Modal Body: Danh sách Bảng xếp hạng (List/Table) -->
+            <div class="p-4 md:p-6 overflow-y-auto space-y-2.5 flex-1" id="leaderboardListBody" style="padding: 18px 24px; overflow-y: auto; flex: 1; max-height: calc(90vh - 165px); display: flex; flex-direction: column; gap: 10px;">
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-3" style="text-align: center; padding: 40px 20px;">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-400"></i>
+                    <p>Đang tải dữ liệu Huyết chiến đoạt vị...</p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400" style="padding: 12px 24px; background: #0b1120; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
+                <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span>Ôn luyện (+2 EXP), thi thử (+10 EXP) để đột phá cảnh giới và leo rank!</span>
+                </div>
+                <button type="button" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition flex items-center gap-2 cursor-pointer shadow-md shadow-amber-500/20" onclick="closeLeaderboardModal()" style="padding: 7px 18px; border-radius: 10px; background: #f59e0b; color: #0f172a; font-weight: 700; border: none; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>Đóng</span>
+                </button>
+            </div>
         </div>
     </div>
 

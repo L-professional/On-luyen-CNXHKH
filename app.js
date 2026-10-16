@@ -490,15 +490,51 @@ function updateHeaderUserPill(user) {
 // HỆ THỐNG GAMIFICATION (RANKING & EXP POINTS)
 // ==========================================================================
 
+const ADMIN_RANK = {
+    level: 99,
+    id: 'thiendiaphaptac',
+    name: 'THIÊN ĐỊA PHÁP TẮC',
+    displayName: 'Thiên Địa Pháp Tắc',
+    minExp: Infinity,
+    maxExp: Infinity,
+    color: '#ffffff',
+    bgColor: 'linear-gradient(90deg, #dc2626 0%, #f59e0b 100%)',
+    textColor: '#ffffff',
+    borderColor: '#fde047',
+    icon: 'fa-solid fa-yin-yang',
+    badgeClass: 'rank-thien-dia-phap-tac',
+    nextRankName: null
+};
+
+const CUC_DAO_RANK = {
+    level: 7,
+    id: 'chitoncucdao',
+    name: 'CHÍ TÔN CỰC ĐẠO',
+    displayName: 'Chí Tôn Cực Đạo',
+    minExp: 1501,
+    maxExp: Infinity,
+    color: '#f43f5e',
+    bgColor: '#ffe4e6',
+    textColor: '#881337',
+    borderColor: '#fda4af',
+    icon: 'fa-solid fa-dragon',
+    badgeClass: 'rank-chitoncucdao',
+    nextRankName: null
+};
+
 const RANK_LEVELS = [
     {
         level: 1,
         id: 'gamo',
         name: 'GÀ MỜ',
         title: 'Gà Mờ',
+        displayName: 'Gà mờ',
         minExp: 0,
         maxExp: 100,
         color: '#475569',
+        bgColor: '#f1f5f9',
+        textColor: '#475569',
+        borderColor: '#cbd5e1',
         icon: 'fa-solid fa-egg',
         badgeClass: 'rank-gamo',
         nextRankName: 'TẬP SỰ'
@@ -508,9 +544,13 @@ const RANK_LEVELS = [
         id: 'tapsu',
         name: 'TẬP SỰ',
         title: 'Tập Sự',
+        displayName: 'Tập sự',
         minExp: 101,
         maxExp: 300,
         color: '#15803d',
+        bgColor: '#dcfce7',
+        textColor: '#15803d',
+        borderColor: '#86efac',
         icon: 'fa-solid fa-feather-pointed',
         badgeClass: 'rank-tapsu',
         nextRankName: 'TÂN BINH'
@@ -520,9 +560,13 @@ const RANK_LEVELS = [
         id: 'tanbinh',
         name: 'TÂN BINH',
         title: 'Tân Binh',
+        displayName: 'Tân binh',
         minExp: 301,
         maxExp: 600,
         color: '#1d4ed8',
+        bgColor: '#dbeafe',
+        textColor: '#1d4ed8',
+        borderColor: '#93c5fd',
         icon: 'fa-solid fa-shield-halved',
         badgeClass: 'rank-tanbinh',
         nextRankName: 'CAO THỦ'
@@ -532,9 +576,13 @@ const RANK_LEVELS = [
         id: 'caothu',
         name: 'CAO THỦ',
         title: 'Cao Thủ',
+        displayName: 'Cao thủ',
         minExp: 601,
         maxExp: 1000,
         color: '#7e22ce',
+        bgColor: '#f3e8ff',
+        textColor: '#7e22ce',
+        borderColor: '#d8b4fe',
         icon: 'fa-solid fa-wand-magic-sparkles',
         badgeClass: 'rank-caothu',
         nextRankName: 'ĐẠI ĐẾ'
@@ -544,9 +592,13 @@ const RANK_LEVELS = [
         id: 'daide',
         name: 'ĐẠI ĐẾ',
         title: 'Đại Đế',
+        displayName: 'Đại đế',
         minExp: 1001,
         maxExp: 1500,
         color: '#b45309',
+        bgColor: '#fef3c7',
+        textColor: '#92400e',
+        borderColor: '#fcd34d',
         icon: 'fa-solid fa-crown',
         badgeClass: 'rank-daide',
         nextRankName: 'CHÍ TÔN THẦN'
@@ -556,9 +608,13 @@ const RANK_LEVELS = [
         id: 'chitonthan',
         name: 'CHÍ TÔN THẦN',
         title: 'Chí Tôn Thần',
+        displayName: 'Chí tôn thần',
         minExp: 1501,
         maxExp: Infinity,
-        color: '#ffffff',
+        color: '#ea580c',
+        bgColor: '#ffedd5',
+        textColor: '#ea580c',
+        borderColor: '#fdba74',
         icon: 'fa-solid fa-fire-flame-curved',
         badgeClass: 'rank-chitonthan',
         nextRankName: null // Cảnh giới tối cao
@@ -572,8 +628,20 @@ const RANK_LEVELS = [
 function getUserStats() {
     const user = getCurrentUser();
     if (!user) {
-        return { exp: 0, level: 1, rankId: 'gamo' };
+        return { exp: 0, level: 1, rankId: 'gamo', rank: RANK_LEVELS[0] };
     }
+
+    // Admin nắm giữ quyền năng Thiên Địa Pháp Tắc tuyệt đối với EXP vô hạn
+    const isAdm = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || !!user.isRoot;
+    if (isAdm) {
+        return {
+            exp: Infinity,
+            level: 99,
+            rankId: 'thiendiaphaptac',
+            rank: ADMIN_RANK
+        };
+    }
+
     const uid = getCurrentUserUID();
     try {
         // 1. Kiểm tra theo UID
@@ -605,14 +673,27 @@ function getUserStats() {
         if (typeof exp === 'undefined' || isNaN(exp)) {
             exp = 0;
         }
+
+        // Kiểm tra xem user đã đột phá cảnh giới Chí Tôn Cực Đạo chưa
+        const isCucDao = (user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || (user.level === 7);
+        if (isCucDao) {
+            return {
+                exp: exp,
+                level: 7,
+                rankId: 'chitoncucdao',
+                rank: CUC_DAO_RANK
+            };
+        }
+
         const rank = getRankByExp(exp);
         return {
             exp: exp,
             level: rank.level,
-            rankId: rank.id
+            rankId: rank.id,
+            rank: rank
         };
     } catch (e) {
-        return { exp: 0, level: 1, rankId: 'gamo' };
+        return { exp: 0, level: 1, rankId: 'gamo', rank: RANK_LEVELS[0] };
     }
 }
 
@@ -694,8 +775,31 @@ function getRankByExp(exp) {
  * Tính toán tiến trình % và số EXP cần thiết để thăng cấp tiếp theo
  */
 function getRankProgress(exp) {
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const isAdm = user && ((user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || !!user.isRoot);
+    if (isAdm) {
+        return {
+            percent: 100,
+            expNeeded: 0,
+            nextRankName: null,
+            isMax: true,
+            isAdmin: true
+        };
+    }
+
+    const isCucDao = user && ((user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || user.level === 7);
+    if (isCucDao) {
+        return {
+            percent: 100,
+            expNeeded: 0,
+            nextRankName: null,
+            isMax: true,
+            isCucDao: true
+        };
+    }
+
     const rank = getRankByExp(exp);
-    if (rank.id === 'chitonthan') {
+    if (rank.id === 'chitonthan' || rank.level === 6) {
         return {
             percent: 100,
             expNeeded: 0,
@@ -781,8 +885,9 @@ function updateHeaderRankDisplay() {
     const user = getCurrentUser();
     if (!user) return;
 
+    const isAdm = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || !!user.isRoot;
     const stats = getUserStats();
-    const rank = getRankByExp(stats.exp);
+    const rank = isAdm ? ADMIN_RANK : (stats.rank || getRankByExp(stats.exp));
 
     const userPills = document.querySelectorAll('.user-pill');
     userPills.forEach(pill => {
@@ -799,9 +904,15 @@ function updateHeaderRankDisplay() {
             }
         }
 
-        badgeEl.className = `header-user-rank-badge ${rank.badgeClass}`;
-        badgeEl.innerHTML = `<i class="${rank.icon}"></i> <span>${rank.name}</span>`;
-        badgeEl.title = `Cấp ${rank.level}: ${rank.name} (${stats.exp} EXP)`;
+        if (isAdm) {
+            badgeEl.className = 'header-user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]';
+            badgeEl.innerHTML = `<i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s;"></i> <span>Thiên Địa Pháp Tắc</span>`;
+            badgeEl.title = `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)`;
+        } else {
+            badgeEl.className = `header-user-rank-badge ${rank.badgeClass}`;
+            badgeEl.innerHTML = `<i class="${rank.icon}"></i> <span>${rank.displayName || rank.name}</span>`;
+            badgeEl.title = `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
+        }
 
         // 2. Cập nhật Khung Avatar PNG thu nhỏ (.avatar-mini) trên Header
         const initial = (user && user.username) ? user.username.charAt(0).toUpperCase() : 'U';
@@ -811,9 +922,10 @@ function updateHeaderRankDisplay() {
             frameEl.id = 'header-avatar-frame';
             pill.insertBefore(frameEl, pill.firstChild);
         }
-        frameEl.className = `avatar-wrapper rank-${rank.level} avatar-mini`;
+        const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+        frameEl.className = `avatar-wrapper rank-${frameRankLevel} avatar-mini ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
         frameEl.textContent = initial;
-        frameEl.title = `Cấp ${rank.level}: ${rank.name} (${stats.exp} EXP)`;
+        frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
 
         const nameEl = pill.querySelector('.user-name');
         if (nameEl && user && user.username) {
@@ -824,12 +936,13 @@ function updateHeaderRankDisplay() {
     // 3. Cập nhật tức thì vào Modal Tài khoản nếu Modal đang mở trên màn hình (không cần F5)
     const initial = (user && user.username) ? user.username.charAt(0).toUpperCase() : 'U';
     const modalCenterpiece = document.getElementById('modal-moba-centerpiece');
+    const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
     if (modalCenterpiece) {
-        modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${rank.level} avatar-large">${initial}</div>`;
+        modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${frameRankLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${initial}</div>`;
     }
     const modalAvatarFrame = document.getElementById('modal-avatar-frame');
     if (modalAvatarFrame) {
-        modalAvatarFrame.className = `avatar-wrapper rank-${rank.level}`;
+        modalAvatarFrame.className = `avatar-wrapper rank-${frameRankLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
         modalAvatarFrame.textContent = initial;
     }
     const modalUserCard = document.getElementById('modal-user-card');
@@ -837,7 +950,7 @@ function updateHeaderRankDisplay() {
         for (let i = 1; i <= 6; i++) {
             modalUserCard.classList.remove(`rank-${i}`);
         }
-        modalUserCard.classList.add(`rank-${rank.level}`);
+        modalUserCard.classList.add(`rank-${frameRankLevel}`);
     }
 }
 
@@ -991,21 +1104,83 @@ function closeAvatarShowcaseModal() {
 /**
  * Render HTML khu vực "Thẻ Bài" (Rank Card) trong Modal thông tin tài khoản
  */
+/**
+ * Render HTML khu vực "Thẻ Bài" (Rank Card) trong Modal thông tin tài khoản
+ */
 function renderRankCardHtml() {
+    const user = getCurrentUser();
+    const isAdm = user && ((user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || !!user.isRoot);
+
+    if (isAdm) {
+        return `
+            <div class="user-rank-card rank-thien-dia-phap-tac" style="border: 2px solid #fde047; background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%); border-radius: 16px; padding: 16px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);">
+                <div class="urc-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <div class="urc-badge-pill rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-size: 12px; border: 1px solid #fde047;">
+                        <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s;"></i>
+                        <span>Thiên Địa Pháp Tắc</span>
+                    </div>
+                    <div class="urc-exp-display" style="display: flex; align-items: baseline; gap: 5px;">
+                        <strong style="font-size: 26px; font-weight: 900; color: #dc2626; line-height: 1;">∞</strong>
+                        <span class="urc-exp-unit" style="font-size: 11px; font-weight: 800; color: #b45309;">Bất Tử Bất Diệt</span>
+                    </div>
+                </div>
+
+                <div class="urc-progress-section">
+                    <div class="urc-progress-header" style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px;">
+                        <span>Quyền Năng Tuyệt Đối (Admin Tối Cao)</span>
+                        <span class="urc-prog-percent" style="color: #dc2626; font-weight: 800;">100% Vô Hạn</span>
+                    </div>
+                    <div class="urc-progress-track" style="height: 10px; background: rgba(239, 68, 68, 0.15); border-radius: 9999px; overflow: hidden; border: 1px solid rgba(239, 68, 68, 0.25);">
+                        <div class="urc-progress-fill" style="width: 100%; height: 100%; background: linear-gradient(90deg, #dc2626, #f59e0b);"></div>
+                    </div>
+                    <div class="urc-next-info" style="margin-top: 8px; font-size: 12.5px; color: #b45309; font-weight: 700;">
+                        <i class="fa-solid fa-infinity" style="color: #dc2626;"></i> Vạn Kiếp Luân Hồi &bull; Thống lĩnh toàn cõi học phần
+                    </div>
+                </div>
+
+                <div class="urc-footer-tips" style="margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); font-size: 12px; color: #78350f; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-crown" style="color: #f59e0b; font-size: 14px;"></i>
+                    <span>Tài khoản Quản trị nắm giữ quyền điều khiển Thiên Địa Pháp Tắc.</span>
+                </div>
+
+                <!-- NÚT XEM BỘ SƯU TẬP 6 KHUNG AVATAR MOBA -->
+                <div style="margin-top: 10px;">
+                    <button type="button" class="btn-toggle-showcase" onclick="openAvatarShowcaseModal()" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, rgba(30, 58, 138, 0.5), rgba(15, 23, 42, 0.8)); color: #93c5fd; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-gem" style="color: #60a5fa;"></i>
+                            <span>Bộ sưu tập 6 Khung Avatar MOBA</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 11px;"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
     const stats = getUserStats();
-    const rank = getRankByExp(stats.exp);
+    const rank = stats.rank || getRankByExp(stats.exp);
     const prog = getRankProgress(stats.exp);
 
-    const nextInfoHtml = prog.isMax
-        ? `<i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Đã đạt Cảnh giới Tối cao (MAX LEVEL)`
-        : `<i class="fa-solid fa-angles-up"></i> Cần <strong>${prog.expNeeded} EXP</strong> nữa để thăng cấp <strong>${prog.nextRankName}</strong>`;
+    const isCucDao = (user && ((user.rank && (typeof user.rank === 'string' ? (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao') : (user.rank.level === 7 || (user.rank.name && user.rank.name.toLowerCase().includes('cực đạo'))))) || user.level === 7));
+    const isChitonthan = !isCucDao && (rank.id === 'chitonthan' || rank.level === 6 || (user && user.rank && typeof user.rank === 'string' && user.rank.toLowerCase().includes('chí tôn thần')));
+    const isExpMax = prog.percent >= 100 || prog.isMax || stats.exp >= 1501;
+    const canDoKiep = !isCucDao && isChitonthan && isExpMax;
+
+    let nextInfoHtml = '';
+    if (isCucDao) {
+        nextInfoHtml = `<i class="fa-solid fa-dragon" style="color: #f43f5e;"></i> Đã đột phá <strong>CHÍ TÔN CỰC ĐẠO</strong> - Uy chấn vạn giới!`;
+    } else if (prog.isMax) {
+        nextInfoHtml = `<i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Đã đạt Cảnh giới Tối cao (MAX LEVEL: Chí Tôn Thần)`;
+    } else {
+        nextInfoHtml = `<i class="fa-solid fa-angles-up"></i> Cần <strong>${prog.expNeeded} EXP</strong> nữa để thăng cấp <strong>${prog.nextRankName}</strong>`;
+    }
 
     return `
         <div class="user-rank-card ${rank.badgeClass}">
             <div class="urc-top">
                 <div class="urc-badge-pill ${rank.badgeClass}">
                     <i class="${rank.icon}"></i>
-                    <span>${rank.name}</span>
+                    <span>${rank.displayName || rank.name}</span>
                 </div>
                 <div class="urc-exp-display">
                     <strong>${stats.exp.toLocaleString('vi-VN')}</strong>
@@ -1015,15 +1190,26 @@ function renderRankCardHtml() {
 
             <div class="urc-progress-section">
                 <div class="urc-progress-header">
-                    <span>Tiến trình thăng cấp (Cấp ${rank.level})</span>
+                    <span>${isCucDao ? 'Cảnh giới Thần Thoại (Cấp 7)' : `Tiến trình thăng cấp (Cấp ${rank.level})`}</span>
                     <span class="urc-prog-percent">${prog.percent}%</span>
                 </div>
                 <div class="urc-progress-track">
-                    <div class="urc-progress-fill" style="width: ${prog.percent}%;"></div>
+                    <div class="urc-progress-fill" style="width: ${prog.percent}%; ${isCucDao ? 'background: linear-gradient(90deg, #f43f5e, #fb7185);' : ''}"></div>
                 </div>
                 <div class="urc-next-info">
                     ${nextInfoHtml}
                 </div>
+
+                <!-- NÚT NGHỊCH THIÊN ĐỘ KIẾP (CHỈ HIỂN THỊ KHI ĐẠT MAX LEVEL 6 VÀ ĐẦY 100% EXP) -->
+                ${canDoKiep ? `
+                    <div class="do-kiep-container" style="margin-top: 14px;">
+                        <button type="button" class="btn-do-kiep animate-pulse" id="btn-do-kiep" onclick="triggerDoKiep()" title="Đột phá bình cảnh lên cảnh giới Chí Tôn Cực Đạo">
+                            <i class="fa-solid fa-fire" style="color: #fef08a;"></i>
+                            <span>🔥 Nghịch Thiên Độ Kiếp</span>
+                            <i class="fa-solid fa-bolt" style="color: #fef08a;"></i>
+                        </button>
+                    </div>
+                ` : ''}
             </div>
 
             <div class="urc-footer-tips">
@@ -1062,19 +1248,64 @@ function renderRankCardHtml() {
 }
 
 /**
- * Render Lộ trình 6 Cảnh giới (Roadmap)
+ * Render Lộ trình Cảnh giới Tu Tiên (Roadmap)
+ * Mặc định CHỈ render từ Cấp 1 (Gà mờ) đến Cấp 6 (Chí tôn thần).
+ * Chỉ khi người dùng đạt Cấp 6 hoặc Cấp 7 mới hiển thị Cấp 7:
+ * - Cấp 6: Hiển thị "Cực Cảnh", ghi chú "Đã đủ điều kiện Độ Kiếp" kèm nút kích hoạt triggerDoKiep().
+ * - Cấp 7: Hiển thị "Chí Tôn Cực Đạo" (Đã đạt).
  */
 function renderRankRoadmapHtml() {
     const stats = getUserStats();
-    const currentRank = getRankByExp(stats.exp);
+    const currentRank = stats.rank || getRankByExp(stats.exp);
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
 
-    const itemsHtml = RANK_LEVELS.map((r, index) => {
+    const isChitonthan = currentRank.level === 6 || (user && user.rank && typeof user.rank === 'string' && user.rank.toLowerCase().includes('chí tôn thần'));
+    const isCucDao = currentRank.level === 7 || (user && ((user.rank && typeof user.rank === 'string' && (user.rank.toLowerCase().includes('cực đạo') || user.rank.toLowerCase() === 'chitoncucdao')) || user.level === 7));
+
+    // Mặc định CHỈ hiển thị từ Cấp 1 đến Cấp 6
+    const roadmapRanks = [...RANK_LEVELS];
+
+    // Chỉ khi đạt Cấp 6 hoặc Cấp 7 mới unhide Cấp 7
+    if (isChitonthan) {
+        roadmapRanks.push({
+            id: 'cuccanh',
+            name: 'Cực Cảnh',
+            displayName: 'Cực Cảnh',
+            level: 7,
+            minExp: 1500,
+            maxExp: Infinity,
+            icon: 'fa-solid fa-bolt-lightning',
+            badgeClass: 'rank-cuccanh',
+            bgColor: '#fff1f2',
+            textColor: '#9f1239',
+            borderColor: '#f43f5e',
+            isSpecialDoKiep: true,
+            note: 'Đã đủ điều kiện Độ Kiếp'
+        });
+    } else if (isCucDao) {
+        roadmapRanks.push({
+            ...CUC_DAO_RANK,
+            isAchievedCucDao: true
+        });
+    }
+
+    const itemsHtml = roadmapRanks.map((r, index) => {
         let status = 'locked';
         let statusText = 'Chưa mở khóa';
         let statusIcon = '<i class="fa-solid fa-lock"></i>';
         let expText = r.maxExp === Infinity ? '> 1500 EXP' : `${r.minExp} - ${r.maxExp} EXP`;
 
-        if (r.level < currentRank.level) {
+        if (r.isSpecialDoKiep) {
+            status = 'ready-dokiep';
+            statusText = 'Sẵn sàng Độ Kiếp';
+            statusIcon = '<i class="fa-solid fa-bolt-lightning text-rose-500 animate-pulse"></i>';
+            expText = r.note || 'Đã đủ điều kiện Độ Kiếp';
+        } else if (r.isAchievedCucDao) {
+            status = 'passed';
+            statusText = 'Đã đạt';
+            statusIcon = '<i class="fa-solid fa-circle-check"></i>';
+            expText = 'Đã đắc đạo - Uy chấn vạn giới';
+        } else if (r.level < currentRank.level) {
             status = 'passed';
             statusText = 'Đã đạt';
             statusIcon = '<i class="fa-solid fa-circle-check"></i>';
@@ -1084,7 +1315,21 @@ function renderRankRoadmapHtml() {
             statusIcon = '<i class="fa-solid fa-award"></i>';
         }
 
-        const isLast = index === RANK_LEVELS.length - 1;
+        const isLast = index === roadmapRanks.length - 1;
+
+        // Nếu là Cực Cảnh (người dùng Cấp 6), render nút kích hoạt Độ Kiếp
+        let statusColHtml = `<div class="rmc-status-badge ${status}">${statusText}</div>`;
+        if (r.isSpecialDoKiep) {
+            statusColHtml = `
+                <div class="rmc-action-wrap flex flex-col items-end gap-1.5" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                    <span class="text-[11px] font-bold text-rose-600 uppercase tracking-wide" style="color: #e11d48; font-size: 11px;">Đã đủ điều kiện Độ Kiếp</span>
+                    <button type="button" class="btn-do-kiep-mini" onclick="triggerDoKiep()" title="Kích hoạt Nghịch Thiên Độ Kiếp" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%); color: #ffffff; border: 1.5px solid #f87171; border-radius: 8px; padding: 4px 12px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); animation: pulse 2s infinite;">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                        <span>ĐỘ KIẾP</span>
+                    </button>
+                </div>
+            `;
+        }
 
         return `
             <div class="roadmap-item ${status}">
@@ -1101,7 +1346,7 @@ function renderRankRoadmapHtml() {
                         </div>
                         <div class="rmc-info">
                             <div class="rmc-title-row">
-                                <span class="rmc-name">${r.name}</span>
+                                <span class="rmc-name">${r.displayName || r.name}</span>
                                 <span class="rmc-level">Cấp ${r.level}</span>
                             </div>
                             <div class="rmc-exp-req">
@@ -1110,9 +1355,7 @@ function renderRankRoadmapHtml() {
                             </div>
                         </div>
                     </div>
-                    <div class="rmc-status-badge ${status}">
-                        ${statusText}
-                    </div>
+                    ${statusColHtml}
                 </div>
             </div>
         `;
@@ -1122,15 +1365,235 @@ function renderRankRoadmapHtml() {
         <div class="roadmap-header-info">
             <div class="rhi-title">
                 <i class="fa-solid fa-map-location-dot"></i>
-                <span>Lộ trình 6 Cảnh giới</span>
+                <span>Lộ trình Cảnh giới Tu Tiên</span>
             </div>
-            <div class="rhi-sub">Hiện tại: <strong>${currentRank.name}</strong></div>
+            <div class="rhi-sub">Hiện tại: <strong>${currentRank.displayName || currentRank.name}</strong></div>
         </div>
         <div class="roadmap-timeline">
             ${itemsHtml}
         </div>
     `;
 }
+
+/**
+ * Kích hoạt Modal xác nhận "Nghịch Thiên Độ Kiếp"
+ */
+function triggerDoKiep() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    showModal({
+        title: '⚡ NGHỊCH THIÊN ĐỘ KIẾP ⚡',
+        icon: 'fa-solid fa-bolt-lightning',
+        content: `
+            <div style="text-align: center; padding: 14px 6px;">
+                <div style="font-size: 52px; color: #dc2626; margin-bottom: 12px; animation: doKiepPulse 1.5s infinite;">
+                    🔥
+                </div>
+                <div style="padding: 16px 20px; border-radius: 14px; background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%); border: 2px solid #fca5a5; box-shadow: 0 4px 18px rgba(220, 38, 38, 0.15); margin-bottom: 16px;">
+                    <p style="font-size: 15px; color: #991b1b; font-weight: 700; line-height: 1.6; margin: 0;">
+                        "Đạo hữu đã chạm đến bình cảnh. Phía trước là cảnh giới 'Chí Tôn Cực Đạo'. Thiên đạo vô thường, nhân phẩm quyết định. Thành thì uy trấn vạn giới, bại thì tu vi hao tổn (trừ 500 EXP). Ngươi có dám đánh cược?"
+                    </p>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 14px; font-size: 12.5px; color: #64748b;">
+                    <span>Tỷ lệ thành công: <strong style="color: #ea580c; font-weight: 800;">5%</strong></span>
+                    <span>&bull;</span>
+                    <span>Tổn thất nếu bại: <strong style="color: #dc2626; font-weight: 800;">-500 EXP</strong></span>
+                </div>
+            </div>
+        `,
+        actionText: '🔥 Quyết Chiến Thiên Đạo',
+        actionCallback: () => {
+            executeDoKiepBreakthrough();
+        },
+        showCancel: true,
+        cancelText: 'Bế quan suy nghĩ thêm',
+        cancelCallback: () => {
+            closeModal();
+            openUserMenuModal();
+        }
+    });
+}
+window.triggerDoKiep = triggerDoKiep;
+
+/**
+ * Thực thi cơ chế RNG Độ Kiếp: 5% Thành công -> Chí Tôn Cực Đạo | 95% Thất bại -> Trừ 500 EXP
+ */
+async function executeDoKiepBreakthrough() {
+    const user = getCurrentUser();
+    if (!user) return;
+    const uid = getCurrentUserUID();
+    const stats = getUserStats();
+    const currentExp = stats.exp;
+
+    // Hiệu ứng đang độ kiếp (Dramatic Lightning Animation)
+    showModal({
+        title: '⚡ THIÊN KIẾP GIÁNG LÂM ⚡',
+        icon: 'fa-solid fa-cloud-bolt',
+        content: `
+            <div style="text-align: center; padding: 24px 10px;">
+                <div style="font-size: 52px; color: #ea580c; margin-bottom: 16px; animation: doKiepPulse 1s infinite alternate;">
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                </div>
+                <h4 style="font-size: 17px; font-weight: 800; color: #dc2626; margin-bottom: 8px;">CỬU TRỌNG LÔI KIẾP ĐANG GIÁNG XUỐNG!</h4>
+                <p style="font-size: 13.5px; color: #64748b; line-height: 1.6;">
+                    Thiên lôi cuồn cuộn, sấm chớp rền vang! Đạo tâm của đạo hữu đang được tôi luyện giữa biển lôi kiếp...
+                </p>
+                <div style="margin-top: 18px; display: flex; justify-content: center;">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl text-amber-500"></i>
+                </div>
+            </div>
+        `,
+        actionText: 'Đang ngưng tụ tu vi...',
+        actionCallback: null
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Xử lý Tỷ lệ (RNG): 5% Thành Công
+    const isSuccess = Math.random() <= 0.05;
+
+    if (isSuccess) {
+        // ================= NHÁNH THÀNH CÔNG (5%) =================
+        const newRankName = 'Chí Tôn Cực Đạo';
+
+        try {
+            if (uid !== 'guest') {
+                if (window.update && window.ref && window.db) {
+                    await update(ref(db, `users/${uid}`), {
+                        rank: newRankName,
+                        level: 7,
+                        updatedAt: Date.now()
+                    });
+                } else if (window.FirebaseService) {
+                    await FirebaseService.updateUser(uid, {
+                        rank: newRankName,
+                        level: 7
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi cập nhật Firebase khi độ kiếp thành công:', e);
+        }
+
+        user.rank = newRankName;
+        user.level = 7;
+        try {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+            const curStats = getUserStats();
+            curStats.rank = CUC_DAO_RANK;
+            curStats.level = 7;
+            localStorage.setItem('userStats_' + uid, JSON.stringify(curStats));
+        } catch (e) {}
+
+        if (typeof createLevelUpParticles === 'function') {
+            createLevelUpParticles();
+            setTimeout(createLevelUpParticles, 600);
+            setTimeout(createLevelUpParticles, 1200);
+        }
+
+        updateHeaderRankDisplay();
+
+        showModal({
+            title: '🎉 NGHỊCH THIÊN ĐỘ KIẾP THÀNH CÔNG! 🎉',
+            icon: 'fa-solid fa-dragon',
+            content: `
+                <div style="text-align: center; padding: 20px 10px;">
+                    <div style="font-size: 58px; margin-bottom: 14px; filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.9));">
+                        🐉
+                    </div>
+                    <div class="user-rank-badge rank-chitoncucdao" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 20px; border-radius: 9999px; font-size: 16px; font-weight: 900; background: #ffe4e6; color: #881337; border: 2px solid #fb7185; box-shadow: 0 0 20px rgba(244, 63, 94, 0.8); margin-bottom: 16px;">
+                        <i class="fa-solid fa-dragon" style="color: #f43f5e;"></i>
+                        <span>CHÍ TÔN CỰC ĐẠO</span>
+                    </div>
+                    <h3 style="font-size: 19px; font-weight: 900; color: #9f1239; margin-bottom: 10px;">ĐỘNG TRỜI CHUYỂN ĐẤT &bull; DANH CHẤN VẠN GIỚI!</h3>
+                    <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+                        Chúc mừng Đạo hữu đã nghịch thiên cải mệnh thành công! Vượt qua Cửu Trọng Lôi Kiếp, chính thức bước chân vào cảnh giới thần thoại <strong>CHÍ TÔN CỰC ĐẠO (Cấp 7)</strong>. Uy trấn vạn cõi, vạn thần quy phục!
+                    </p>
+                </div>
+            `,
+            actionText: 'Tiếp Nhận Thần Vị',
+            actionCallback: () => {
+                closeModal();
+                openUserMenuModal();
+            }
+        });
+
+    } else {
+        // ================= NHÁNH THẤT BẠI (95%) =================
+        const deductedExp = Math.max(0, currentExp - 500);
+        const demotedRank = getRankByExp(deductedExp);
+
+        try {
+            if (uid !== 'guest') {
+                if (window.update && window.ref && window.db) {
+                    await update(ref(db, `users/${uid}`), {
+                        exp: deductedExp,
+                        level: demotedRank.level,
+                        rank: demotedRank.displayName || demotedRank.name,
+                        updatedAt: Date.now()
+                    });
+                } else if (window.FirebaseService) {
+                    await FirebaseService.saveExp(uid, deductedExp);
+                    await FirebaseService.updateUser(uid, {
+                        exp: deductedExp,
+                        level: demotedRank.level,
+                        rank: demotedRank.displayName || demotedRank.name
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi cập nhật Firebase khi độ kiếp thất bại:', e);
+        }
+
+        try {
+            localStorage.setItem('exp_' + uid, deductedExp.toString());
+            if (user.username) {
+                localStorage.setItem('exp_' + user.username, deductedExp.toString());
+            }
+            saveUserStats({
+                exp: deductedExp,
+                level: demotedRank.level,
+                rankId: demotedRank.id
+            });
+            user.exp = deductedExp;
+            user.level = demotedRank.level;
+            user.rank = demotedRank.displayName || demotedRank.name;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+        } catch (e) {}
+
+        updateHeaderRankDisplay();
+
+        showModal({
+            title: '⚡ ĐỘ KIẾP THẤT BẠI ⚡',
+            icon: 'fa-solid fa-cloud-bolt',
+            content: `
+                <div style="text-align: center; padding: 20px 10px;">
+                    <div style="font-size: 54px; color: #dc2626; margin-bottom: 14px; filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.7));">
+                        <i class="fa-solid fa-heart-crack"></i>
+                    </div>
+                    <div style="padding: 12px 16px; border-radius: 12px; background: #fef2f2; border: 1.5px solid #f87171; color: #b91c1c; font-weight: 800; font-size: 15px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+                        Độ kiếp thất bại! Đạo cơ tổn thương, ngươi đã đánh mất 500 EXP!
+                    </div>
+                    <p style="font-size: 13.5px; color: #475569; line-height: 1.6;">
+                        Lôi kiếp quá đỗi hung hiểm, tu vi của ngươi đã bị phản phệ và tụt xuống còn <strong>${deductedExp.toLocaleString('vi-VN')} EXP</strong> (Cấp độ: <span class="user-rank-badge ${demotedRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${demotedRank.bgColor}; color: ${demotedRank.textColor}; border: 1px solid ${demotedRank.borderColor};"><i class="${demotedRank.icon}"></i> ${demotedRank.displayName || demotedRank.name}</span>).
+                    </p>
+                    <p style="font-size: 12.5px; color: #64748b; margin-top: 10px;">
+                        Hãy tiếp tục ôn luyện và thi trắc nghiệm để tôi luyện đạo tâm, tích lũy lại tu vi trước khi tiếp tục nghịch thiên!
+                    </p>
+                </div>
+            `,
+            actionText: 'Dưỡng Thương Bế Quan',
+            actionCallback: () => {
+                closeModal();
+                openUserMenuModal();
+            }
+        });
+    }
+}
+window.executeDoKiepBreakthrough = executeDoKiepBreakthrough;
 
 /**
  * Mở / Đóng Lộ trình cấp độ trong Modal Tài khoản
@@ -1442,18 +1905,13 @@ function triggerConfettiEffect(container) {
 function openUserMenuModal() {
     closeMobileSidebar();
     const user = getCurrentUser();
-    const roleText = (user && user.role === 'admin') ? 'Quản trị viên (Admin)' : 'Học viên (User)';
-    const roleBadgeColor = (user && user.role === 'admin') ? '#2563eb' : '#10b981';
+    const isAdm = (user && ((user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || !!user.isRoot));
+    const roleText = isAdm ? 'Quản trị viên (Admin)' : 'Học viên (User)';
 
     const stats = getUserStats();
-    const rank = getRankByExp(stats.exp);
-
-    let avatarBg = roleBadgeColor;
-    if (rank.level === 5) {
-        avatarBg = 'linear-gradient(135deg, #f59e0b, #b45309)';
-    } else if (rank.level === 6) {
-        avatarBg = 'linear-gradient(135deg, #ef4444, #991b1b)';
-    }
+    const rank = isAdm ? ADMIN_RANK : (stats.rank || getRankByExp(stats.exp));
+    const initial = user && user.username ? user.username.charAt(0).toUpperCase() : 'U';
+    const frameLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
 
     showModal({
         title: 'Tài khoản người dùng',
@@ -1462,18 +1920,22 @@ function openUserMenuModal() {
             <div style="font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 14px;">
                 <!-- TÂM ĐIỂM KHUNG AVATAR PNG 6 CẤP ĐỘ -->
                 <div id="modal-moba-centerpiece" style="display: flex; justify-content: center; align-items: center; padding: 20px 0; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);">
-                    <div class="avatar-wrapper rank-${rank.level} avatar-large">${user ? user.username.charAt(0).toUpperCase() : 'U'}</div>
+                    <div class="avatar-wrapper rank-${frameLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${initial}</div>
                 </div>
 
                 <!-- Thông tin người dùng với Khung Avatar & Card theo Cấp độ (.rank-1 .. .rank-6) -->
-                <div class="modal-user-card rank-${rank.level}" id="modal-user-card">
-                    <div class="avatar-wrapper rank-${rank.level}" id="modal-avatar-frame" style="width: 52px; height: 52px; font-size: 20px;">
-                        ${user ? user.username.charAt(0).toUpperCase() : 'U'}
+                <div class="modal-user-card rank-${frameLevel}" id="modal-user-card">
+                    <div class="avatar-wrapper rank-${frameLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}" id="modal-avatar-frame" style="width: 52px; height: 52px; font-size: 20px;">
+                        ${initial}
                     </div>
                     <div class="muc-info">
-                        <div class="muc-name">${user ? user.username : 'Chưa đăng nhập'}</div>
-                        <div class="muc-role">
-                            ${roleText}
+                        <div class="muc-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span>${user ? user.username : 'Chưa đăng nhập'}</span>
+                            ${isAdm ? `<span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="padding: 1px 8px; border-radius: 9999px; font-size: 10px; border: 1px solid #fde047;"><i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 9px;"></i> Thiên Địa Pháp Tắc</span>` : ''}
+                        </div>
+                        <div class="muc-role" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 3px;">
+                            <span>${roleText}</span>
+                            ${isAdm ? `<span class="van-kiep-luan-hoi-badge"><i class="fa-solid fa-infinity"></i> Vạn Kiếp Luân Hồi</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -4469,3 +4931,567 @@ function calculateScore() {
 }
 window.calculateScore = calculateScore;
 window.submitTest = submitTest;
+
+// ==========================================================================
+// TÍNH NĂNG BẢNG XẾP HẠNG "HUYẾT CHIẾN ĐOẠT VỊ" (LEADERBOARD SYSTEM)
+// ==========================================================================
+
+/**
+ * Xác định chính xác Cấp độ (Rank / Level) của người dùng trên Bảng xếp hạng.
+ * BẮT BUỘC: Dùng chung một hàm tính toán Cấp độ từ số EXP (getRankByExp)
+ * cho cả Bảng xếp hạng và Giao diện Profile cá nhân để bảo đảm 100% đồng nhất.
+ * (Ví dụ: Kien có 0 EXP thì cả ở Profile và Bảng xếp hạng đều phải là "Gà mờ")
+ */
+function getLeaderboardUserRank(u, calculatedExp) {
+    if (!u) return RANK_LEVELS[0];
+
+    // Quyền lực tuyệt đối của Admin: Thiên Địa Pháp Tắc
+    const isAdm = (u.role && u.role.toLowerCase() === 'admin') || (u.username && u.username.toLowerCase() === 'admin') || !!u.isRoot;
+    if (isAdm) {
+        return ADMIN_RANK;
+    }
+
+    // Ngoại lệ duy nhất ngoài EXP: Đã Độ Kiếp thành công lên Cực Đạo (Cấp 7)
+    const isCucDao = (u.level === 7 || u.level === '7') || 
+                     (typeof u.rank === 'string' && (u.rank.toLowerCase().includes('cực đạo') || u.rank.toLowerCase() === 'chitoncucdao')) ||
+                     (u.rank && typeof u.rank === 'object' && (u.rank.level === 7 || (u.rank.name && u.rank.name.toLowerCase().includes('cực đạo'))));
+    if (isCucDao) {
+        return CUC_DAO_RANK;
+    }
+
+    // Bắt buộc: Tính toán Cấp độ trực tiếp từ số EXP bằng getRankByExp()
+    return getRankByExp(calculatedExp);
+}
+
+/**
+ * Đọc tổng điểm EXP của một tài khoản:
+ * Ưu tiên dữ liệu mới nhất nếu là user hiện tại, sau đó kiểm tra Firebase và LocalStorage
+ */
+function getLeaderboardUserExp(u) {
+    if (!u) return 0;
+    // Admin có chỉ số EXP vô hạn
+    const isAdm = (u.role && u.role.toLowerCase() === 'admin') || (u.username && u.username.toLowerCase() === 'admin') || !!u.isRoot;
+    if (isAdm) {
+        return Infinity;
+    }
+
+    try {
+        const currentUid = typeof getCurrentUserUID === 'function' ? getCurrentUserUID() : null;
+        const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+        const curUsername = curUser ? curUser.username : null;
+        const isCurrent = (currentUid && (u.userId === currentUid || u.id === currentUid)) ||
+                          (curUsername && u.username && u.username.toLowerCase() === curUsername.toLowerCase());
+
+        // Nếu là user đang đăng nhập hiện tại, ưu tiên lấy điểm mới nhất từ session/local/state
+        if (isCurrent && typeof getUserStats === 'function') {
+            const currentStats = getUserStats();
+            if (currentStats && typeof currentStats.exp !== 'undefined') {
+                return Math.max(0, parseInt(currentStats.exp, 10) || 0);
+            }
+        }
+
+        // Kiểm tra u.exp trực tiếp (từ Firebase users/{uid}/exp)
+        if (typeof u.exp !== 'undefined' && u.exp !== null) {
+            return Math.max(0, parseInt(u.exp, 10) || 0);
+        }
+
+        // Kiểm tra trong u.userStats
+        if (u.userStats && typeof u.userStats.exp !== 'undefined') {
+            return Math.max(0, parseInt(u.userStats.exp, 10) || 0);
+        }
+
+        // Kiểm tra localStorage theo userId hoặc username
+        if (u.userId) {
+            const localExp = localStorage.getItem('exp_' + u.userId);
+            if (localExp !== null) return Math.max(0, parseInt(localExp, 10) || 0);
+        }
+        if (u.username) {
+            const localExp = localStorage.getItem('exp_' + u.username);
+            if (localExp !== null) return Math.max(0, parseInt(localExp, 10) || 0);
+            const userStatsStr = localStorage.getItem('userStats_' + u.username);
+            if (userStatsStr) {
+                const parsed = JSON.parse(userStatsStr);
+                if (parsed && typeof parsed.exp !== 'undefined') {
+                    return Math.max(0, parseInt(parsed.exp, 10) || 0);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Lỗi khi tính EXP cho user leaderboard:', e);
+    }
+    return 0;
+}
+
+/**
+ * Tải toàn bộ danh sách users trực tiếp từ Firebase Realtime Database.
+ * Tuyệt đối KHÔNG dùng mảng dữ liệu hardcode (mock data) fallback.
+ */
+async function fetchLeaderboardUsers() {
+    try {
+        // 1. Đọc trực tiếp từ Firebase Realtime Database node 'users'
+        if (window.get && window.ref && window.db) {
+            const snap = await get(ref(db, 'users'));
+            if (snap && snap.exists() && snap.val()) {
+                const data = snap.val();
+                return Object.keys(data).map(uid => ({
+                    ...data[uid],
+                    userId: uid
+                }));
+            }
+        }
+
+        // 2. Fallback qua FirebaseService.getAllUsers nếu có
+        if (window.FirebaseService && typeof FirebaseService.getAllUsers === 'function') {
+            const list = await FirebaseService.getAllUsers();
+            if (Array.isArray(list) && list.length) {
+                return list;
+            }
+        }
+    } catch (e) {
+        console.warn('[Leaderboard] Lỗi khi tải users từ Firebase Realtime Database:', e);
+    }
+
+    // TUYỆT ĐỐI KHÔNG dùng mock data (như DEFAULT_ROOT_USERS).
+    // Nếu offline hoặc không kết nối được Firebase, chỉ hiển thị tài khoản của người dùng hiện tại (nếu đang đăng nhập)
+    const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    return currentUser ? [currentUser] : [];
+}
+
+/**
+ * Mở Modal Bảng xếp hạng "Huyết chiến đoạt vị"
+ */
+function openLeaderboardModal() {
+    if (typeof closeMobileSidebar === 'function') {
+        closeMobileSidebar();
+    }
+    const modal = document.getElementById('leaderboardModal');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    // Đổ dữ liệu và render bảng xếp hạng
+    renderLeaderboard();
+}
+
+/**
+ * Đóng Modal Bảng xếp hạng "Huyết chiến đoạt vị"
+ */
+function closeLeaderboardModal() {
+    const modal = document.getElementById('leaderboardModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+}
+
+/**
+ * Logic lấy dữ liệu, sắp xếp và render giao diện Bảng xếp hạng:
+ * 1. Lấy dữ liệu người dùng thật từ Firebase (xóa bỏ mock data).
+ * 2. Tách Admin lên thẻ "Chúa Tể Không Gian" độc tôn ở TRÊN CÙNG, bên ngoài khung cuộn.
+ * 3. Người chơi xếp hạng từ #1 Quán Quân 👑, #2 Á Quân 🥈, #3 Quý Quân 🥉 trong khung cuộn.
+ */
+async function renderLeaderboard() {
+    const listBody = document.getElementById('leaderboardListBody');
+    const adminSection = document.getElementById('leaderboardAdminSection');
+    const userSummaryEl = document.getElementById('leaderboardUserSummary');
+    if (!listBody) return;
+
+    // Reset admin section và hiển thị trạng thái đang tải cho listBody
+    if (adminSection) {
+        adminSection.classList.add('hidden');
+        adminSection.style.display = 'none';
+        adminSection.innerHTML = '';
+    }
+
+    listBody.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-3" style="text-align: center; padding: 40px 20px;">
+            <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-400"></i>
+            <p style="font-size: 13.5px; color: #94a3b8;">Đang triệu tập các cao thủ trên Bảng Phong Thần...</p>
+        </div>
+    `;
+
+    try {
+        const rawUsers = await fetchLeaderboardUsers();
+        const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+        const currentUid = typeof getCurrentUserUID === 'function' ? getCurrentUserUID() : null;
+        const currentUsername = currentUser ? currentUser.username : null;
+
+        // Chuẩn hóa, tính điểm EXP & Rank theo hàm chung getRankByExp(), loại bỏ tài khoản ảo / mock / rác
+        const validUsers = rawUsers.filter(u => {
+            if (!u || typeof u !== 'object') return false;
+            if (u.userId === 'u_student_loc_2026' || u.username === 'Loc') return false;
+            const hasValidName = (u.username && typeof u.username === 'string' && u.username.trim().length > 0) ||
+                                 (u.displayName && typeof u.displayName === 'string' && u.displayName.trim().length > 0);
+            const hasValidId = (u.userId && typeof u.userId === 'string' && u.userId.trim().length > 0) ||
+                               (u.id && typeof u.id === 'string' && u.id.trim().length > 0);
+            return hasValidName && hasValidId;
+        });
+
+        let usersList = validUsers.map(u => {
+            const exp = getLeaderboardUserExp(u);
+            const rank = getLeaderboardUserRank(u, exp);
+            return {
+                ...u,
+                calculatedExp: exp,
+                calculatedRank: rank
+            };
+        });
+
+        // Đảm bảo user hiện tại có trong danh sách nếu chưa có
+        if (currentUser && !usersList.some(u => (currentUid && u.userId === currentUid) || (u.username && currentUsername && u.username.toLowerCase() === currentUsername.toLowerCase()))) {
+            const exp = getLeaderboardUserExp(currentUser);
+            const rank = getLeaderboardUserRank(currentUser, exp);
+            usersList.push({
+                ...currentUser,
+                userId: currentUid,
+                calculatedExp: exp,
+                calculatedRank: rank
+            });
+        }
+
+        // TÁCH BIỆT ADMIN - "CHÚA TỂ KHÔNG GIAN"
+        // Trước khi sắp xếp và render danh sách Bảng xếp hạng, hãy filter (tách) tài khoản Admin ra khỏi mảng users
+        const isAdminCheck = u => (u.role && u.role.toLowerCase() === 'admin') || 
+                                  (u.username && u.username.toLowerCase() === 'admin') || 
+                                  !!u.isRoot;
+
+        const adminUser = usersList.find(isAdminCheck);
+        const mortalUsers = usersList.filter(u => !isAdminCheck(u));
+
+        // Sắp xếp mảng người chơi thường theo thứ tự giảm dần của EXP
+        mortalUsers.sort((a, b) => {
+            const expA = a.calculatedExp || 0;
+            const expB = b.calculatedExp || 0;
+            if (expB !== expA) {
+                return expB - expA;
+            }
+            const lvlA = a.calculatedRank ? a.calculatedRank.level : 1;
+            const lvlB = b.calculatedRank ? b.calculatedRank.level : 1;
+            if (lvlB !== lvlA) {
+                return lvlB - lvlA;
+            }
+            return (a.username || '').localeCompare(b.username || '');
+        });
+
+        // 1. RENDER THẺ CỦA ADMIN NẰM Ở VỊ TRÍ TRÊN CÙNG, BÊN NGOÀI KHUNG CUỘN CỦA BẢNG XẾP HẠNG
+        if (adminSection) {
+            if (adminUser) {
+                adminSection.classList.remove('hidden');
+                adminSection.style.display = 'block';
+
+                const adminDisplayName = adminUser.displayName || adminUser.username || 'Admin';
+                const isCurrentAdmin = (currentUser && isAdminCheck(currentUser));
+
+                adminSection.innerHTML = `
+                    <div class="admin-sovereign-card relative flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-red-950/70 via-slate-900 to-amber-950/60 border-2 border-red-500/70 shadow-lg shadow-red-500/25 text-white transition mb-1" style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.75) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.65) 100%); border: 2px solid rgba(239, 68, 68, 0.75); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4); display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; position: relative;">
+                        
+                        <!-- Tại vị trí đáng lẽ hiển thị #1, thay thế bằng dòng chữ/Badge rực rỡ: "👑 Chúa Tể Không Gian" -->
+                        <div class="leaderboard-pos flex items-center justify-center shrink-0" title="Chúa Tể Không Gian - Độc Tôn Toàn Server">
+                            <span class="admin-sovereign-badge px-3 py-1.5 rounded-xl font-black text-xs md:text-sm tracking-wide bg-gradient-to-r from-amber-400 via-rose-500 to-yellow-400 text-slate-950 shadow-md shadow-rose-500/50 uppercase flex items-center gap-1.5 animate-pulse" style="padding: 6px 12px; border-radius: 10px; font-weight: 900; font-size: 12.5px; background: linear-gradient(90deg, #fbbf24 0%, #f43f5e 50%, #facc15 100%); color: #020617; box-shadow: 0 0 14px rgba(244, 63, 94, 0.6); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid #fef08a;">
+                                <span>👑 Chúa Tể Không Gian</span>
+                            </span>
+                        </div>
+
+                        <!-- Khung viền Avatar Sci-Fi Admin (w-12 h-12) lấp lánh đỏ kim -->
+                        <div class="relative flex items-center justify-center w-12 h-12 avatar-frame-container" style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0;" title="Thiên Địa Pháp Tắc - Tối Cao Vô Thượng">
+                            <div class="avatar-inner-circle relative flex items-center justify-center w-8 h-8 rounded-full overflow-hidden border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.9)] animate-pulse" style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5; background: radial-gradient(circle at center, #7f1d1d 0%, #0f172a 100%); color: #ffffff; font-weight: 800; font-size: 13.5px; border: 2px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.9);">
+                                ${adminUser.photoURL ? `<img src="${escapeHtml(adminUser.photoURL)}" alt="Admin" class="w-full h-full rounded-full object-cover" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-weight: 800; font-size: 13.5px;\\'>A</span>';">` : '<span style="font-weight: 800; font-size: 13.5px;">A</span>'}
+                            </div>
+                            <img src="images/frame-6.png" alt="Admin Frame" class="avatar-frame-overlay absolute inset-0 w-full h-full pointer-events-none z-10 avatar-frame-glow-admin" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 15px rgba(245, 158, 11, 0.85));" onerror="this.style.display='none'" />
+                        </div>
+
+                        <!-- Tên Admin & Cảnh giới Thiên Địa Pháp Tắc -->
+                        <div class="flex-1 min-w-0" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;">
+                            <div class="flex items-center gap-2 flex-wrap" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <strong class="text-sm md:text-base font-black truncate text-amber-200" style="font-size: 15px; font-weight: 800; color: #fef08a;">
+                                    ${escapeHtml(adminDisplayName)}
+                                </strong>
+                                ${isCurrentAdmin ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #dc2626; color: #fff;">Bạn</span>' : ''}
+                                <span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #fde047; white-space: nowrap;">
+                                    <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 10px;"></i> 
+                                    <span>Thiên Địa Pháp Tắc</span>
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-amber-300/80" style="font-size: 11.5px; line-height: 1.2; color: #fde68a;">
+                                <span>Cảnh giới: <strong>Thiên Địa Pháp Tắc</strong> &bull; Lịch sử: <strong>Vạn Kiếp Luân Hồi</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Chỉ số Vô Cực ∞ Bất Tử Bất Diệt -->
+                        <div class="flex items-center gap-1.5 shrink-0 text-red-400 font-black" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; text-align: right;">
+                            <i class="fa-solid fa-infinity text-red-400 animate-pulse" style="font-size: 18px; color: #f87171;"></i>
+                            <span class="text-lg md:text-xl font-black text-red-400" style="font-size: 20px; font-weight: 900; color: #f87171;" title="Bất Tử Bất Diệt">∞</span>
+                            <span class="text-[11px] font-bold text-amber-300 hidden sm:inline" style="font-size: 11px; color: #fde047;">Bất Tử Bất Diệt</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Dòng tiêu đề phân cách Bảng Phong Thần cho người chơi -->
+                    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400/90 pt-1.5 pb-0.5 px-1" style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 6px; padding-bottom: 2px;">
+                        <i class="fa-solid fa-fire text-amber-400"></i>
+                        <span>Bảng Phong Thần - Quần Hùng Tranh Đoạt</span>
+                        <span class="flex-1 h-[1px] bg-gradient-to-r from-amber-500/40 to-transparent" style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(245, 158, 11, 0.4) 0%, transparent 100%);"></span>
+                    </div>
+                `;
+            } else {
+                adminSection.classList.add('hidden');
+                adminSection.style.display = 'none';
+                adminSection.innerHTML = '';
+            }
+        }
+
+        // Cập nhật thông tin tóm tắt của user hiện tại
+        if (userSummaryEl) {
+            const isCurAdm = (currentUser && isAdminCheck(currentUser));
+            const myRankIndex = mortalUsers.findIndex(u => 
+                (currentUid && u.userId === currentUid) || 
+                (currentUsername && u.username && u.username.toLowerCase() === currentUsername.toLowerCase())
+            );
+            const myStats = typeof getUserStats === 'function' ? getUserStats() : { exp: 0 };
+            const myExp = isCurAdm ? Infinity : (myRankIndex !== -1 ? mortalUsers[myRankIndex].calculatedExp : myStats.exp);
+            const myRankObj = isCurAdm ? ADMIN_RANK : (myRankIndex !== -1 ? mortalUsers[myRankIndex].calculatedRank : (myStats.rank || getRankByExp(myExp)));
+            const myRankPosText = isCurAdm ? '👑 Chúa Tể Không Gian' : (myRankIndex !== -1 ? `#${myRankIndex + 1}` : 'Chưa xếp hạng');
+
+            const myExpText = isCurAdm
+                ? `<strong class="text-red-500 font-black" style="color: #dc2626; font-size: 13.5px;">∞ Bất Tử Bất Diệt</strong>`
+                : `<strong class="text-amber-400 font-bold" style="color: #f59e0b;">${myExp.toLocaleString('vi-VN')} EXP</strong>`;
+
+            const myBadgeHtml = isCurAdm
+                ? `<span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #fde047;"><i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 9px;"></i> Thiên Địa Pháp Tắc</span>`
+                : `<span class="user-rank-badge ${myRankObj.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${myRankObj.bgColor}; color: ${myRankObj.textColor}; border: 1px solid ${myRankObj.borderColor};"><i class="${myRankObj.icon}" style="font-size: 10px;"></i> <span>${myRankObj.displayName || myRankObj.name} (Cấp ${myRankObj.level})</span></span>`;
+
+            userSummaryEl.innerHTML = `
+                <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="text-slate-400">Vị trí của bạn:</span>
+                    <strong class="text-amber-400 font-extrabold text-sm" style="color: #fbbf24; font-size: 13.5px;">${myRankPosText}</strong>
+                    <span class="text-slate-500">|</span>
+                    <span class="text-slate-400">Tổng điểm: ${myExpText}</span>
+                </div>
+                <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="text-slate-400">Cảnh giới:</span>
+                    ${myBadgeHtml}
+                </div>
+            `;
+        }
+
+        if (!mortalUsers.length) {
+            listBody.innerHTML = `
+                <div class="text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-users-slash text-3xl mb-3"></i>
+                    <p>Chưa có người chơi nào tham gia tranh đoạt.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Render từng hàng người chơi theo chỉ số index và phân loại Top 1, Top 2, Top 3, Top 4+
+        const html = mortalUsers.map((u, index) => {
+            const userExp = u.calculatedExp;
+            const userRank = u.calculatedRank;
+            const rankLevel = userRank.level || 1;
+
+            const isCurrentPlayer = (currentUid && u.userId === currentUid) ||
+                                    (currentUsername && u.username && u.username.toLowerCase() === currentUsername.toLowerCase());
+
+            const isGoogleUser = (u.username && (u.username.toLowerCase().includes('google') || u.username.startsWith('User_Google'))) ||
+                                 (u.photoURL && (u.photoURL.includes('googleusercontent') || u.photoURL.includes('google'))) ||
+                                 (u.email && u.email.includes('@') && u.photoURL);
+
+            // Cấu hình Khung viền Avatar Sci-Fi (Avatar Frames) 3D lấp lánh khớp chuẩn với admin
+            let frameImgSrc = `images/frame-${rankLevel >= 7 ? 6 : rankLevel}.png`;
+            let innerBorderClass = '';
+            let innerBorderStyle = '';
+            let glowClass = `avatar-frame-glow-rank-${rankLevel >= 7 ? 6 : rankLevel}`;
+            let glowStyle = '';
+
+            if (isGoogleUser) {
+                frameImgSrc = 'images/avatar-frame-cyan.png';
+                innerBorderClass = 'border-2 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.7)] animate-pulse';
+                innerBorderStyle = 'border: 2px solid #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.7);';
+                glowClass = 'avatar-frame-glow-google';
+                glowStyle = 'filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.85)) drop-shadow(0 0 10px rgba(16, 185, 129, 0.55));';
+            } else {
+                switch (rankLevel) {
+                    case 1:
+                        innerBorderClass = 'border-2 border-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.45)]';
+                        innerBorderStyle = 'border: 2px solid #94a3b8; box-shadow: 0 0 8px rgba(148, 163, 184, 0.45);';
+                        glowStyle = 'filter: drop-shadow(0 0 4px rgba(148, 163, 184, 0.5));';
+                        break;
+                    case 2:
+                        innerBorderClass = 'border-2 border-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);';
+                        glowStyle = 'filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.6));';
+                        break;
+                    case 3:
+                        innerBorderClass = 'border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);';
+                        glowStyle = 'filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));';
+                        break;
+                    case 4:
+                        innerBorderClass = 'border-2 border-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.7)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.7);';
+                        glowStyle = 'filter: drop-shadow(0 0 7px rgba(168, 85, 247, 0.75));';
+                        break;
+                    case 5:
+                        innerBorderClass = 'border-2 border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);';
+                        glowStyle = 'filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));';
+                        break;
+                    case 6:
+                        innerBorderClass = 'border-2 border-rose-500 shadow-[0_0_14px_rgba(239,68,68,0.9)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #ef4444; box-shadow: 0 0 14px rgba(239, 68, 68, 0.9), 0 0 20px rgba(245, 158, 11, 0.6);';
+                        glowStyle = 'filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 14px rgba(245, 158, 11, 0.7));';
+                        break;
+                    case 7:
+                        innerBorderClass = 'border-2 border-rose-500 shadow-[0_0_16px_rgba(244,63,94,0.9)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #f43f5e; box-shadow: 0 0 16px rgba(244, 63, 94, 0.9);';
+                        glowStyle = 'filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.9)) drop-shadow(0 0 15px rgba(251, 113, 133, 0.8));';
+                        break;
+                    default:
+                        innerBorderClass = 'border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse';
+                        innerBorderStyle = 'border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);';
+                        glowStyle = 'filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));';
+                }
+            }
+
+            // Render Avatar hình ảnh hoặc chữ cái đầu
+            const initialChar = (u.username || 'U').charAt(0).toUpperCase();
+            const avatarContentHtml = u.photoURL
+                ? `<img src="${escapeHtml(u.photoURL)}" alt="${escapeHtml(u.username)}" class="w-full h-full rounded-full object-cover" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-weight: 800; font-size: 13.5px; text-transform: uppercase;\\'>${initialChar}</span>';">`
+                : `<span style="font-weight: 800; font-size: 13.5px; text-transform: uppercase;">${initialChar}</span>`;
+
+            // Áp dụng class Tailwind & Style riêng biệt theo chỉ số index cho Top 1, Top 2, Top 3, Top 4+
+            let rowClasses = '';
+            let rankBadgeHtml = '';
+            let rowInlineStyle = '';
+            let expColorClass = '';
+
+            if (index === 0) {
+                // Top 1: Nền màu Vàng kim (Gold/Yellow), hiệu ứng tỏa sáng (shadow-yellow-500/50), có icon Vương miện 👑, chữ nổi bật
+                rowClasses = 'leaderboard-row rank-top1 relative flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-400 border-2 border-yellow-400 shadow-xl shadow-yellow-500/50 text-amber-950 font-bold transition transform hover:scale-[1.01]';
+                rowInlineStyle = 'background: linear-gradient(135deg, #fef08a 0%, #fde047 35%, #facc15 100%); border: 2px solid #eab308; box-shadow: 0 0 22px rgba(234, 179, 8, 0.55), 0 4px 12px rgba(0, 0, 0, 0.12); color: #451a03;';
+                rankBadgeHtml = `
+                    <div class="leaderboard-pos flex items-center justify-center w-12 shrink-0 gap-1.5" title="Quán Quân Top 1">
+                        <span class="text-2xl" style="font-size: 24px; filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.9));">👑</span>
+                        <span class="text-2xl font-black text-amber-900 tracking-tight" style="font-size: 22px; font-weight: 900; color: #451a03;">#1</span>
+                    </div>
+                `;
+                expColorClass = 'text-amber-950 font-black';
+            } else if (index === 1) {
+                // Top 2: Nền màu Bạc (Silver/Gray-300), viền sáng (border-gray-400), icon Huy chương bạc 🥈
+                rowClasses = 'leaderboard-row rank-top2 relative flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-slate-200 via-gray-100 to-slate-300 border-2 border-gray-400 shadow-md shadow-gray-400/40 text-slate-800 transition transform hover:scale-[1.01]';
+                rowInlineStyle = 'background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%); border: 2px solid #94a3b8; box-shadow: 0 4px 14px rgba(148, 163, 184, 0.4); color: #0f172a;';
+                rankBadgeHtml = `
+                    <div class="leaderboard-pos flex items-center justify-center w-12 shrink-0 gap-1.5" title="Á Quân Top 2">
+                        <span class="text-2xl" style="font-size: 22px;">🥈</span>
+                        <span class="text-xl font-black text-slate-800 tracking-tight" style="font-size: 20px; font-weight: 800; color: #1e293b;">#2</span>
+                    </div>
+                `;
+                expColorClass = 'text-slate-800 font-extrabold';
+            } else if (index === 2) {
+                // Top 3: Nền màu Đồng (Bronze/Orange-700), icon Huy chương đồng 🥉
+                rowClasses = 'leaderboard-row rank-top3 relative flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-amber-100 via-orange-100 to-amber-200 border-2 border-orange-700 shadow-md shadow-orange-700/40 text-amber-950 transition transform hover:scale-[1.01]';
+                rowInlineStyle = 'background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 40%, #fed7aa 100%); border: 2px solid #c2410c; box-shadow: 0 4px 14px rgba(194, 65, 12, 0.35); color: #431407;';
+                rankBadgeHtml = `
+                    <div class="leaderboard-pos flex items-center justify-center w-12 shrink-0 gap-1.5" title="Quý Quân Top 3">
+                        <span class="text-2xl" style="font-size: 22px;">🥉</span>
+                        <span class="text-xl font-black text-orange-950 tracking-tight" style="font-size: 20px; font-weight: 800; color: #431407;">#3</span>
+                    </div>
+                `;
+                expColorClass = 'text-orange-950 font-extrabold';
+            } else {
+                // Top 4 trở đi: Nền trắng/xám nhạt cơ bản, gọn gàng
+                rowClasses = 'leaderboard-row rank-other relative flex items-center gap-3.5 p-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm transition';
+                rowInlineStyle = 'background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); color: #1e293b;';
+                rankBadgeHtml = `
+                    <div class="leaderboard-pos flex items-center justify-center w-12 shrink-0" title="Hạng ${index + 1}">
+                        <span class="text-base font-bold text-slate-400" style="font-size: 15px; font-weight: 700; color: #64748b;">#${index + 1}</span>
+                    </div>
+                `;
+                expColorClass = 'text-amber-600 font-bold';
+            }
+
+            if (isCurrentPlayer) {
+                rowClasses += ' is-current-user ring-2 ring-blue-500 ring-offset-2';
+            }
+
+            const displayName = u.displayName || u.username || 'Chiến binh';
+
+            // Cột Cấp độ / Rank Badge
+            const userRankBadgeHtml = (rankLevel === 7
+                ? `<span class="user-rank-badge rank-chitoncucdao" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; background: #ffe4e6; color: #881337; border: 1.5px solid #fb7185; white-space: nowrap;"><i class="fa-solid fa-dragon" style="font-size: 10px; color: #f43f5e;"></i> <span>Chí Tôn Cực Đạo</span></span>`
+                : `<span class="user-rank-badge ${userRank.badgeClass}" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; background-color: ${userRank.bgColor}; color: ${userRank.textColor}; border: 1px solid ${userRank.borderColor}; white-space: nowrap;"><i class="${userRank.icon}" style="font-size: 10px;"></i> <span>${userRank.displayName || userRank.name}</span></span>`);
+
+            // Subtitle dòng dưới tên:
+            const subtitleHtml = `<div class="text-[11px] ${index <= 2 ? 'opacity-85' : 'text-slate-400'}" style="font-size: 11.5px; line-height: 1.2;"><span>Cấp độ: <strong>${rankLevel === 7 ? 'Cấp 7 (Chí Tôn Cực Đạo)' : `Cấp ${rankLevel}`}</strong></span>${u.username && displayName !== u.username ? `<span class="ml-2 opacity-75">(@${escapeHtml(u.username)})</span>` : ''}</div>`;
+
+            // EXP Display
+            const expDisplayHtml = `<div class="flex items-center gap-1.5 shrink-0 ${expColorClass}" style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; text-align: right;"><i class="fa-solid fa-bolt text-amber-500" style="font-size: 13px;"></i><span class="text-base md:text-lg font-black" style="font-size: 16px; font-weight: 800;">${userExp.toLocaleString('vi-VN')}</span><span class="text-[11px] font-bold ${index <= 2 ? 'opacity-75' : 'text-slate-400'}" style="font-size: 11px;">EXP</span></div>`;
+
+            return `
+                <div class="${rowClasses}" style="${rowInlineStyle}">
+                    <!-- Cột Hạng / Thứ tự (Crown / Medals / Numbers) -->
+                    ${rankBadgeHtml}
+
+                    <!-- Khung viền Avatar Sci-Fi (w-12 h-12) với overlay image và hiệu ứng lấp lánh -->
+                    <div class="relative flex items-center justify-center w-12 h-12 avatar-frame-container" style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0;" title="Cấp ${rankLevel}: ${userRank.displayName || userRank.name}${isGoogleUser ? ' (Tài khoản Google)' : ''}">
+                        <div class="avatar-inner-circle relative flex items-center justify-center w-8 h-8 rounded-full overflow-hidden ${innerBorderClass}" style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 5; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); color: #ffffff; font-weight: 800; font-size: 13.5px; ${innerBorderStyle}">
+                            ${avatarContentHtml}
+                        </div>
+                        <img src="${frameImgSrc}" alt="Avatar Frame" class="avatar-frame-overlay absolute inset-0 w-full h-full pointer-events-none z-10 ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; ${glowStyle}" onerror="this.style.display='none'" />
+                    </div>
+
+                    <!-- Tên người chơi & Huy hiệu Cấp độ -->
+                    <div class="flex-1 min-w-0" style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;">
+                        <div class="flex items-center gap-2 flex-wrap" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <strong class="text-sm md:text-base font-bold truncate" style="font-size: 14.5px; font-weight: 700;">
+                                ${escapeHtml(displayName)}
+                            </strong>
+                            ${isCurrentPlayer ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #2563eb; color: #fff;">Bạn</span>' : ''}
+                            ${isGoogleUser ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cyan-100 text-cyan-800 border border-cyan-300" style="padding: 1px 6px; border-radius: 4px; font-size: 10px; background: #cffafe; color: #155e75; border: 1px solid #a5f3fc;" title="Đăng nhập Google"><i class="fa-brands fa-google" style="font-size: 9px;"></i></span>' : ''}
+                            ${userRankBadgeHtml}
+                        </div>
+                        ${subtitleHtml}
+                    </div>
+
+                    <!-- Điểm kinh nghiệm EXP -->
+                    ${expDisplayHtml}
+                </div>
+            `;
+        }).join('');
+
+        listBody.innerHTML = html;
+    } catch (err) {
+        console.error('[Leaderboard] Lỗi render Bảng xếp hạng:', err);
+        listBody.innerHTML = `
+            <div class="text-center py-12 text-rose-400">
+                <i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i>
+                <p>Không thể tải dữ liệu Bảng xếp hạng. Vui lòng thử lại sau.</p>
+            </div>
+        `;
+    }
+}
+
+// Lắng nghe phím ESC để đóng Modal Leaderboard
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('leaderboardModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeLeaderboardModal();
+        }
+    }
+});
+
+// Tự động mở Modal nếu đường dẫn có query ?openLeaderboard=1 hoặc ?openLeaderboard=true
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('openLeaderboard') === '1' || urlParams.get('openLeaderboard') === 'true') {
+            openLeaderboardModal();
+        }
+    } catch (e) {}
+});
+
+// Xuất các hàm Leaderboard ra window
+window.openLeaderboardModal = openLeaderboardModal;
+window.closeLeaderboardModal = closeLeaderboardModal;
+window.renderLeaderboard = renderLeaderboard;
