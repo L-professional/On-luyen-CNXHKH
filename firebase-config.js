@@ -388,18 +388,28 @@ const FirebaseService = {
     },
 
     /**
-     * Cập nhật trạng thái hoạt động Online / Offline & lastActive (Task 2)
+     * Cập nhật trạng thái hoạt động Online / Idle / Offline & lastActive
      * @param {string} userId
-     * @param {'online'|'offline'} status
+     * @param {'online'|'idle'|'offline'} status
      * @param {boolean} [useBeacon=false] Dùng sendBeacon khi beforeunload nếu khả dụng
      */
     async updateUserStatus(userId, status = 'online', useBeacon = false) {
         if (!userId) return;
-        const now = Date.now();
+        const serverTime = (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue)
+            ? firebase.database.ServerValue.TIMESTAMP
+            : Date.now();
         const payload = {
             status: status,
-            lastActive: now
+            lastActive: serverTime
         };
+
+        if (useBeacon && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function' && typeof firebaseConfig !== 'undefined' && firebaseConfig.databaseURL) {
+            try {
+                const url = `${firebaseConfig.databaseURL.replace(/\/+$/, '')}/users/${userId}.json?x-http-method-override=PATCH`;
+                const blob = new Blob([JSON.stringify({ status: 'offline', lastActive: { ".sv": "timestamp" } })], { type: 'application/json' });
+                navigator.sendBeacon(url, blob);
+            } catch (err) { }
+        }
 
         try {
             await update(ref(db, `users/${userId}`), payload);
@@ -409,44 +419,130 @@ const FirebaseService = {
     },
 
     /**
-     * Thiết lập theo dõi trạng thái hiện diện (Presence Tracking) cho người dùng
+     * Cập nhật hoạt động thời gian thực của người dùng (Activity Broadcaster)
+     * @param {string} activityString
+     * @param {string} [targetUserId]
+     */
+    async updateUserActivity(activityString, targetUserId) {
+        const currentSession = this.getCurrentSession();
+        const uid = targetUserId || (currentSession && (currentSession.userId || currentSession.id));
+        if (!uid) return;
+        try {
+            const serverTime = (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue)
+                ? firebase.database.ServerValue.TIMESTAMP
+                : Date.now();
+            await update(ref(db, `users/${uid}`), {
+                currentActivity: activityString || '',
+                lastActive: serverTime
+            });
+        } catch (e) {
+            console.warn('[Firebase] updateUserActivity error:', e);
+        }
+    },
+
+    /**
+     * Thiết lập theo dõi trạng thái hiện diện (Presence Tracking & AFK System)
+     * - onDisconnect() của Firebase: Tự động update status: 'offline' và lastActive: serverTimestamp khi tắt tab/mất mạng
+     * - Idle Detection: Lắng nghe mousemove, keydown. Sau 5 phút không có tương tác -> status: 'idle' (Thần du thái hư)
+     * - Khi có tương tác lại -> status: 'online'
      * @param {string} userId
      */
     setupPresence(userId) {
         if (!userId) return;
 
-        // 1. Cập nhật online ngay khi vào ứng dụng
-        this.updateUserStatus(userId, 'online');
+        // Tránh gắn lặp lại nhiều lần trên cùng 1 userId trong cùng một trang
+        if (this._currentPresenceUserId === userId && this._presenceInitialized) {
+            return;
+        }
+        this._currentPresenceUserId = userId;
+        this._presenceInitialized = true;
 
-        // 2. Lắng nghe các tương tác (click, phím, cuộn) để duy trì online & cập nhật lastActive
+        const getServerTimestamp = () => {
+            if (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue) {
+                return firebase.database.ServerValue.TIMESTAMP;
+            }
+            return Date.now();
+        };
+
+        let isIdle = false;
+        let idleTimer = null;
         let lastThrottle = 0;
-        const onActivity = () => {
+        const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 phút không tương tác
+
+        const setIdleStatus = async () => {
+            isIdle = true;
+            await this.updateUserStatus(userId, 'idle');
+        };
+
+        const resetIdleTimer = () => {
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = setTimeout(setIdleStatus, IDLE_TIMEOUT_MS);
+        };
+
+        const onUserActivity = () => {
             const now = Date.now();
-            if (now - lastThrottle > 20000) { // Cập nhật nhịp tim mỗi 20 giây
+            if (isIdle) {
+                // Đang treo máy (idle) -> có tương tác trở lại -> chuyển về online
+                isIdle = false;
                 lastThrottle = now;
                 this.updateUserStatus(userId, 'online');
+            } else {
+                // Đang online -> throttle cập nhật lastActive định kỳ mỗi 25 giây
+                if (now - lastThrottle > 25000) {
+                    lastThrottle = now;
+                    this.updateUserStatus(userId, 'online');
+                }
             }
+            resetIdleTimer();
         };
-        window.addEventListener('click', onActivity, { passive: true });
-        window.addEventListener('keydown', onActivity, { passive: true });
-        window.addEventListener('scroll', onActivity, { passive: true });
 
-        // 3. Sử dụng onDisconnect của Firebase để chuyển status sang offline khi mất kết nối đột ngột
+        // 1. Lắng nghe sự kiện mousemove, keydown để phát hiện tương tác / Treo máy (Idle)
+        const eventOpts = { passive: true };
+        window.addEventListener('mousemove', onUserActivity, eventOpts);
+        window.addEventListener('keydown', onUserActivity, eventOpts);
+        window.addEventListener('click', onUserActivity, eventOpts);
+        window.addEventListener('scroll', onUserActivity, eventOpts);
+        window.addEventListener('touchstart', onUserActivity, eventOpts);
+
+        // Khởi động bộ đếm 5 phút ban đầu
+        resetIdleTimer();
+
+        // 2. Sử dụng onDisconnect() của Firebase Realtime Database
         try {
             if (fbDb && typeof fbDb.ref === 'function') {
-                const statusRef = fbDb.ref(`users/${userId}/status`);
-                const lastActiveRef = fbDb.ref(`users/${userId}/lastActive`);
-                statusRef.onDisconnect().set('offline');
-                lastActiveRef.onDisconnect().set(Date.now());
+                const connectedRef = fbDb.ref('.info/connected');
+                const userRef = fbDb.ref(`users/${userId}`);
+
+                connectedRef.on('value', (snap) => {
+                    if (snap && snap.val() === true) {
+                        const serverTime = getServerTimestamp();
+                        // Đăng ký onDisconnect với Firebase Realtime Database
+                        userRef.onDisconnect().update({
+                            status: 'offline',
+                            lastActive: serverTime
+                        });
+
+                        // Vừa kết nối -> cập nhật online
+                        userRef.update({
+                            status: isIdle ? 'idle' : 'online',
+                            lastActive: serverTime
+                        });
+                    }
+                });
+            } else {
+                this.updateUserStatus(userId, 'online');
             }
         } catch (e) {
-            console.warn('[Firebase] onDisconnect setup:', e);
+            console.warn('[Firebase] onDisconnect setup error:', e);
+            this.updateUserStatus(userId, 'online');
         }
 
-        // 4. Bắt sự kiện beforeunload khi tắt trình duyệt / tab -> chuyển status = 'offline'
-        window.addEventListener('beforeunload', () => {
+        // 3. Bắt sự kiện beforeunload và pagehide khi tắt tab / trình duyệt
+        const handleUnload = () => {
             this.updateUserStatus(userId, 'offline', true);
-        });
+        };
+        window.addEventListener('beforeunload', handleUnload);
+        window.addEventListener('pagehide', handleUnload);
     },
 
     /**
@@ -655,3 +751,10 @@ const FirebaseService = {
 };
 
 window.FirebaseService = FirebaseService;
+
+window.updateUserActivity = function (activityString) {
+    if (window.FirebaseService && typeof window.FirebaseService.updateUserActivity === 'function') {
+        return window.FirebaseService.updateUserActivity(activityString);
+    }
+    return Promise.resolve();
+};

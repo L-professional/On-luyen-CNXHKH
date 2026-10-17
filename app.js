@@ -2406,7 +2406,7 @@ async function logoutUser() {
         if (window.FirebaseService) {
             try {
                 await FirebaseService.updateUserStatus(uid, 'offline');
-                await FirebaseService.updateUser(uid, { activeSession: null, sessionToken: null });
+                await FirebaseService.updateUser(uid, { activeSession: null, sessionToken: null, currentActivity: '' });
             } catch (e) {}
         }
         try {
@@ -2521,10 +2521,27 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ==========================================================================
+// THUẬT TOÁN TRUY VẾT: CẬP NHẬT HOẠT ĐỘNG THỜI GIAN THỰC (ACTIVITY BROADCASTER)
+// ==========================================================================
+function updateUserActivity(activityString) {
+    if (window.FirebaseService && typeof window.FirebaseService.updateUserActivity === 'function') {
+        const user = getCurrentUser();
+        const uid = user ? (user.userId || ('u_' + (user.username || '').toLowerCase())) : null;
+        window.FirebaseService.updateUserActivity(activityString, uid);
+    }
+}
+window.updateUserActivity = updateUserActivity;
+
+// ==========================================================================
 // 2. ĐỒNG BỘ DỮ LIỆU RA DASHBOARD (INDEX.HTML)
 // ==========================================================================
 async function initDashboardPage() {
     await syncDashboardProgress();
+    if (typeof broadcastHomeActivity === 'function') {
+        broadcastHomeActivity();
+    } else {
+        updateUserActivity("Đang dạo bước Tông Môn");
+    }
 }
 
 /**
@@ -3132,6 +3149,13 @@ function renderLearnCurrentQuestionDetail() {
 
     // Cập nhật Max Progress
     saveMaxProgress(appState.topicId, percent);
+
+    // Phát sóng thông tin hoạt động thời gian thực (Activity Broadcaster)
+    if (typeof broadcastPracticeActivity === 'function') {
+        broadcastPracticeActivity(appState.topicId, appState.currentIndex, total);
+    } else if (typeof updateUserActivity === 'function') {
+        updateUserActivity(`Đang luyện khí: Chủ đề ${appState.topicId} (Câu ${appState.currentIndex + 1}/${total})`);
+    }
 
     // Badge loại câu hỏi
     const badgeEl = document.getElementById('learn-q-badge-type');
@@ -4034,6 +4058,11 @@ function finishLearnTopic() {
             actionText: 'Rời khỏi bí cảnh',
             actionCallback: () => {
                 closeModal();
+                if (typeof resetPracticeActivity === 'function') {
+                    resetPracticeActivity();
+                } else if (typeof updateUserActivity === 'function') {
+                    updateUserActivity("Trạng thái chờ");
+                }
                 if (expResult.leveledUp) {
                     showLevelUpModal(expResult.newRank, expResult.oldRank, () => {
                         window.location.href = 'index.html';
@@ -4076,6 +4105,11 @@ function finishLearnTopic() {
             cancelText: 'Vẫn muốn thoát (Không nhận thưởng)',
             cancelCallback: () => {
                 closeModal();
+                if (typeof resetPracticeActivity === 'function') {
+                    resetPracticeActivity();
+                } else if (typeof updateUserActivity === 'function') {
+                    updateUserActivity("Trạng thái chờ");
+                }
                 window.location.href = 'index.html';
             }
         });
@@ -4231,6 +4265,18 @@ function renderTestProgressSection() {
 function renderTestQuestionCard() {
     const q = appState.allQuestions[appState.currentIndex];
     if (!q) return;
+
+    // Phát sóng thông tin hoạt động thời gian thực (Activity Broadcaster)
+    const total = appState.allQuestions ? appState.allQuestions.length : 0;
+    if (typeof broadcastMockActivity === 'function') {
+        broadcastMockActivity(appState.currentIndex, total, appState.topicId);
+    } else if (typeof updateUserActivity === 'function') {
+        if (appState.topicId === 'mock') {
+            updateUserActivity(`Đang vượt Bí Cảnh (Câu ${appState.currentIndex + 1}/${total})`);
+        } else {
+            updateUserActivity(`Đang vượt Bí Cảnh: Chủ đề ${appState.topicId} (Câu ${appState.currentIndex + 1}/${total})`);
+        }
+    }
 
     const qInfo = detectQuestionType(q);
     const isLast = appState.currentIndex === appState.allQuestions.length - 1;
@@ -4910,6 +4956,11 @@ function submitTest() {
         cancelText: 'Về trang chủ',
         cancelCallback: () => {
             closeModal();
+            if (typeof resetMockActivity === 'function') {
+                resetMockActivity();
+            } else if (typeof updateUserActivity === 'function') {
+                updateUserActivity("Trạng thái chờ");
+            }
             if (expResult.leveledUp) {
                 showLevelUpModal(expResult.newRank, expResult.oldRank, () => {
                     window.location.href = 'index.html';
@@ -4965,6 +5016,14 @@ function confirmExit() {
         `,
         actionText: 'Rời khỏi',
         actionCallback: () => {
+            if (typeof resetPracticeActivity === 'function') {
+                resetPracticeActivity();
+            } else if (typeof resetMockActivity === 'function') {
+                resetMockActivity();
+            } else if (typeof updateUserActivity === 'function') {
+                updateUserActivity("Trạng thái chờ");
+            }
+
             if (appState.pendingLevelUp) {
                 const rank = appState.pendingLevelUp;
                 appState.pendingLevelUp = null;

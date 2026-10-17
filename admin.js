@@ -127,16 +127,21 @@ function protectAdminRoute() {
 
 /**
  * Sắp xếp danh sách người dùng theo tiêu chí kép:
- * 1. Ưu tiên status === 'online' lên đầu
+ * 1. Ưu tiên status: online (2) -> idle (1) -> offline (0) lên đầu
  * 2. Sắp xếp theo vần A-Z của username (localeCompare)
  */
 function sortUsers(usersArray) {
     if (!Array.isArray(usersArray)) return [];
     return [...usersArray].sort((a, b) => {
-        const aOnline = (a.status === 'online') ? 1 : 0;
-        const bOnline = (b.status === 'online') ? 1 : 0;
-        if (bOnline !== aOnline) {
-            return bOnline - aOnline;
+        const getPriority = (status) => {
+            if (status === 'online') return 2;
+            if (status === 'idle') return 1;
+            return 0;
+        };
+        const pA = getPriority(a.status);
+        const pB = getPriority(b.status);
+        if (pB !== pA) {
+            return pB - pA;
         }
         const nameA = (a.username || a.displayName || '').toString().trim();
         const nameB = (b.username || b.displayName || '').toString().trim();
@@ -645,18 +650,23 @@ function renderUserTable(searchKeyword = '') {
     // Thu thập và sắp xếp: ưu tiên status === 'online' trước, sau đó theo vần A-Z của username (localeCompare)
     let users = sortUsers(cleanAndFilterUsers(getUserList()));
 
-    // Cập nhật thống kê số lượng Online / Offline lên Thẻ (Card) và Badge
+    // Cập nhật thống kê số lượng Online / Treo máy / Offline lên Thẻ (Card) và Badge
     const onlineCount = users.filter(u => u.status === 'online').length;
-    const offlineCount = users.length - onlineCount;
+    const idleCount = users.filter(u => u.status === 'idle').length;
+    const offlineCount = users.length - (onlineCount + idleCount);
 
     const statOnlineCard = document.getElementById('stat-online-card');
+    const statIdleCard = document.getElementById('stat-idle-card');
     const statOfflineCard = document.getElementById('stat-offline-card');
     if (statOnlineCard) statOnlineCard.innerHTML = `🟢 Đang Online: <span id="online-users-count">${onlineCount}</span> tài khoản`;
+    if (statIdleCard) statIdleCard.innerHTML = `🟡 Treo máy: <span id="idle-users-count">${idleCount}</span> tài khoản`;
     if (statOfflineCard) statOfflineCard.innerHTML = `⚪ Đang Offline: <span id="offline-users-count">${offlineCount}</span> tài khoản`;
 
     const onlineCountEl = document.getElementById('online-users-count');
+    const idleCountEl = document.getElementById('idle-users-count');
     const offlineCountEl = document.getElementById('offline-users-count');
     if (onlineCountEl) onlineCountEl.textContent = onlineCount;
+    if (idleCountEl) idleCountEl.textContent = idleCount;
     if (offlineCountEl) offlineCountEl.textContent = offlineCount;
 
     if (countBadge) {
@@ -701,17 +711,49 @@ function renderUserTable(searchKeyword = '') {
                              (u.email && u.email.includes('@') && u.photoURL);
 
 
-        // Trạng thái hoạt động Online / Offline (Tách thành cột riêng)
-        const isOnline = u.status === 'online';
-        const statusHtml = isOnline
-            ? `<div class="user-activity-status flex items-center gap-2" title="Đang trực tuyến">
-                   <span class="status-indicator-dot online"></span>
-                   <span class="status-indicator-text online text-xs font-semibold">Online</span>
-               </div>`
-            : `<div class="user-activity-status flex items-center gap-2" title="${u.lastActive ? new Date(u.lastActive).toLocaleString('vi-VN') : 'Chưa có hoạt động'}">
-                   <span class="status-indicator-dot offline"></span>
-                   <span class="status-indicator-text offline text-xs font-medium">${formatLastActiveTime(u.lastActive)}</span>
-               </div>`;
+        // Cột TRẠNG THÁI & HÀNH TUNG (Thiên Nhãn Thông - Real-time Activity Tracking)
+        let statusHtml = '';
+        const currentAct = (u.currentActivity && typeof u.currentActivity === 'string') ? u.currentActivity.trim() : '';
+
+        if (u.status === 'online') {
+            statusHtml = `
+                <div class="user-activity-status" title="Đang trực tuyến">
+                    <div class="flex items-center gap-1.5 font-semibold text-xs" style="color: #15803d;">
+                        <span style="font-size: 13px; line-height: 1;">🟢</span>
+                        <span class="status-indicator-dot online"></span>
+                        <span class="status-indicator-text online">Online</span>
+                    </div>
+                    ${currentAct 
+                        ? `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #64748b; font-size: 12px; font-style: italic; white-space: normal; line-height: 1.35;">${escapeHtml(currentAct)}</div>` 
+                        : `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #94a3b8; font-size: 12px; font-style: italic;">Đang dạo bước Tông Môn</div>`
+                    }
+                </div>
+            `;
+        } else if (u.status === 'idle') {
+            statusHtml = `
+                <div class="user-activity-status" title="Treo máy (Thần du thái hư)">
+                    <div class="flex items-center gap-1.5 font-semibold text-xs" style="color: #d97706;">
+                        <span style="font-size: 13px; line-height: 1;">🟡</span>
+                        <span class="status-indicator-dot idle"></span>
+                        <span class="status-indicator-text idle">Treo máy</span>
+                    </div>
+                    ${currentAct 
+                        ? `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #64748b; font-size: 12px; font-style: italic; white-space: normal; line-height: 1.35;">${escapeHtml(currentAct)} <span style="color: #d97706;">(Thần du thái hư)</span></div>` 
+                        : `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #d97706; font-size: 12px; font-style: italic;">Thần du thái hư</div>`
+                    }
+                </div>
+            `;
+        } else {
+            statusHtml = `
+                <div class="user-activity-status" title="${u.lastActive ? new Date(u.lastActive).toLocaleString('vi-VN') : 'Chưa có hoạt động'}">
+                    <div class="flex items-center gap-1.5 font-medium text-xs" style="color: #64748b;">
+                        <span style="font-size: 13px; line-height: 1;">⚪</span>
+                        <span class="status-indicator-dot offline"></span>
+                        <span class="status-indicator-text offline">${formatLastActiveTime(u.lastActive)}</span>
+                    </div>
+                </div>
+            `;
+        }
 
         const isUserAdmin = (u.role && u.role.toLowerCase() === 'admin') || (u.username && u.username.toLowerCase() === 'admin') || isRootAdmin;
 
@@ -849,7 +891,7 @@ function renderUserTable(searchKeyword = '') {
                         </div>
                     </div>
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm">
+                <td class="px-3 py-2 text-sm" style="min-width: 220px;">
                     ${statusHtml}
                 </td>
                 <td class="whitespace-nowrap px-3 py-2 text-sm">
@@ -2013,7 +2055,7 @@ async function adminLogout() {
         if (window.FirebaseService) {
             try {
                 await FirebaseService.updateUserStatus(userId, 'offline');
-                await FirebaseService.updateUser(userId, { activeSession: null, sessionToken: null });
+                await FirebaseService.updateUser(userId, { activeSession: null, sessionToken: null, currentActivity: '' });
             } catch (e) {}
         } else if (user.username) {
             try {
@@ -2251,18 +2293,23 @@ function updateAdminStatsBadges() {
     if (badgeUsers) badgeUsers.textContent = users.length;
     if (totalUsers) totalUsers.textContent = users.length;
 
-    // Cập nhật thẻ Online / Offline
+    // Cập nhật thẻ Online / Treo máy / Offline
     const onlineCount = users.filter(u => u.status === 'online').length;
-    const offlineCount = users.length - onlineCount;
+    const idleCount = users.filter(u => u.status === 'idle').length;
+    const offlineCount = users.length - (onlineCount + idleCount);
 
     const statOnlineCard = document.getElementById('stat-online-card');
+    const statIdleCard = document.getElementById('stat-idle-card');
     const statOfflineCard = document.getElementById('stat-offline-card');
     if (statOnlineCard) statOnlineCard.innerHTML = `🟢 Đang Online: <span id="online-users-count">${onlineCount}</span> tài khoản`;
+    if (statIdleCard) statIdleCard.innerHTML = `🟡 Treo máy: <span id="idle-users-count">${idleCount}</span> tài khoản`;
     if (statOfflineCard) statOfflineCard.innerHTML = `⚪ Đang Offline: <span id="offline-users-count">${offlineCount}</span> tài khoản`;
 
     const onlineCountEl = document.getElementById('online-users-count');
+    const idleCountEl = document.getElementById('idle-users-count');
     const offlineCountEl = document.getElementById('offline-users-count');
     if (onlineCountEl) onlineCountEl.textContent = onlineCount;
+    if (idleCountEl) idleCountEl.textContent = idleCount;
     if (offlineCountEl) offlineCountEl.textContent = offlineCount;
 
     const badgeFeedbacks = document.getElementById('badge-feedbacks-count');

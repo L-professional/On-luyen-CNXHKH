@@ -3220,12 +3220,23 @@ body.mode-test .test-layout-view {
     animation: pulse-online 2s infinite;
 }
 
+.status-indicator-dot.idle {
+    background-color: #eab308;
+    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.25);
+    animation: pulse-idle 2s infinite;
+}
+
 .status-indicator-dot.offline {
     background-color: #94a3b8;
 }
 
 .status-indicator-text.online {
     color: #15803d;
+    font-weight: 600;
+}
+
+.status-indicator-text.idle {
+    color: #b45309;
     font-weight: 600;
 }
 
@@ -3243,6 +3254,18 @@ body.mode-test .test-layout-view {
     }
     100% {
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes pulse-idle {
+    0% {
+        box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 5px rgba(234, 179, 8, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
     }
 }
 
