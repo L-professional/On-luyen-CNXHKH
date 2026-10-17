@@ -2610,6 +2610,8 @@ async function initPracticePage() {
 
     if (topicParam === 'mock') {
         await loadMockExamData();
+    } else if (topicParam === 'tam-ma') {
+        await loadTamMaExamData();
     } else {
         const topicId = parseInt(topicParam, 10) || 1;
         await loadTopicData(topicId);
@@ -2790,6 +2792,73 @@ async function loadMockExamData() {
     document.title = `Thi Mô Phỏng - Ôn luyện trắc nghiệm`;
 
     // Thi mô phỏng luôn chạy ở mode=test
+    appState.mode = 'test';
+    renderLayout('test');
+    initTestMode();
+}
+
+/**
+ * Nạp dữ liệu câu hỏi cho bài thi "⚔️ Bí Cảnh Trảm Tâm Ma"
+ * Chuyên luyện lại các câu hỏi học viên từng làm sai
+ */
+async function loadTamMaExamData() {
+    appState.topicId = 'tam-ma';
+    appState.isMockExam = false;
+    appState.topicMeta = {
+        id: 'tam-ma',
+        title: "Trảm Tâm Ma",
+        name: "⚔️ Bí Cảnh Trảm Tâm Ma (Trắc Nghiệm Câu Sai)",
+        shortTitle: "Bí Cảnh Trảm Tâm Ma",
+        headerDisplay: "⚔️ Bí Cảnh Trảm Tâm Ma<br>Trắc nghiệm rèn luyện lại các câu hỏi đã sai",
+        quote: "Đạo tâm tôi luyện qua gian truân, quét sạch tâm ma đốn ngộ chân lý.",
+        icon: "fa-solid fa-wand-magic-sparkles"
+    };
+
+    let questions = [];
+    try {
+        const raw = sessionStorage.getItem('tam_ma_questions') || localStorage.getItem('tam_ma_questions_' + getCurrentUserUID());
+        questions = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        questions = [];
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+        try {
+            const res = await fetch('./data/chude1.json');
+            if (res.ok) {
+                const data = await res.json();
+                questions = groupQuestions(data).slice(0, 15);
+            }
+        } catch (e) {
+            questions = [];
+        }
+    }
+
+    if (questions.length === 0) {
+        alert('Không tìm thấy tâm ma nào để khảo hạch.');
+        window.location.href = 'utilities.html?tab=history';
+        return;
+    }
+
+    const examQuestions = questions.map((q, idx) => ({
+        ...q,
+        examIndex: idx,
+        id: `tamma_${idx}_${q.id || idx}`
+    }));
+
+    appState.allQuestions = examQuestions;
+    appState.filteredQuestions = examQuestions;
+    appState.currentIndex = 0;
+    appState.userAnswers = {};
+    appState.questionResults = {};
+    appState.flaggedQuestions = {};
+    // Thời gian: 90 giây mỗi câu, tối thiểu 5 phút
+    appState.timerSeconds = Math.max(5 * 60, examQuestions.length * 90);
+    appState.isSubmitted = false;
+    appState.isReviewMode = false;
+
+    document.title = `⚔️ Trảm Tâm Ma - Ôn luyện trắc nghiệm`;
+
     appState.mode = 'test';
     renderLayout('test');
     initTestMode();
@@ -4644,6 +4713,17 @@ function submitTest() {
 
         const topicName = appState.topicMeta ? (appState.topicMeta.name || appState.topicMeta.title) : 'Bài thi trắc nghiệm';
 
+        // Gom các câu làm sai để phục vụ cho chức năng "⚔️ Trảm Tâm Ma"
+        const wrongQuestions = [];
+        if (Array.isArray(appState.allQuestions)) {
+            appState.allQuestions.forEach(q => {
+                const uAns = appState.userAnswers ? appState.userAnswers[q.id] : undefined;
+                if (!isAnswerCorrectForQuestion(q, uAns)) {
+                    wrongQuestions.push(q);
+                }
+            });
+        }
+
         const historyItem = {
             id: Date.now(),
             date: dateFormatted,
@@ -4653,8 +4733,40 @@ function submitTest() {
             totalQuestions: total,
             score: parseFloat(score),
             timeSpent: timeSpentStr,
-            passed: passed
+            passed: passed,
+            wrongQuestions: wrongQuestions
         };
+
+        // Cập nhật kho tâm ma (tam_ma_pool) cho chức năng Trảm Tâm Ma
+        try {
+            const poolKey = 'tam_ma_pool_' + uid;
+            let currentPool = [];
+            const rawPool = localStorage.getItem(poolKey);
+            if (rawPool) currentPool = JSON.parse(rawPool) || [];
+
+            if (appState.topicId === 'tam-ma') {
+                // Trong bài thi Trảm Tâm Ma, nếu làm đúng câu nào thì xóa câu đó khỏi pool!
+                const correctIds = new Set();
+                appState.allQuestions.forEach(q => {
+                    const uAns = appState.userAnswers ? appState.userAnswers[q.id] : undefined;
+                    if (isAnswerCorrectForQuestion(q, uAns)) {
+                        if (q.id) correctIds.add(q.id);
+                        if (q.origId) correctIds.add(q.origId);
+                    }
+                });
+                currentPool = currentPool.filter(q => !correctIds.has(q.id) && !correctIds.has(q.origId));
+            } else {
+                // Thêm các câu sai mới vào pool
+                const existingIds = new Set(currentPool.map(q => q.id));
+                wrongQuestions.forEach(q => {
+                    if (!existingIds.has(q.id)) {
+                        currentPool.push(q);
+                        existingIds.add(q.id);
+                    }
+                });
+            }
+            localStorage.setItem(poolKey, JSON.stringify(currentPool));
+        } catch (err) {}
 
         historyList.unshift(historyItem);
         localStorage.setItem(historyKey, JSON.stringify(historyList));

@@ -7909,4 +7909,364 @@ body.sidebar-open .sidebar-backdrop {
     background: linear-gradient(135deg, rgba(255, 241, 242, 0.6) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
 }
 
+/* ==========================================================================
+   TU TIÊN HÓA (XIANXIA GAMIFICATION) CHO 5 TIỆN ÍCH & CHƯỞNG QUẢN THIÊN ĐẠO
+   ========================================================================== */
+
+/* 1. SỔ BỘ TU VI & ĐẠO TÂM LUẬN */
+.dao-tam-card {
+    padding: 16px 20px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    transition: all 0.3s ease;
+}
+
+.dao-tam-card.dao-tam-unstable {
+    background: linear-gradient(135deg, rgba(69, 10, 10, 0.85) 0%, rgba(15, 23, 42, 0.92) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+    color: #fecaca;
+}
+
+.dao-tam-card.dao-tam-solid {
+    background: linear-gradient(135deg, rgba(12, 74, 110, 0.85) 0%, rgba(15, 23, 42, 0.92) 100%);
+    border: 2px solid rgba(14, 165, 233, 0.7);
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.25);
+    color: #bae6fd;
+}
+
+.dao-tam-card.dao-tam-transcendent {
+    background: linear-gradient(135deg, rgba(113, 63, 18, 0.85) 0%, rgba(15, 23, 42, 0.92) 100%);
+    border: 2px solid rgba(234, 179, 8, 0.75);
+    box-shadow: 0 0 24px rgba(234, 179, 8, 0.35);
+    color: #fef08a;
+}
+
+.dao-tam-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dao-tam-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.dao-tam-unstable .dao-tam-icon {
+    background: rgba(220, 38, 38, 0.25);
+    color: #f87171;
+    border: 1px solid #ef4444;
+}
+
+.dao-tam-solid .dao-tam-icon {
+    background: rgba(14, 165, 233, 0.25);
+    color: #38bdf8;
+    border: 1px solid #0ea5e9;
+}
+
+.dao-tam-transcendent .dao-tam-icon {
+    background: rgba(245, 158, 11, 0.25);
+    color: #facc15;
+    border: 1px solid #eab308;
+}
+
+.dao-tam-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    opacity: 0.85;
+}
+
+.dao-tam-comment {
+    font-size: 16px;
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.dao-tam-percent-badge {
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-weight: 800;
+    font-size: 14px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+}
+
+/* LỤC ĐẠO LUÂN HỒI TRẬN */
+.luc-dao-matrix-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1.5px solid #e2e8f0;
+}
+
+.luc-dao-chart-container {
+    position: relative;
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 10px 0 20px;
+}
+
+/* 2. KÝ LỤC LUÂN HỒI (BIA ĐÁ / CUỘN TRỤC) */
+.ancient-scroll-card {
+    background-color: #f4e4bc !important;
+    background-image: radial-gradient(#dfcfab 1px, transparent 1px), radial-gradient(#dfcfab 1px, #f4e4bc 1px) !important;
+    background-size: 20px 20px !important;
+    border: 2px solid #854d0e !important;
+    box-shadow: 0 4px 20px rgba(133, 77, 14, 0.18), inset 0 0 25px rgba(180, 83, 9, 0.08) !important;
+    border-radius: 14px !important;
+    font-family: 'Georgia', 'Times New Roman', 'Noto Serif', serif !important;
+}
+
+.ancient-scroll-header {
+    border-bottom: 2px dashed #a16207 !important;
+    padding-bottom: 12px;
+}
+
+.ancient-scroll-title {
+    color: #78350f !important;
+    font-weight: 800 !important;
+    font-family: 'Georgia', serif !important;
+    letter-spacing: 0.5px;
+}
+
+.ancient-scroll-desc {
+    color: #92400e !important;
+    font-size: 13px !important;
+    font-style: italic;
+}
+
+.ancient-table {
+    width: 100%;
+    border-collapse: separate !important;
+    border-spacing: 0 6px !important;
+    font-family: 'Georgia', serif !important;
+}
+
+.ancient-table thead tr th {
+    background: rgba(120, 53, 15, 0.12) !important;
+    color: #78350f !important;
+    font-weight: 800 !important;
+    border-bottom: 2px solid #b45309 !important;
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    text-transform: uppercase;
+}
+
+.ancient-table tbody tr {
+    background: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 1px 3px rgba(120, 53, 15, 0.1) !important;
+    transition: all 0.2s ease;
+}
+
+.ancient-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    transform: translateY(-1px);
+}
+
+.ancient-table td {
+    padding: 10px 12px !important;
+    border-top: 1px solid rgba(180, 83, 9, 0.15) !important;
+    border-bottom: 1px solid rgba(180, 83, 9, 0.15) !important;
+    color: #451a03 !important;
+}
+
+.ancient-table td:first-child {
+    border-left: 2px solid #b45309 !important;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.ancient-table td:last-child {
+    border-right: 2px solid #b45309 !important;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Nút Trảm Tâm Ma */
+.btn-tram-tam-ma {
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #991b1b 100%) !important;
+    color: #ffffff !important;
+    border: 1.5px solid #f87171 !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 0 14px rgba(220, 38, 38, 0.5) !important;
+    cursor: pointer;
+    transition: all 0.25s ease !important;
+}
+
+.btn-tram-tam-ma:hover {
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.85) !important;
+    border-color: #fef08a !important;
+}
+
+/* 3. TRUYỀN ÂM PHÙ (LÁ BÙA THẦN BÍ) */
+.truyen-am-phu-card {
+    background: linear-gradient(180deg, #fef9c3 0%, #fef08a 35%, #fde047 100%) !important;
+    border: 3px solid #dc2626 !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    position: relative !important;
+    box-shadow: 0 0 25px rgba(220, 38, 38, 0.25), inset 0 0 16px rgba(234, 179, 8, 0.35) !important;
+    color: #7f1d1d !important;
+    transition: all 0.3s ease;
+}
+
+.talisman-top-seal {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #ef4444;
+}
+
+.talisman-stamp {
+    display: inline-block;
+    padding: 3px 14px;
+    border: 2px solid #b91c1c;
+    color: #991b1b;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: rgba(254, 226, 226, 0.7);
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+}
+
+.truyen-am-phu-card .fb-label {
+    color: #991b1b !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+}
+
+.truyen-am-phu-card .fb-input,
+.truyen-am-phu-card .fb-select,
+.truyen-am-phu-card .fb-textarea {
+    border: 1.5px solid #dc2626 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #7f1d1d !important;
+    font-weight: 600;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}
+
+.truyen-am-phu-card .fb-input:focus,
+.truyen-am-phu-card .fb-select:focus,
+.truyen-am-phu-card .fb-textarea:focus {
+    border-color: #b91c1c !important;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.4) !important;
+    outline: none !important;
+}
+
+.btn-phong-bua {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #7f1d1d 100%) !important;
+    color: #fff !important;
+    border: 1.5px solid #f87171 !important;
+    padding: 10px 22px !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 0 14px rgba(220, 38, 38, 0.5) !important;
+    transition: all 0.2s ease;
+}
+
+.btn-phong-bua:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.8) !important;
+    border-color: #fef08a !important;
+}
+
+/* Animation phóng bùa truyền âm (bay lên & fade out) */
+.phong-bua-flying {
+    animation: flyTalismanAnim 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+    pointer-events: none !important;
+}
+
+@keyframes flyTalismanAnim {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+        box-shadow: 0 0 25px rgba(220, 38, 38, 0.3);
+    }
+    30% {
+        opacity: 0.95;
+        transform: translateY(-25px) scale(0.97) rotate(-2deg);
+        box-shadow: 0 0 35px rgba(239, 68, 68, 0.8), 0 0 18px rgba(245, 158, 11, 0.7);
+        filter: brightness(1.15);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-240px) scale(0.25) rotate(-12deg);
+        box-shadow: 0 0 50px rgba(245, 158, 11, 1);
+        filter: brightness(2);
+    }
+}
+
+/* 4. CHƯỞNG QUẢN THIÊN ĐẠO - HẮC LAO & PHẾ BỎ TU VI */
+.badge-hac-lao {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 800;
+    background: #0f172a;
+    color: #f87171;
+    border: 1px solid #dc2626;
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.45);
+    white-space: nowrap;
+}
+
+.btn-action.btn-phe-bo {
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%) !important;
+    color: #fca5a5 !important;
+    border: 1px solid #ef4444 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(220, 38, 38, 0.3);
+}
+
+.btn-action.btn-phe-bo:hover {
+    background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%) !important;
+    color: #ffffff !important;
+    border-color: #fecaca !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6) !important;
+}
+
+.btn-action.btn-hac-lao {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: #f87171 !important;
+    border: 1px solid #dc2626 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(220, 38, 38, 0.25);
+}
+
+.btn-action.btn-hac-lao:hover {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+    color: #ffffff !important;
+    border-color: #f87171 !important;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.5) !important;
+}
+
+
 

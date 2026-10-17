@@ -1273,6 +1273,8 @@ function getUserHistory() {
     }
 }
 
+let lucDaoRadarChartInstance = null;
+
 function renderStatsTab() {
     const history = getUserHistory();
 
@@ -1284,26 +1286,163 @@ function renderStatsTab() {
 
     const totalTests = history.length;
 
-    // Tính toán bằng reduce và filter chuẩn JS
-    let avgScore = 0;
+    // 1. TÍNH TOÁN ĐÁNH GIÁ ĐẠO TÂM:
+    // Tính tổng số câu hỏi đã làm và tổng số câu trả lời đúng trên toàn bộ lịch sử thi
+    let totalQuestionsAttempted = 0;
+    let totalCorrectAnswers = 0;
+
+    let sumScores = 0;
     let passCount = 0;
     let maxScore = 0;
 
-    if (totalTests > 0) {
-        const sumScores = history.reduce((acc, item) => acc + (Number(item.score) || 0), 0);
-        avgScore = (sumScores / totalTests).toFixed(1);
-        passCount = history.filter(item => item.passed || Number(item.score) >= 5.0).length;
-        maxScore = Math.max(...history.map(item => Number(item.score) || 0)).toFixed(1);
+    history.forEach(item => {
+        sumScores += (Number(item.score) || 0);
+        if (item.passed || Number(item.score) >= 5.0) passCount++;
+        const s = Number(item.score) || 0;
+        if (s > maxScore) maxScore = s;
+
+        totalQuestionsAttempted += (Number(item.totalQuestions) || 0);
+        totalCorrectAnswers += (Number(item.correctCount) || 0);
+    });
+
+    const avgScore = totalTests > 0 ? (sumScores / totalTests).toFixed(1) : '0.0';
+    const passRate = totalTests > 0 ? Math.round((passCount / totalTests) * 100) : 0;
+    const maxScoreVal = maxScore.toFixed(1);
+
+    const overallAccuracy = totalQuestionsAttempted > 0
+        ? Math.round((totalCorrectAnswers / totalQuestionsAttempted) * 100)
+        : 0;
+
+    // Logic Đánh giá Đạo Tâm:
+    // < 50%: "Đạo tâm bất ổn, dễ sinh tâm ma (Cần bế quan luyện lại)".
+    // 50% - 80%: "Căn cơ vững chắc, linh khí dồi dào".
+    // > 80%: "Vạn pháp khai thông, ngộ tính tuyệt đỉnh".
+    let daoTamClass = 'dao-tam-solid';
+    let daoTamIcon = 'fa-solid fa-shield-halved';
+    let daoTamTitle = 'CĂN CƠ VỮNG CHẮC';
+    let daoTamComment = 'Căn cơ vững chắc, linh khí dồi dào';
+
+    if (totalTests === 0 || overallAccuracy < 50) {
+        daoTamClass = 'dao-tam-unstable';
+        daoTamIcon = 'fa-solid fa-skull-crossbones';
+        daoTamTitle = 'ĐẠO TÂM BẤT ỔN';
+        daoTamComment = 'Đạo tâm bất ổn, dễ sinh tâm ma (Cần bế quan luyện lại)';
+    } else if (overallAccuracy <= 80) {
+        daoTamClass = 'dao-tam-solid';
+        daoTamIcon = 'fa-solid fa-shield-halved';
+        daoTamTitle = 'CĂN CƠ VỮNG CHẮC';
+        daoTamComment = 'Căn cơ vững chắc, linh khí dồi dào';
+    } else {
+        daoTamClass = 'dao-tam-transcendent';
+        daoTamIcon = 'fa-solid fa-sparkles';
+        daoTamTitle = 'VẠN PHÁP KHAI THÔNG';
+        daoTamComment = 'Vạn pháp khai thông, ngộ tính tuyệt đỉnh';
     }
 
-    const passRate = totalTests > 0 ? Math.round((passCount / totalTests) * 100) : 0;
+    const daoTamCardEl = document.getElementById('dao-tam-evaluation-card');
+    if (daoTamCardEl) {
+        daoTamCardEl.className = `dao-tam-card ${daoTamClass}`;
+        daoTamCardEl.innerHTML = `
+            <div class="dao-tam-left">
+                <div class="dao-tam-icon">
+                    <i class="${daoTamIcon}"></i>
+                </div>
+                <div>
+                    <div class="dao-tam-title">Đạo Tâm Luận • ${daoTamTitle}</div>
+                    <div class="dao-tam-comment">"${escapeHtml(daoTamComment)}"</div>
+                </div>
+            </div>
+            <div class="dao-tam-percent-badge">
+                Tỷ lệ chính xác: ${overallAccuracy}% (${totalCorrectAnswers}/${totalQuestionsAttempted} câu đúng)
+            </div>
+        `;
+    }
 
+    // 2. CẬP NHẬT 4 THẺ CHỈ SỐ TU VI TỔNG QUÁT:
     if (totalTestsEl) totalTestsEl.textContent = `${totalTests} bài`;
     if (avgScoreEl) avgScoreEl.textContent = `${avgScore} / 10`;
     if (passRateEl) passRateEl.textContent = `${passRate}%`;
-    if (maxScoreEl) maxScoreEl.textContent = `${maxScore} / 10`;
+    if (maxScoreEl) maxScoreEl.textContent = `${maxScoreVal} / 10`;
 
-    // Render danh sách tiến độ điểm số theo từng chủ đề
+    // 3. RENDER LỤC ĐẠO LUÂN HỒI TRẬN (CHART.JS RADAR CHART):
+    const radarCanvas = document.getElementById('luc-dao-radar-chart');
+    if (radarCanvas && typeof Chart !== 'undefined') {
+        if (lucDaoRadarChartInstance) {
+            try { lucDaoRadarChartInstance.destroy(); } catch (e) {}
+            lucDaoRadarChartInstance = null;
+        }
+
+        const radarLabels = [
+            'CĐ 1: Đối Tượng & PP',
+            'CĐ 2: Sự Ra Đời CNXH',
+            'CĐ 3: Sứ Mệnh GCCN',
+            'CĐ 4: Đặc Trưng CNXH',
+            'CĐ 5: Hình Thái KT-XH',
+            'CĐ 6: Quá Độ Lên CNXH'
+        ];
+
+        const radarScores = [1, 2, 3, 4, 5, 6].map(id => {
+            const topicHistory = history.filter(h => String(h.topicId) === String(id));
+            if (topicHistory.length === 0) return 0;
+            return parseFloat(Math.max(...topicHistory.map(h => Number(h.score) || 0)).toFixed(1));
+        });
+
+        const ctx = radarCanvas.getContext('2d');
+        lucDaoRadarChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: radarLabels,
+                datasets: [{
+                    label: 'Linh lực cao nhất (Thang 10)',
+                    data: radarScores,
+                    backgroundColor: 'rgba(245, 158, 11, 0.28)',
+                    borderColor: '#d97706',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#dc2626',
+                    pointBorderColor: '#fef08a',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 10,
+                        ticks: {
+                            stepSize: 2,
+                            backdropColor: 'transparent',
+                            color: '#94a3b8',
+                            font: { size: 10, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(245, 158, 11, 0.25)'
+                        },
+                        angleLines: {
+                            color: 'rgba(245, 158, 11, 0.35)'
+                        },
+                        pointLabels: {
+                            color: '#78350f',
+                            font: { size: 12, weight: 'bold', family: "'Georgia', serif" }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#78350f',
+                            font: { size: 13, weight: 'bold' }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 4. RENDER DANH SÁCH CHI TIẾT 6 CHỦ ĐỀ:
     if (!topicListEl) return;
 
     topicListEl.innerHTML = TOPICS_METADATA.map(t => {
@@ -1341,13 +1480,13 @@ function renderStatsTab() {
                         <div class="tsi-progress-fill ${fillClass}" style="width: ${bestPercent}%;"></div>
                     </div>
                     <div class="tsi-sub-row">
-                        <span>Đã thi: <strong>${attempts}</strong> lượt</span>
-                        <span>Điểm cao nhất: <strong>${attempts > 0 ? bestPercent + '%' : '0%'}</strong></span>
+                        <span>Đã vượt ải: <strong>${attempts}</strong> lượt</span>
+                        <span>Đỉnh cao: <strong>${attempts > 0 ? bestPercent + '%' : '0%'}</strong></span>
                     </div>
                 </div>
-                <a href="${targetHref}" class="btn-tsi-action" title="Làm bài kiểm tra chủ đề này">
+                <a href="${targetHref}" class="btn-tsi-action" title="Nhập trận kiểm tra chủ đề này">
                     <i class="fa-solid fa-play"></i>
-                    <span>${attempts > 0 ? 'Thi lại' : 'Làm bài'}</span>
+                    <span>${attempts > 0 ? 'Tái Đấu' : 'Vào Trận'}</span>
                 </a>
             </div>
         `;
@@ -1355,8 +1494,121 @@ function renderStatsTab() {
 }
 
 // ==========================================================================
-// 4. PHÂN HỆ 2: LỊCH SỬ LÀM BÀI (tab=history)
+// 4. PHÂN HỆ 2: KÝ LỤC LUÂN HỒI (tab=history) & TRẢM TÂM MA
 // ==========================================================================
+
+/**
+ * Thu thập tất cả các câu hỏi mà học viên đã từng làm sai trong các lần thi
+ */
+async function collectAllWrongQuestions() {
+    const user = getCurrentUser();
+    if (!user) return [];
+    const uid = getCurrentUserUID();
+    const history = getUserHistory();
+    let wrongList = [];
+
+    // 1. Lấy từ tam_ma_pool trong localStorage nếu có
+    try {
+        const poolRaw = localStorage.getItem('tam_ma_pool_' + uid) || localStorage.getItem('tam_ma_pool_' + user.username);
+        if (poolRaw) {
+            const pool = JSON.parse(poolRaw);
+            if (Array.isArray(pool)) wrongList.push(...pool);
+        }
+    } catch (e) {}
+
+    // 2. Lấy từ các bài thi trong lịch sử
+    history.forEach(item => {
+        if (Array.isArray(item.wrongQuestions) && item.wrongQuestions.length > 0) {
+            wrongList.push(...item.wrongQuestions);
+        }
+    });
+
+    // 3. Khử trùng lặp theo ID câu hỏi
+    const uniqueMap = new Map();
+    wrongList.forEach(q => {
+        if (q && q.id && !uniqueMap.has(q.id)) {
+            uniqueMap.set(q.id, q);
+        }
+    });
+
+    // 4. Nếu chưa có câu sai được lưu nhưng có các bài thi điểm chưa tuyệt đối (< 10đ),
+    // tự động trích xuất câu hỏi từ các chủ đề chưa đạt để đệ tử tôi luyện
+    if (uniqueMap.size === 0 && history.length > 0) {
+        const imperfectTests = history.filter(h => (Number(h.score) || 0) < 10);
+        if (imperfectTests.length > 0) {
+            for (const t of imperfectTests.slice(0, 3)) {
+                const tid = (t.topicId && t.topicId !== 'mock') ? parseInt(t.topicId, 10) : 1;
+                if (tid >= 1 && tid <= 6) {
+                    try {
+                        const res = await fetch(`./data/chude${tid}.json`);
+                        if (res.ok) {
+                            const qData = await res.json();
+                            if (Array.isArray(qData)) {
+                                qData.slice(0, 5).forEach(q => {
+                                    if (!uniqueMap.has(q.id)) {
+                                        uniqueMap.set(q.id, { ...q, topicId: tid });
+                                    }
+                                });
+                            }
+                        }
+                    } catch (err) {}
+                }
+            }
+        }
+    }
+
+    return Array.from(uniqueMap.values());
+}
+
+/**
+ * Thực thi chức năng "⚔️ Trảm Tâm Ma":
+ * Quét lịch sử làm bài, gom tất cả các câu hỏi mà học viên đã làm sai và mở bài thi luyện lại
+ */
+async function executeTramTamMa() {
+    const user = getCurrentUser();
+    if (!user) {
+        showToast('Vui lòng đăng nhập để thi triển bí thuật Trảm Tâm Ma!', 'error');
+        return;
+    }
+    const uid = getCurrentUserUID();
+    showToast('Đang thám trắc thức hải, thu thập tâm ma...', 'info');
+
+    const wrongQuestions = await collectAllWrongQuestions();
+
+    if (!wrongQuestions || wrongQuestions.length === 0) {
+        showModal({
+            title: 'Đạo Tâm Viên Mãn',
+            icon: 'fa-solid fa-sparkles',
+            content: `
+                <div style="text-align: center; padding: 12px 0;">
+                    <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 8s; font-size: 48px; color: #f59e0b; margin-bottom: 12px;"></i>
+                    <h4 style="font-size: 17px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">Không Phát Hiện Tâm Ma!</h4>
+                    <p style="color: #64748b; font-size: 13.5px; line-height: 1.6;">
+                        Đạo tâm của đạo hữu vô cùng kiên định, chưa có câu hỏi sai nào tích tụ thành ma chướng. Hãy khiêu chiến các Bí Cảnh mới để tiếp tục thăng tiến tu vi!
+                    </p>
+                </div>
+            `,
+            actionText: 'Vào Bí Cảnh Thi Thử',
+            actionCallback: () => {
+                closeModal();
+                window.location.href = 'practice.html?topic=mock&mode=test';
+            }
+        });
+        return;
+    }
+
+    // Lưu danh sách câu hỏi tâm ma vào bộ nhớ phiên
+    sessionStorage.setItem('tam_ma_questions', JSON.stringify(wrongQuestions));
+    localStorage.setItem('tam_ma_questions_' + uid, JSON.stringify(wrongQuestions));
+
+    showToast(`Đã phong ấn ${wrongQuestions.length} tâm ma! Đang chuyển hướng vào Bí Cảnh Trảm Tâm Ma...`, 'success');
+    setTimeout(() => {
+        window.location.href = 'practice.html?topic=tam-ma&mode=test';
+    }, 700);
+}
+window.executeTramTamMa = executeTramTamMa;
+window.handleTramTamMa = executeTramTamMa;
+
 function renderHistoryTab() {
     const history = getUserHistory();
     const container = document.getElementById('history-container');
@@ -1364,17 +1616,17 @@ function renderHistoryTab() {
 
     if (history.length === 0) {
         container.innerHTML = `
-            <div class="empty-state-box">
-                <div class="empty-state-icon">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
+            <div class="empty-state-box" style="background: rgba(255,255,255,0.7); border: 2px dashed #b45309; border-radius: 12px; padding: 36px 20px;">
+                <div class="empty-state-icon" style="background: rgba(180, 83, 9, 0.15); color: #78350f;">
+                    <i class="fa-solid fa-monument"></i>
                 </div>
-                <h4 class="empty-state-title">Bạn chưa làm bài kiểm tra nào!</h4>
-                <p class="empty-state-desc">
-                    Hãy tham gia làm ít nhất một bài kiểm tra tính điểm (mode=test) để hệ thống tự động ghi nhận kết quả và xếp hạng năng lực cho bạn.
+                <h4 class="empty-state-title" style="color: #78350f; font-family: 'Georgia', serif;">Chưa Từng Vượt Ải Độ Kiếp Nào!</h4>
+                <p class="empty-state-desc" style="color: #92400e;">
+                    Thạch bia luân hồi vẫn còn để trống. Hãy nhập trận Bí Cảnh để thiên đạo ghi danh chiến tích của đạo hữu vào sử sách.
                 </p>
-                <a href="practice.html?topic=mock&mode=test" class="btn-tsi-action" style="padding: 10px 20px; font-size: 13.5px; background: var(--primary); color: #fff; border: none; border-radius: 10px;">
-                    <i class="fa-solid fa-bullseye"></i>
-                    <span>Bắt đầu thi thử ngay</span>
+                <a href="practice.html?topic=mock&mode=test" class="btn-action btn-tram-tam-ma" style="padding: 10px 22px; font-size: 14px; text-decoration: none;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Vào Bí Cảnh Khảo Hạch Ngay</span>
                 </a>
             </div>
         `;
@@ -1383,17 +1635,17 @@ function renderHistoryTab() {
 
     container.innerHTML = `
         <div class="table-responsive" style="margin-top: 10px;">
-            <table class="admin-table">
+            <table class="ancient-table">
                 <thead>
                     <tr>
                         <th style="width: 50px; text-align: center;">STT</th>
-                        <th style="width: 160px;">Thời gian nộp</th>
-                        <th>Chủ đề bài thi</th>
-                        <th style="width: 130px; text-align: center;">Số câu đúng</th>
-                        <th style="width: 110px; text-align: center;">Thời gian</th>
-                        <th style="width: 100px; text-align: center;">Điểm số</th>
-                        <th style="width: 120px; text-align: center;">Đánh giá</th>
-                        <th style="width: 90px; text-align: center;">Xóa</th>
+                        <th style="width: 160px;">Thời Khắc Độ Kiếp</th>
+                        <th>Bí Cảnh Khảo Hạch</th>
+                        <th style="width: 140px; text-align: center;">Kiếp Nạn Vượt Qua</th>
+                        <th style="width: 110px; text-align: center;">Thời Thần</th>
+                        <th style="width: 100px; text-align: center;">Linh Lực</th>
+                        <th style="width: 130px; text-align: center;">Đạo Quả</th>
+                        <th style="width: 80px; text-align: center;">Tẩy</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1402,34 +1654,34 @@ function renderHistoryTab() {
                         const scoreVal = Number(item.score).toFixed(1);
                         return `
                             <tr>
-                                <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
-                                <td style="color: #64748b; font-size: 13px;">
+                                <td style="text-align: center; font-weight: 700; color: #78350f;">${idx + 1}</td>
+                                <td style="color: #78350f; font-size: 13px;">
                                     <i class="fa-regular fa-calendar-check" style="margin-right: 4px; font-size: 11px;"></i>
                                     ${escapeHtml(item.date)}
                                 </td>
                                 <td>
-                                    <strong style="color: #1e293b; font-size: 13.5px;">${escapeHtml(item.topicName)}</strong>
+                                    <strong style="color: #451a03; font-size: 13.5px;">${escapeHtml(item.topicName)}</strong>
                                 </td>
-                                <td style="text-align: center; font-weight: 600; color: #334155;">
+                                <td style="text-align: center; font-weight: 700; color: #78350f;">
                                     ${item.correctCount} / ${item.totalQuestions}
                                 </td>
-                                <td style="text-align: center; color: #64748b; font-size: 13px;">
+                                <td style="text-align: center; color: #78350f; font-size: 13px;">
                                     <i class="fa-regular fa-clock" style="margin-right: 3px; font-size: 11px;"></i>
                                     ${item.timeSpent || '15:00'}
                                 </td>
                                 <td style="text-align: center;">
-                                    <span style="font-size: 15px; font-weight: 800; color: ${isPass ? '#10b981' : '#ef4444'};">
+                                    <span style="font-size: 16px; font-weight: 900; color: ${isPass ? '#15803d' : '#b91c1c'};">
                                         ${scoreVal}
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
-                                    <span class="${isPass ? 'badge-pass' : 'badge-fail'}">
-                                        <i class="fa-solid ${isPass ? 'fa-check' : 'fa-xmark'}"></i>
-                                        <span>${isPass ? 'Đạt' : 'Chưa đạt'}</span>
+                                    <span class="${isPass ? 'badge-pass' : 'badge-fail'}" style="${isPass ? 'background: #dcfce7; color: #15803d; border: 1px solid #86efac;' : 'background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;'} font-weight: 800; border-radius: 9999px; padding: 2px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid ${isPass ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                                        <span>${isPass ? 'Đắc Đạo' : 'Chưa Đạt'}</span>
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
-                                    <button type="button" class="btn-action" style="padding: 5px 8px; background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; border-radius: 6px;" onclick="deleteHistoryItem(${item.id})" title="Xóa lượt thi này">
+                                    <button type="button" class="btn-action" style="padding: 4px 8px; background: rgba(254, 242, 242, 0.85); color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px;" onclick="deleteHistoryItem(${item.id})" title="Tẩy xóa lượt thi này khỏi bia đá">
                                         <i class="fa-solid fa-trash-can" style="font-size: 12px;"></i>
                                     </button>
                                 </td>
@@ -1572,13 +1824,21 @@ function handleSendFeedback(e) {
     allFeedbacks.unshift(newFeedback);
     localStorage.setItem('system_feedbacks', JSON.stringify(allFeedbacks));
 
-    // Hiển thị Toast thông báo và reset form
-    showToast('Gửi thành công! Cảm ơn bạn đã đóng góp ý kiến.');
-    titleInput.value = '';
-    contentTextarea.value = '';
+    // Hiệu ứng Phóng Bùa Truyền Âm (Fade out & trượt lên không gian)
+    const talismanEl = document.getElementById('talisman-feedback-box') || document.getElementById('feedback-form');
+    if (talismanEl) {
+        talismanEl.classList.add('phong-bua-flying');
+    }
 
-    // Cập nhật lại danh sách góp ý của user này
-    renderUserFeedbackList();
+    setTimeout(() => {
+        if (talismanEl) {
+            talismanEl.classList.remove('phong-bua-flying');
+        }
+        titleInput.value = '';
+        contentTextarea.value = '';
+        showToast('Lá bùa đã hóa thành đạo kim quang bay thẳng về Tàng Kinh Các! Trưởng lão sẽ sớm tiếp nhận lời truyền âm.', 'success');
+        renderUserFeedbackList();
+    }, 850);
 }
 
 function renderFeedbackTab() {

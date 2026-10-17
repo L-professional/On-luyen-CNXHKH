@@ -825,6 +825,7 @@ function renderUserTable(searchKeyword = '') {
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <strong style="color: #1e293b; font-size: 14.5px; font-weight: 700;">${escapeHtml(u.username)}</strong>
                                 ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
+                                ${u.banned ? '<span class="badge-hac-lao" title="Đang bị giam giữ tại Hắc Lao"><i class="fa-solid fa-link"></i> Hắc Lao</span>' : ''}
                                 ${rankBadgeHtml}
                             </div>
                             ${(isGoogleUser && u.email) ? `<div style="font-size: 11px; color: #64748b; line-height: 1;"><i class="fa-solid fa-envelope" style="font-size: 9.5px; margin-right: 3px;"></i>${escapeHtml(u.email)}</div>` : ''}
@@ -860,6 +861,14 @@ function renderUserTable(searchKeyword = '') {
                             <button type="button" class="btn-action btn-penalty-exp" onclick="openThienKiepModal('${escapeHtml(userId)}')" title="Giáng thiên kiếp trừ EXP của ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; border: 1px solid #ef4444; font-weight: 700; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.45); display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
                                 <i class="fa-solid fa-bolt-lightning"></i>
                                 <span>⚡ Giáng Thiên Kiếp</span>
+                            </button>
+                            <button type="button" class="btn-action btn-phe-bo" onclick="pheBoTuVi('${escapeHtml(userId)}')" title="Phế bỏ toàn bộ tu vi EXP về 0, giáng xuống Phàm Cảnh cho ${escapeHtml(u.username)}" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                <i class="fa-solid fa-fire"></i>
+                                <span>🔥 Phế Bỏ Tu Vi</span>
+                            </button>
+                            <button type="button" class="btn-action btn-hac-lao" onclick="toggleBanUser('${escapeHtml(userId)}')" title="${u.banned ? 'Đại xá khỏi hắc lao cho ' + escapeHtml(u.username) : 'Đả nhập hắc lao phong ấn ' + escapeHtml(u.username)}" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                <i class="fa-solid ${u.banned ? 'fa-unlock' : 'fa-link'}"></i>
+                                <span>${u.banned ? '🔓 Đại Xá' : '⛓️ Đả Nhập Hắc Lao'}</span>
                             </button>
                         ` : ''}
                         <button type="button" class="btn-action btn-edit-pwd" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}">
@@ -1354,6 +1363,179 @@ async function executeThienKiep(amount, kiepName) {
 window.openThienKiepModal = openThienKiepModal;
 window.closeThienKiepModal = closeThienKiepModal;
 window.executeThienKiep = executeThienKiep;
+
+/**
+ * Quyền năng tối thượng: "Phế Bỏ Tu Vi"
+ * Reset trực tiếp EXP của user về 0, giáng xuống Phàm Cảnh (Luyện Khí), xóa cờ isAscended
+ * @param {string} userId
+ */
+async function pheBoTuVi(userId) {
+    if (!userId) return;
+    const users = getUserList();
+    const user = users.find(u => u.userId === userId || (u.username && u.username.toLowerCase() === userId.toLowerCase()));
+    if (!user) {
+        showToast('Không tìm thấy tài khoản người dùng!', 'error');
+        return;
+    }
+
+    const isAdm = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || user.isRoot;
+    if (isAdm) {
+        alert('Không thể phế bỏ tu vi của Thiên Đạo Chưởng Quản / Chúa Tể Không Gian!');
+        return;
+    }
+
+    const confirmMsg = `Ngươi có chắc chắn muốn thi triển Đại Pháp Phế Bỏ Tu Vi đối với đạo hữu "${user.username}"?\n\nToàn bộ EXP sẽ bị reset về 0, tước bỏ Chí Tôn Cực Đạo (isAscended = false) và giáng thẳng xuống Phàm Cảnh (Luyện Khí)!`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const targetUid = user.userId || ('u_' + (user.username || '').toLowerCase());
+        const updateData = {
+            exp: 0,
+            level: 1,
+            rank: 'Phàm Cảnh (Luyện Khí)',
+            rankId: 'gamo',
+            isAscended: false,
+            updatedAt: Date.now()
+        };
+
+        // 1. Cập nhật Firebase
+        if (window.update && window.ref && window.db) {
+            await update(ref(db, `users/${targetUid}`), updateData);
+        } else if (window.FirebaseService && typeof FirebaseService.updateUserStats === 'function') {
+            await FirebaseService.updateUserStats(targetUid, updateData);
+        }
+
+        // 2. Cập nhật LocalStorage
+        localStorage.setItem('exp_' + targetUid, '0');
+        localStorage.setItem('isAscended_' + targetUid, 'false');
+        localStorage.removeItem('isAscended_' + targetUid);
+        if (user.username) {
+            localStorage.setItem('exp_' + user.username, '0');
+            localStorage.setItem('isAscended_' + user.username, 'false');
+            localStorage.removeItem('isAscended_' + user.username);
+        }
+
+        // 3. Cập nhật trong bộ nhớ Admin và userList
+        user.exp = 0;
+        user.level = 1;
+        user.rank = 'Phàm Cảnh (Luyện Khí)';
+        user.rankId = 'gamo';
+        user.isAscended = false;
+
+        const cachedIdx = adminUsersList.findIndex(u => u.userId === targetUid || u.username === user.username);
+        if (cachedIdx !== -1) {
+            adminUsersList[cachedIdx].exp = 0;
+            adminUsersList[cachedIdx].level = 1;
+            adminUsersList[cachedIdx].rank = 'Phàm Cảnh (Luyện Khí)';
+            adminUsersList[cachedIdx].rankId = 'gamo';
+            adminUsersList[cachedIdx].isAscended = false;
+        }
+
+        const userIdx = users.findIndex(u => u.userId === targetUid || u.username === user.username);
+        if (userIdx !== -1) {
+            users[userIdx].exp = 0;
+            users[userIdx].level = 1;
+            users[userIdx].rank = 'Phàm Cảnh (Luyện Khí)';
+            users[userIdx].rankId = 'gamo';
+            users[userIdx].isAscended = false;
+            await saveUserList(users);
+        }
+
+        renderUserTable();
+        showToast(`Đã phế bỏ toàn bộ tu vi của "${user.username}", giáng xuống Phàm Cảnh!`, 'success');
+        console.log(`[Admin] Phế bỏ tu vi thành công cho ${user.username}`);
+    } catch (err) {
+        console.error('[Admin] Lỗi khi phế bỏ tu vi:', err);
+        showToast(`Lỗi khi phế bỏ tu vi: ${err.message || err}`, 'error');
+    }
+}
+
+/**
+ * Quyền năng tối thượng: "Đả Nhập Hắc Lao" / "Đại Xá Thiên Hạ"
+ * Chuyển trạng thái tài khoản thành banned: true / false
+ * Nếu banned: true, kick offline và thu hồi token, khi đăng nhập sẽ bị chặn
+ * @param {string} userId
+ */
+async function toggleBanUser(userId) {
+    if (!userId) return;
+    const users = getUserList();
+    const user = users.find(u => u.userId === userId || (u.username && u.username.toLowerCase() === userId.toLowerCase()));
+    if (!user) {
+        showToast('Không tìm thấy tài khoản người dùng!', 'error');
+        return;
+    }
+
+    const isAdm = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || user.isRoot;
+    if (isAdm) {
+        alert('Không thể đả nhập hắc lao đối với Thiên Đạo Chưởng Quản / Admin!');
+        return;
+    }
+
+    const currentlyBanned = !!user.banned;
+    const newBannedStatus = !currentlyBanned;
+
+    const confirmMsg = newBannedStatus
+        ? `Ngươi có chắc chắn muốn Đả Nhập Hắc Lao đối với đạo hữu "${user.username}"?\n\nTài khoản sẽ bị phong ấn môn quy, lập tức bị cưỡng chế đăng xuất và không thể đăng nhập tu luyện!`
+        : `Ngươi có chắc chắn muốn ban lệnh Đại Xá Thiên Hạ, thả đạo hữu "${user.username}" ra khỏi Hắc Lao để tiếp tục tu luyện?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const targetUid = user.userId || ('u_' + (user.username || '').toLowerCase());
+        const updateData = {
+            banned: newBannedStatus,
+            updatedAt: Date.now()
+        };
+        if (newBannedStatus) {
+            updateData.status = 'offline';
+            updateData.activeSession = null;
+            updateData.sessionToken = null;
+        }
+
+        // 1. Cập nhật Firebase
+        if (window.update && window.ref && window.db) {
+            await update(ref(db, `users/${targetUid}`), updateData);
+        } else if (window.FirebaseService && typeof FirebaseService.updateUserStats === 'function') {
+            await FirebaseService.updateUserStats(targetUid, updateData);
+        }
+
+        // 2. Cập nhật trong bộ nhớ Admin và userList
+        user.banned = newBannedStatus;
+        if (newBannedStatus) {
+            user.status = 'offline';
+            user.activeSession = null;
+            user.sessionToken = null;
+        }
+
+        const cachedIdx = adminUsersList.findIndex(u => u.userId === targetUid || u.username === user.username);
+        if (cachedIdx !== -1) {
+            adminUsersList[cachedIdx].banned = newBannedStatus;
+            if (newBannedStatus) adminUsersList[cachedIdx].status = 'offline';
+        }
+
+        const userIdx = users.findIndex(u => u.userId === targetUid || u.username === user.username);
+        if (userIdx !== -1) {
+            users[userIdx].banned = newBannedStatus;
+            if (newBannedStatus) users[userIdx].status = 'offline';
+            await saveUserList(users);
+        }
+
+        renderUserTable();
+
+        if (newBannedStatus) {
+            showToast(`Đã đả nhập "${user.username}" vào Hắc Lao! Phong ấn đăng nhập kích hoạt.`, 'error');
+        } else {
+            showToast(`Đã đại xá thả "${user.username}" ra khỏi Hắc Lao!`, 'success');
+        }
+        console.log(`[Admin] Đổi trạng thái Hắc Lao cho ${user.username}: banned = ${newBannedStatus}`);
+    } catch (err) {
+        console.error('[Admin] Lỗi khi đổi trạng thái Hắc Lao:', err);
+        showToast(`Lỗi: ${err.message || err}`, 'error');
+    }
+}
+
+window.pheBoTuVi = pheBoTuVi;
+window.toggleBanUser = toggleBanUser;
 
 /**
  * Đổi tên người dùng (Task 3: Admin User Rename)

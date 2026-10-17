@@ -14,6 +14,9 @@
 
     <!-- Stylesheet dùng chung toàn hệ thống -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Chart.js CDN (cho Lục Đạo Luân Hồi Trận Radar Chart) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -130,36 +133,36 @@
 
             <!-- Khối Tiện ích (Active menu) -->
             <div class="sidebar-section utilities-section">
-                <h3 class="sidebar-title">TIỆN ÍCH</h3>
+                <h3 class="sidebar-title">TIỆN ÍCH TÔNG MÔN</h3>
                 <ul class="utility-menu">
                     <li>
                         <button class="utility-item" id="sidebar-tab-stats" onclick="switchUtilityTab('stats')">
-                            <i class="fa-solid fa-chart-simple"></i>
-                            <span>Thống kê kết quả</span>
+                            <i class="fa-solid fa-dharmachakra"></i>
+                            <span>Sổ Bộ Tu Vi</span>
                         </button>
                     </li>
                     <li>
                         <button class="utility-item" id="sidebar-tab-history" onclick="switchUtilityTab('history')">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                            <span>Lịch sử làm bài</span>
+                            <i class="fa-solid fa-monument"></i>
+                            <span>Ký Lục Luân Hồi</span>
                         </button>
                     </li>
                     <li>
                         <button class="utility-item" id="sidebar-tab-guide" onclick="switchUtilityTab('guide')">
-                            <i class="fa-regular fa-circle-question"></i>
-                            <span>Hướng dẫn sử dụng</span>
+                            <i class="fa-solid fa-book-skull"></i>
+                            <span>Tàng Kinh Các</span>
                         </button>
                     </li>
                     <li>
                         <button class="utility-item" id="sidebar-tab-feedback" onclick="switchUtilityTab('feedback')">
-                            <i class="fa-regular fa-envelope"></i>
-                            <span>Liên hệ / Góp ý</span>
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                            <span>Truyền Âm Phù</span>
                         </button>
                     </li>
                     <li id="admin-menu-item">
                         <a href="admin.html" class="utility-item">
                             <i class="fas fa-users-cog"></i>
-                            <span>Quản lý tài khoản</span>
+                            <span>Chưởng Quản Thiên Đạo</span>
                         </a>
                     </li>
                 </ul>
@@ -177,11 +180,11 @@
             <section class="util-header-card">
                 <div class="util-header-info">
                     <div class="util-icon-circle" id="util-header-icon">
-                        <i class="fa-solid fa-sliders"></i>
+                        <i class="fa-solid fa-dharmachakra"></i>
                     </div>
                     <div>
-                        <h2 class="util-page-title" id="util-header-title">Trung tâm Tiện ích & Hỗ trợ</h2>
-                        <p class="util-page-desc" id="util-header-desc">Theo dõi tiến độ học tập, lịch sử thi và gửi phản hồi đóng góp cho hệ thống.</p>
+                        <h2 class="util-page-title" id="util-header-title">Sổ Bộ Tu Vi & Tiện Ích Tông Môn</h2>
+                        <p class="util-page-desc" id="util-header-desc">Theo dõi căn cơ tu vi, kích hoạt Lục Đạo Luân Hồi Trận, trảm tâm ma và phóng phù truyền âm về Tàng Kinh Các.</p>
                     </div>
                 </div>
             </section>
@@ -189,116 +192,130 @@
             <!-- Thanh Tab Chuyển Đổi Nhanh 4 Tiện Ích -->
             <nav class="util-tab-nav" aria-label="Chuyển đổi tiện ích">
                 <button type="button" class="util-tab-btn active" id="tab-btn-stats" onclick="switchUtilityTab('stats')">
-                    <i class="fa-solid fa-chart-simple"></i>
-                    <span>Thống kê kết quả</span>
+                    <i class="fa-solid fa-dharmachakra"></i>
+                    <span>Sổ Bộ Tu Vi</span>
                 </button>
                 <button type="button" class="util-tab-btn" id="tab-btn-history" onclick="switchUtilityTab('history')">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>Lịch sử làm bài</span>
+                    <i class="fa-solid fa-monument"></i>
+                    <span>Ký Lục Luân Hồi</span>
                 </button>
                 <button type="button" class="util-tab-btn" id="tab-btn-guide" onclick="switchUtilityTab('guide')">
-                    <i class="fa-regular fa-circle-question"></i>
-                    <span>Hướng dẫn sử dụng</span>
+                    <i class="fa-solid fa-book-skull"></i>
+                    <span>Tàng Kinh Các</span>
                 </button>
                 <button type="button" class="util-tab-btn" id="tab-btn-feedback" onclick="switchUtilityTab('feedback')">
-                    <i class="fa-regular fa-envelope"></i>
-                    <span>Liên hệ / Góp ý</span>
+                    <i class="fa-solid fa-fire-flame-curved"></i>
+                    <span>Truyền Âm Phù</span>
                 </button>
             </nav>
 
             <!-- ================================================================
-                 TAB 1: THỐNG KÊ KẾT QUẢ (tab=stats)
+                 TAB 1: THỐNG KÊ KẾT QUẢ / SỔ BỘ TU VI (tab=stats)
                  ================================================================ -->
             <section class="util-pane active" id="tab-pane-stats">
-                <!-- 4 Thẻ Card Thống kê tổng quát -->
+                <!-- Thẻ Đánh giá Đạo Tâm (Đạo Tâm Luận) -->
+                <div class="dao-tam-card" id="dao-tam-evaluation-card">
+                    <!-- Dynamic rendering by utilities.js: Đạo tâm bất ổn / Căn cơ vững chắc / Vạn pháp khai thông -->
+                </div>
+
+                <!-- 4 Thẻ Card Thống kê tu vi tổng quát -->
                 <div class="util-stats-grid">
                     <div class="util-stat-card">
                         <div class="usc-icon-box blue">
-                            <i class="fa-solid fa-file-signature"></i>
+                            <i class="fa-solid fa-scroll"></i>
                         </div>
                         <div class="usc-info">
-                            <span class="usc-label">Tổng bài đã thi</span>
-                            <span class="usc-value" id="stat-total-tests">0</span>
+                            <span class="usc-label">Số lần vượt ải</span>
+                            <span class="usc-value" id="stat-total-tests">0 bài</span>
                         </div>
                     </div>
 
                     <div class="util-stat-card">
                         <div class="usc-icon-box green">
-                            <i class="fa-solid fa-chart-line"></i>
+                            <i class="fa-solid fa-bolt"></i>
                         </div>
                         <div class="usc-info">
-                            <span class="usc-label">Điểm trung bình</span>
-                            <span class="usc-value" id="stat-avg-score">0.0</span>
+                            <span class="usc-label">Linh lực trung bình</span>
+                            <span class="usc-value" id="stat-avg-score">0.0 / 10</span>
                         </div>
                     </div>
 
                     <div class="util-stat-card">
                         <div class="usc-icon-box amber">
-                            <i class="fa-solid fa-trophy"></i>
+                            <i class="fa-solid fa-feather-pointed"></i>
                         </div>
                         <div class="usc-info">
-                            <span class="usc-label">Tỷ lệ Đạt (&ge; 5đ)</span>
+                            <span class="usc-label">Tỷ lệ Đắc Đạo (&ge; 5đ)</span>
                             <span class="usc-value" id="stat-pass-rate">0%</span>
                         </div>
                     </div>
 
                     <div class="util-stat-card">
                         <div class="usc-icon-box purple">
-                            <i class="fa-solid fa-medal"></i>
+                            <i class="fa-solid fa-crown"></i>
                         </div>
                         <div class="usc-info">
-                            <span class="usc-label">Điểm cao nhất</span>
-                            <span class="usc-value" id="stat-max-score">0.0</span>
+                            <span class="usc-label">Đỉnh cao tu vi</span>
+                            <span class="usc-value" id="stat-max-score">0.0 / 10</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Bảng Điểm số cao nhất theo từng chủ đề -->
-                <div class="util-card-box">
+                <!-- LỤC ĐẠO LUÂN HỒI TRẬN (Radar Chart năng lực) -->
+                <div class="util-card-box luc-dao-matrix-card">
                     <div class="ucb-header">
                         <h3 class="ucb-title">
-                            <i class="fa-solid fa-chart-bar"></i>
-                            <span>Điểm số cao nhất theo từng chủ đề</span>
+                            <i class="fa-solid fa-dharmachakra fa-spin" style="--fa-animation-duration: 25s; color: #f59e0b;"></i>
+                            <span>Lục Đạo Luân Hồi Trận (Bát Quái Đồ Căn Cơ)</span>
                         </h3>
                         <span style="font-size: 13px; color: var(--text-muted);">
-                            Dữ liệu tính trên lịch sử thi của bạn
+                            Trận đồ mô phỏng độ tinh thuần 6 Chủ đề tu vi của đạo hữu
                         </span>
                     </div>
 
-                    <div class="topic-stat-list" id="topic-stat-list">
+                    <div class="luc-dao-chart-container">
+                        <canvas id="luc-dao-radar-chart"></canvas>
+                    </div>
+
+                    <!-- Bảng chi tiết 6 chủ đề bên dưới -->
+                    <div class="topic-stat-list" id="topic-stat-list" style="margin-top: 15px;">
                         <!-- Rendered dynamically by utilities.js -->
                     </div>
                 </div>
             </section>
 
             <!-- ================================================================
-                 TAB 2: LỊCH SỬ LÀM BÀI (tab=history)
+                 TAB 2: KÝ LỤC LUÂN HỒI (tab=history)
                  ================================================================ -->
             <section class="util-pane" id="tab-pane-history">
-                <div class="util-card-box">
-                    <div class="ucb-header">
+                <div class="util-card-box ancient-scroll-card">
+                    <div class="ucb-header ancient-scroll-header">
                         <div>
-                            <h3 class="ucb-title">
-                                <i class="fa-solid fa-clock-rotate-left"></i>
-                                <span>Lịch sử các lần thi kiểm tra</span>
+                            <h3 class="ucb-title ancient-scroll-title">
+                                <i class="fa-solid fa-monument"></i>
+                                <span>Ký Lục Luân Hồi (Văn Bia Khắc Ghi Chiến Tích)</span>
                             </h3>
-                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-                                Toàn bộ kết quả nộp bài trong chế độ Kiểm tra (mode=test) được lưu độc lập theo tài khoản của bạn.
+                            <p class="ancient-scroll-desc">
+                                Văn bia cổ ghi chép lại mọi kiếp số vượt ải và khảo nghiệm của đạo hữu tại các Bí Cảnh.
                             </p>
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <button type="button" class="btn-action" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3;" onclick="confirmClearHistory()" title="Xóa toàn bộ lịch sử thi">
-                                <i class="fa-solid fa-trash-can"></i>
-                                <span>Xóa lịch sử</span>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn-action btn-tram-tam-ma" id="btn-tram-tam-ma" onclick="executeTramTamMa()" title="Gom tất cả các câu đã làm sai để mở bí cảnh Trảm Tâm Ma">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>⚔️ Trảm Tâm Ma</span>
                             </button>
-                            <a href="practice.html?topic=mock&mode=test" class="btn-action" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">
+                            <button type="button" class="btn-action" style="background: rgba(254, 242, 242, 0.85); color: #dc2626; border: 1px solid #fecdd3; border-radius: 8px; font-weight: 700;" onclick="confirmClearHistory()" title="Xóa toàn bộ ký lục luân hồi">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Tẩy Ký Ức</span>
+                            </button>
+                            <a href="practice.html?topic=mock&mode=test" class="btn-action" style="background: rgba(239, 246, 255, 0.9); color: #2563eb; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700;">
                                 <i class="fa-solid fa-plus"></i>
-                                <span>Làm bài thi mới</span>
+                                <span>Vượt Ải Mới</span>
                             </a>
                         </div>
                     </div>
 
-                    <!-- Bảng Danh sách các lần thi -->
+                    <!-- Bảng Danh sách các lần thi dạng Bia đá / Cuộn trục -->
                     <div id="history-container">
                         <!-- Dynamic Table or Empty state injected by utilities.js -->
                     </div>
@@ -306,118 +323,119 @@
             </section>
 
             <!-- ================================================================
-                 TAB 3: HƯỚNG DẪN SỬ DỤNG (tab=guide)
+                 TAB 3: TÀNG KINH CÁC (tab=guide)
                  ================================================================ -->
             <section class="util-pane" id="tab-pane-guide">
                 <div class="util-card-box">
                     <div class="ucb-header">
                         <div>
                             <h3 class="ucb-title">
-                                <i class="fa-regular fa-compass"></i>
-                                <span>Hướng dẫn ôn luyện & thi trắc nghiệm</span>
+                                <i class="fa-solid fa-book-skull" style="color: #8b5cf6;"></i>
+                                <span>Tàng Kinh Các (Cẩm Nang Nhập Môn Tu Tiên)</span>
                             </h3>
                             <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-                                Cẩm nang chi tiết giúp bạn khai thác tối đa các tính năng của hệ thống để đạt điểm cao môn CNXHKH.
+                                Tuyệt học tu chân bí kíp, chỉ dẫn tân thủ đệ tử khai mở kinh mạch, vượt ải bí cảnh và lĩnh ngộ lý luận Chủ Nghĩa Xã Hội Khoa Học.
                             </p>
                         </div>
                     </div>
 
-                    <!-- Accordion Hướng Dẫn -->
+                    <!-- Accordion Hướng Dẫn Tu Tiên -->
                     <div class="guide-accordion">
-                        <!-- Mục 1: Cách làm bài Ôn luyện -->
+                        <!-- Mục 1: Ngự Khí Quyết cơ bản -->
                         <div class="guide-acc-item open">
                             <button type="button" class="guide-acc-header" onclick="toggleAccordion(this)">
                                 <div class="guide-acc-title-group">
                                     <div class="guide-acc-icon">
                                         <i class="fa-solid fa-book-open-reader"></i>
                                     </div>
-                                    <span>1. Chế độ Ôn luyện (mode=learn) – Học kèm phản hồi tức thì</span>
+                                    <span>1. Ngự Khí Quyết Cơ Bản (Chế độ Ôn Luyện – mode=learn)</span>
                                 </div>
                                 <i class="fa-solid fa-chevron-down guide-acc-chevron"></i>
                             </button>
                             <div class="guide-acc-body">
-                                <p><strong>Giao diện 2 cột thông minh:</strong></p>
+                                <p><strong>Lưỡng Trận Song Hành (Giao diện 2 cột thông minh):</strong></p>
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li><strong>Cột trái:</strong> Danh sách toàn bộ câu hỏi trong chủ đề, tích hợp bộ lọc câu hỏi (Tất cả, Chưa làm, Làm đúng, Làm sai) và thanh cuộn câu hỏi nhanh trên điện thoại.</li>
-                                    <li><strong>Cột phải:</strong> Thẻ hiển thị câu hỏi đang chọn kèm theo các phương án trả lời.</li>
+                                    <li><strong>Trận đồ bên trái:</strong> Danh sách toàn bộ thiên cơ câu hỏi trong chủ đề, tích hợp linh phù phân loại (Tất cả, Chưa ngộ, Đã đắc đạo, Vướng tâm ma) và thanh trượt thần tốc.</li>
+                                    <li><strong>Trận đồ bên phải:</strong> Thẻ pháp khí hiển thị câu hỏi đang chọn kèm theo các phương án quyết đáp.</li>
                                 </ul>
-                                <p><strong>Màu sắc nhận diện Đúng / Sai ngay lập tức:</strong></p>
+                                <p><strong>Linh Quang Nhận Diện Chân Lý:</strong></p>
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li>Khi bạn chọn đáp án <strong>Đúng</strong>: Ô đáp án lập tức chuyển sang nền xanh lá mạ cùng dấu tích xanh.</li>
-                                    <li>Khi bạn chọn đáp án <strong>Sai</strong>: Ô đáp án chuyển sang màu đỏ cảnh báo, đồng thời hệ thống tự động bôi viền đứt nét xanh lá quanh đáp án đúng thực sự.</li>
+                                    <li>Khi chọn đáp án <strong>Đúng</strong>: Ô pháp trận lập tức tỏa hào quang xanh ngọc (Lục sắc linh quang) cùng ấn chú chuẩn xác.</li>
+                                    <li>Khi chọn đáp án <strong>Sai</strong>: Ô pháp trận bốc lên huyết quang cảnh báo đỏ thắm, đồng thời trận pháp tự động khoanh vùng chỉ điểm đáp án chân lý.</li>
                                 </ul>
-                                <p><strong>Khối Giải thích chi tiết:</strong> Xuất hiện ngay dưới mỗi câu hỏi, trích dẫn chuẩn xác giáo trình giúp bạn khắc sâu lý luận Mác - Lênin.</p>
+                                <p><strong>Tiền Nhân Khai Sáng (Giải thích chi tiết):</strong> Xuất hiện ngay dưới mỗi câu hỏi, dẫn chứng cội nguồn giáo trình giúp đệ tử đốn ngộ lý luận Mác - Lênin cốt lõi.</p>
                             </div>
                         </div>
 
-                        <!-- Mục 2: Cách làm bài Kiểm tra -->
+                        <!-- Mục 2: Bí Cảnh Mô Phỏng -->
                         <div class="guide-acc-item">
                             <button type="button" class="guide-acc-header" onclick="toggleAccordion(this)">
                                 <div class="guide-acc-title-group">
                                     <div class="guide-acc-icon">
-                                        <i class="fa-solid fa-stopwatch-20"></i>
+                                        <i class="fa-solid fa-skull"></i>
                                     </div>
-                                    <span>2. Chế độ Kiểm tra (mode=test) – Thi bấm giờ & chấm điểm thang 10</span>
+                                    <span>2. Bí Cảnh Mô Phỏng (Chế độ Kiểm Tra – mode=test)</span>
                                 </div>
                                 <i class="fa-solid fa-chevron-down guide-acc-chevron"></i>
                             </button>
                             <div class="guide-acc-body">
-                                <p><strong>Giao diện 1 cột tập trung cao độ:</strong></p>
+                                <p><strong>Độc Thân Nhập Trận (Giao diện 1 cột tập trung cao độ):</strong></p>
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li>Không hiển thị đáp án đúng/sai, không hiển thị giải thích trong suốt quá trình làm bài.</li>
-                                    <li>Khi chọn một phương án, ô chỉ đổi màu xanh lam nhạt để xác nhận đã chọn, tạo áp lực như phòng thi thật.</li>
+                                    <li>Tuyệt đối phong tỏa linh thức: Không hiển thị đúng/sai, không hiển thị gợi ý giải thích trong suốt quá trình khảo nghiệm để rèn luyện tâm tính kiên định.</li>
+                                    <li>Khi chọn đáp án, ô chỉ đổi sắc lam nhẹ nhàng xác nhận lựa chọn như bước vào khảo thí trước mặt Chưởng Môn.</li>
                                 </ul>
-                                <p><strong>Đồng hồ đếm ngược:</strong></p>
+                                <p><strong>Lôi Kiếp Hạn Định (Đồng hồ đếm ngược sinh tử):</strong></p>
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li>30 phút cho các bài kiểm tra theo từng chương (20 câu).</li>
-                                    <li>60 phút cho bài thi mô phỏng tổng hợp (40 câu).</li>
-                                    <li>Khi hết giờ làm bài, hệ thống sẽ tự động khóa và nộp bài để tính điểm.</li>
+                                    <li>30 phút cho khảo hạch từng Chủ đề đơn lẻ (20 câu).</li>
+                                    <li>60 phút cho Đại Bí Cảnh Mô Phỏng tổng hợp liên môn (40 câu).</li>
+                                    <li>Khi thời thần chấm dứt, thiên đạo cưỡng chế thu bài để luận định công đức.</li>
                                 </ul>
-                                <p><strong>Nộp bài & Chế độ Xem lại (Review Mode):</strong> Sau khi nộp bài, bạn được thông báo điểm số trên thang 10 (Đạt nếu &ge; 5.0). Bấm nút "Xem lại đáp án" để chuyển sang chế độ rà soát từng câu đã chọn đúng hay sai.</p>
+                                <p><strong>Luận Định Đạo Quả & Hồi Tưởng Thần Thức:</strong> Sau khi nộp bài, hệ thống sẽ cấp phát điểm số thang 10 (Đắc Đạo nếu &ge; 5.0). Bấm nút "Xem lại đáp án" để mở Thần Thức Hồi Tưởng rà soát từng câu chuẩn xác.</p>
                             </div>
                         </div>
 
-                        <!-- Mục 3: Quy chế lưu tiến trình & Độc lập dữ liệu -->
+                        <!-- Mục 3: Thiên Đạo Pháp Tắc Tính Điểm & Độ Kiếp -->
                         <div class="guide-acc-item">
                             <button type="button" class="guide-acc-header" onclick="toggleAccordion(this)">
                                 <div class="guide-acc-title-group">
                                     <div class="guide-acc-icon">
-                                        <i class="fa-solid fa-shield-halved"></i>
+                                        <i class="fa-solid fa-bolt-lightning"></i>
                                     </div>
-                                    <span>3. Quy chế Tạm dừng ôn & Bảo mật độc lập dữ liệu</span>
+                                    <span>3. Thiên Đạo Pháp Tắc Tính Điểm & Độ Kiếp Thăng Cảnh</span>
                                 </div>
                                 <i class="fa-solid fa-chevron-down guide-acc-chevron"></i>
                             </button>
                             <div class="guide-acc-body">
-                                <p><strong>Bấm Tạm dừng chỉ lưu ở chế độ Ôn luyện:</strong></p>
+                                <p><strong>Tích Lũy Tu Vi (EXP Reward System):</strong></p>
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li>Khi đang ở chế độ Ôn luyện (mode=learn), bạn có thể bấm nút <strong>"Tạm dừng ôn"</strong> bất cứ lúc nào. Tiến trình các câu đã làm sẽ được lưu lại để lần sau vào học tiếp.</li>
-                                    <li>Trong chế độ Kiểm tra (mode=test), việc thoát ra giữa chừng sẽ <strong>không lưu bài thi dở dang</strong> để đảm bảo tính nghiêm túc của kỳ thi.</li>
+                                    <li><strong>Cơ Bản:</strong> Mỗi câu trả lời đúng gia tăng <strong>+10 EXP</strong> tu vi.</li>
+                                    <li><strong>Thưởng Hoàn Thành Bí Cảnh:</strong> Giải đáp đầy đủ 100% câu hỏi thưởng thêm <strong>+50 EXP</strong>.</li>
+                                    <li><strong>Thần Cơ Ngộ Đạo:</strong> Đạt điểm số &ge; 8.0 (hoặc đúng &ge; 40 câu) được thiên đạo ban thưởng <strong>+100 EXP</strong> linh khí ngút trời.</li>
                                 </ul>
-                                <p><strong>Độc lập dữ liệu cá nhân (Data Isolation):</strong></p>
+                                <p><strong>Lộ Trình Cảnh Giới & Độ Kiếp:</strong></p>
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li>Toàn bộ lịch sử làm bài, điểm thi và góp ý được lưu theo định danh tài khoản của phiên đăng nhập (<code>history_[tên_đăng_nhập]</code>).</li>
-                                    <li>Dữ liệu của bạn được cách ly hoàn toàn, không bị lẫn lộn khi học chung máy tính với người khác.</li>
+                                    <li>Tu vi tích lũy giúp thăng từ <strong>Luyện Khí</strong> &rarr; <strong>Trúc Cơ</strong> &rarr; <strong>Kim Đan</strong> &rarr; <strong>Nguyên Anh</strong> &rarr; <strong>Hóa Thần</strong> &rarr; <strong>Độ Kiếp</strong> &rarr; <strong>Cực Cảnh</strong>.</li>
+                                    <li>Khi đạt đỉnh cao Cực Cảnh (Cấp 7), đạo hữu kích hoạt nghi thức <strong>Độ Kiếp Thăng Thiên</strong> nghênh đón 9 đạo Lôi Đình để phi thăng thành <strong>Chí Tôn Cực Đạo</strong> bất tử!</li>
                                 </ul>
                             </div>
                         </div>
 
-                        <!-- Mục 4: Phím tắt & Thao tác nhanh -->
+                        <!-- Mục 4: Thần Thông Thuật & Phím Tắt -->
                         <div class="guide-acc-item">
                             <button type="button" class="guide-acc-header" onclick="toggleAccordion(this)">
                                 <div class="guide-acc-title-group">
                                     <div class="guide-acc-icon">
-                                        <i class="fa-solid fa-keyboard"></i>
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
                                     </div>
-                                    <span>4. Phím tắt và Thao tác nhanh trên máy tính & điện thoại</span>
+                                    <span>4. Thần Thông Thuật & Ngự Kiếm Phím Tắt Thao Tác</span>
                                 </div>
                                 <i class="fa-solid fa-chevron-down guide-acc-chevron"></i>
                             </button>
                             <div class="guide-acc-body">
                                 <ul style="margin: 6px 0 12px 20px; line-height: 1.6;">
-                                    <li><strong>Phím Mũi tên Trái (&larr;):</strong> Quay lại câu hỏi trước đó.</li>
-                                    <li><strong>Phím Mũi tên Phải (&rarr;):</strong> Chuyển sang câu hỏi kế tiếp.</li>
-                                    <li><strong>Trên điện thoại:</strong> Vuốt dải số câu hỏi nhanh ở trên đầu để chuyển ngay đến câu bất kỳ mà không cần mở danh sách cồng kềnh.</li>
+                                    <li><strong>Ngự Kiếm Nghịch Chuyển (&larr;):</strong> Quay lại câu hỏi trước đó trong chớp mắt.</li>
+                                    <li><strong>Ngự Kiếm Thuận Phong (&rarr;):</strong> Vượt không gian sang câu hỏi kế tiếp.</li>
+                                    <li><strong>Pháp Bảo Cầm Tay (Mobile):</strong> Vuốt nhẹ chuỗi linh phù số câu hỏi trên đỉnh màn hình để xuyên toái hư không đến thẳng câu hỏi tùy chọn.</li>
                                 </ul>
                             </div>
                         </div>
@@ -426,74 +444,71 @@
             </section>
 
             <!-- ================================================================
-                 TAB 4: LIÊN HỆ / GÓP Ý (tab=feedback)
+                 TAB 4: TRUYỀN ÂM PHÙ (tab=feedback)
                  ================================================================ -->
             <section class="util-pane" id="tab-pane-feedback">
-                <div class="util-card-box">
-                    <div class="ucb-header">
-                        <div>
-                            <h3 class="ucb-title">
-                                <i class="fa-regular fa-paper-plane"></i>
-                                <span>Gửi ý kiến đóng góp & Báo lỗi câu hỏi</span>
-                            </h3>
-                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-                                Đội ngũ phát triển luôn trân trọng mọi ý kiến đóng góp để không ngừng hoàn thiện chất lượng câu hỏi ôn tập.
-                            </p>
-                        </div>
+                <div class="util-card-box truyen-am-phu-card" id="talisman-feedback-box">
+                    <!-- Ấn chú Chu Sa đỉnh bùa -->
+                    <div class="talisman-top-seal">
+                        <span class="talisman-stamp">
+                            <i class="fa-solid fa-fire"></i> SẮC LỆNH • TRUYỀN ÂM PHÙ
+                        </span>
+                        <p style="font-size: 13px; color: #991b1b; margin-top: 6px; font-weight: 600;">
+                            Hóa ý niệm vào linh phù, phóng bay vạn dặm kết nối trực tiếp với Trưởng Lão Tông Môn.
+                        </p>
                     </div>
 
-                    <!-- Form Gửi Góp Ý -->
+                    <!-- Form Gửi Truyền Âm Phù dạng Lá Bùa -->
                     <form class="feedback-form" id="feedback-form" onsubmit="handleSendFeedback(event)">
                         <div class="fb-form-row">
                             <div class="fb-field">
                                 <label class="fb-label" for="fb-sender">
-                                    <i class="fa-solid fa-user"></i> Người gửi
+                                    <i class="fa-solid fa-user-ninja"></i> Đạo Hữu Khởi Phù
                                 </label>
-                                <input type="text" class="fb-input" id="fb-sender" readonly style="background: #f1f5f9; cursor: not-allowed; font-weight: 600;">
+                                <input type="text" class="fb-input" id="fb-sender" readonly style="background: rgba(254, 243, 199, 0.6); cursor: not-allowed; font-weight: 700;">
                             </div>
 
                             <div class="fb-field">
                                 <label class="fb-label" for="fb-type">
-                                    <i class="fa-solid fa-tag"></i> Phân loại ý kiến
+                                    <i class="fa-solid fa-scroll"></i> Mục Đích Truyền Âm
                                 </label>
                                 <select class="fb-select" id="fb-type" required>
-                                    <option value="Báo lỗi câu hỏi / đáp án">Báo lỗi câu hỏi / đáp án sai</option>
-                                    <option value="Góp ý giải thích chi tiết">Góp ý bổ sung phần giải thích</option>
-                                    <option value="Đề xuất tính năng mới">Đề xuất tính năng giao diện mới</option>
-                                    <option value="Khác">Ý kiến khác</option>
+                                    <option value="Báo cáo Tâm Ma (Lỗi)">👹 Báo cáo Tâm Ma (Lỗi câu hỏi, đáp án)</option>
+                                    <option value="Hiến Kế Tông Môn (Góp ý)">📜 Hiến Kế Tông Môn (Góp ý tính năng, giáo trình)</option>
+                                    <option value="Cầu Cứu Trưởng Lão (Hỗ trợ)">🙏 Cầu Cứu Trưởng Lão (Hỗ trợ tu luyện)</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="fb-field">
                             <label class="fb-label" for="fb-title">
-                                <i class="fa-solid fa-heading"></i> Tiêu đề góp ý
+                                <i class="fa-solid fa-feather"></i> Tiêu Đề Linh Phù
                             </label>
-                            <input type="text" class="fb-input" id="fb-title" placeholder="VD: Câu 12 chủ đề 3 bị lỗi chính tả phương án C..." required maxlength="120">
+                            <input type="text" class="fb-input" id="fb-title" placeholder="VD: Phát hiện dị tượng tâm ma tại Câu 12 Chủ đề 3..." required maxlength="120">
                         </div>
 
                         <div class="fb-field">
                             <label class="fb-label" for="fb-content">
-                                <i class="fa-solid fa-align-left"></i> Nội dung chi tiết
+                                <i class="fa-solid fa-pen-nib"></i> Lời Truyền Âm Chi Tiết
                             </label>
-                            <textarea class="fb-textarea" id="fb-content" placeholder="Mô tả cụ thể thắc mắc, đề xuất hoặc nội dung cần chỉnh sửa..." required rows="5"></textarea>
+                            <textarea class="fb-textarea" id="fb-content" placeholder="Khắc ghi chi tiết thắc mắc, đề xuất kiến thiết hoặc dị tượng gặp phải..." required rows="5"></textarea>
                         </div>
 
-                        <div style="display: flex; justify-content: flex-end;">
-                            <button type="submit" class="btn-submit-feedback">
-                                <i class="fa-solid fa-paper-plane"></i>
-                                <span>Gửi góp ý ngay</span>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+                            <button type="submit" class="btn-submit-feedback btn-phong-bua" id="btn-submit-talisman">
+                                <i class="fa-solid fa-fire-flame-curved"></i>
+                                <span>Phóng Phù Truyền Âm</span>
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Lịch sử các góp ý do User này gửi -->
-                <div class="util-card-box" style="margin-top: 10px;">
+                <!-- Lịch sử các linh phù do đạo hữu này phóng đi -->
+                <div class="util-card-box" style="margin-top: 14px;">
                     <div class="ucb-header">
                         <h3 class="ucb-title">
-                            <i class="fa-solid fa-envelope-open-text"></i>
-                            <span>Các ý kiến đóng góp đã gửi của bạn</span>
+                            <i class="fa-solid fa-envelope-open-text" style="color: #b45309;"></i>
+                            <span>Lịch Sử Phóng Phù Của Đạo Hữu</span>
                         </h3>
                     </div>
 

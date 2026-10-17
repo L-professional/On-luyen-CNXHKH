@@ -54,6 +54,23 @@ async function checkExistingSession() {
             if (!matched && window.FirebaseService) {
                 matched = await FirebaseService.findUserByUsername(user.username);
             }
+            if (!matched && user.userId && window.get && window.ref && window.db) {
+                try {
+                    const snap = await get(ref(db, 'users/' + user.userId));
+                    if (snap && snap.exists()) matched = snap.val();
+                } catch (e) {}
+            }
+
+            // Nếu người dùng đã bị đả nhập hắc lao (banned) -> dọn sạch phiên
+            if ((matched && matched.banned) || user.banned) {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionToken');
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.removeItem('sessionToken');
+                const banner = document.getElementById('existing-session-banner');
+                if (banner) banner.classList.add('hidden');
+                return;
+            }
 
             if (matched && matched.activeSession && user.sessionId && matched.activeSession !== user.sessionId) {
                 // Phiên đã bị nơi khác đăng nhập đè -> dọn dẹp phiên cũ
@@ -147,11 +164,13 @@ async function handleLogin(e) {
         let userExp = matchedUser.exp || 0;
         let userRank = matchedUser.rank || null;
         let userLevel = matchedUser.level || 1;
+        let isBanned = !!matchedUser.banned;
 
         if (window.FirebaseService) {
             try {
                 const fbUser = await FirebaseService.findUserByUsername(matchedUser.username);
                 if (fbUser) {
+                    if (fbUser.banned) isBanned = true;
                     if (fbUser.userId) userId = fbUser.userId;
                     if (fbUser.isAscended) isAscended = true;
                     if (fbUser.photoURL) photoURL = fbUser.photoURL;
@@ -176,6 +195,7 @@ async function handleLogin(e) {
                 const snap = await get(ref(db, 'users/' + userId));
                 if (snap && snap.exists()) {
                     const val = snap.val();
+                    if (val.banned) isBanned = true;
                     if (val.isAscended) isAscended = true;
                     if (val.photoURL) photoURL = val.photoURL;
                     if (val.displayName) displayName = val.displayName;
@@ -184,6 +204,12 @@ async function handleLogin(e) {
                     if (val.level) userLevel = val.level;
                 }
             } catch (err) {}
+        }
+
+        // KIỂM TRA PHONG ẤN HẮC LAO: Nếu user bị ban cố tình đăng nhập, chặn lại và báo lỗi
+        if (isBanned) {
+            showToast('Kẻ phạm môn quy đã bị đả nhập hắc lao, không thể tu luyện!', 'error');
+            return;
         }
 
         if (matchedUser.isAscended || userLevel === 7 || (typeof userRank === 'string' && userRank.toLowerCase().includes('cực đạo'))) {
