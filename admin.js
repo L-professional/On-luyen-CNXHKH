@@ -529,35 +529,27 @@ function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '', sizeClass
                          (photoURL && (photoURL.includes('googleusercontent') || photoURL.includes('google'))) ||
                          (u.email && u.email.includes('@') && photoURL);
 
-    let frameImgSrc = 'images/frame-1.png';
-    let glowClass = '';
-
+    let frameSrc = 'images/frame-1.png';
     if (isAdm) {
-        frameImgSrc = 'images/frame-6.png';
-        glowClass = 'avatar-frame-glow-admin';
+        frameSrc = 'images/frame-6.png';
     } else if (isGoogleUser) {
-        frameImgSrc = 'images/avatar-frame-cyan.png';
-        glowClass = 'avatar-frame-glow-google';
+        frameSrc = 'images/avatar-frame-cyan.png';
     } else {
         const lvl = Math.min(6, Math.max(1, parseInt(rankLevel, 10) || 1));
-        frameImgSrc = `images/frame-${lvl}.png`;
-        glowClass = `avatar-frame-glow-rank-${lvl}`;
+        frameSrc = `images/frame-${lvl}.png`;
     }
 
-    const fallbackLetter = `<div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none z-0" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`;
-
-    const avatarInnerHtml = photoURL
-        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-full h-full rounded-full object-cover z-0" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
-           <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none z-0" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`
-        : fallbackLetter;
-
-    const idAttr = customId ? `id="${customId}" ` : '';
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(initialChar)}&background=1e293b&color=ffffff&bold=true`;
+    const avatarSrc = (photoURL && String(photoURL).trim()) ? photoURL : defaultAvatar;
+    const idAttr = customId ? ` id="${customId}"` : '';
 
     return `
-        <div ${idAttr}class="relative flex items-center justify-center ${sizeClasses} shrink-0 rounded-full" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
-            ${avatarInnerHtml}
-            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] max-w-none object-contain pointer-events-none z-10 ${glowClass}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 125%; height: 125%; max-width: none; object-fit: contain; pointer-events: none; z-index: 10;" onerror="this.style.display='none'" />
-        </div>
+<div${idAttr} class="relative flex items-center justify-center ${sizeClasses} shrink-0 rounded-full bg-gray-800">
+    <!-- 1. Ảnh Avatar thật hoặc Chữ cái -->
+    <img src="${avatarSrc}" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" onerror="this.onerror=null; this.src='${defaultAvatar}';" />
+    <!-- 2. Khung viền (Overlay Frame) - Bắt buộc dùng absolute và -translate -->
+    <img src="${frameSrc}" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10" />
+</div>
     `.trim();
 }
 

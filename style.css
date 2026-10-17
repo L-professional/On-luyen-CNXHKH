@@ -2485,7 +2485,7 @@ body.mode-test .test-layout-view {
 }
 
 #modal-container {
-    z-index: 100000;
+    z-index: 9999;
 }
 
 /* Phòng vệ tối cao: Khóa cứng Khung Avatar không thể phình to hoặc phá vỡ layout */
@@ -2495,8 +2495,8 @@ img[src*="avatar-frame"] {
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
-    width: 125% !important;
-    height: 125% !important;
+    width: 135% !important;
+    height: 135% !important;
     max-width: none !important;
     max-height: none !important;
     object-fit: contain !important;

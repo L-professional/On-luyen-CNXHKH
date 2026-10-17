@@ -79,9 +79,11 @@
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
-                <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" id="header-avatar-frame">
-                    <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none z-0" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">L</div>
-                    <img src="images/frame-1.png" alt="Avatar Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] max-w-none object-contain pointer-events-none z-10" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 125%; height: 125%; max-width: none; object-fit: contain; pointer-events: none; z-index: 10;" onerror="this.style.display='none'" />
+                <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-gray-800" id="header-avatar-frame">
+                    <!-- 1. Ảnh Avatar thật hoặc Chữ cái -->
+                    <img src="https://ui-avatars.com/api/?name=L&background=1e293b&color=ffffff&bold=true" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" />
+                    <!-- 2. Khung viền (Overlay Frame) - Bắt buộc dùng absolute và -translate -->
+                    <img src="images/frame-1.png" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10" />
                 </div>
                 <span class="user-name" id="header-user-name">Lộc</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
@@ -421,14 +423,14 @@
     </div>
 
     <!-- Reusable Modal Window (Popup chọn chế độ Ôn luyện / Kiểm tra) -->
-    <div id="modal-container" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="closeModalOnBackdrop(event)">
+    <div id="modal-container" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="closeModalOnBackdrop(event)">
         <div class="modal-card" id="modal-card">
             <!-- Modal Header, Body, Footer injected dynamically by app.js -->
         </div>
     </div>
 
     <!-- Modal Bảng Xếp Hạng "Huyết chiến đoạt vị" (Leaderboard) -->
-    <div id="leaderboardModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'leaderboardModal') closeLeaderboardModal()" style="display: none; position: fixed; inset: 0; z-index: 100000; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px;">
+    <div id="leaderboardModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'leaderboardModal') closeLeaderboardModal()" style="display: none; position: fixed; inset: 0; z-index: 100000; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px;">
         <div class="bg-slate-900 text-white rounded-3xl shadow-2xl w-full max-w-4xl mx-auto overflow-hidden border border-amber-500/40 flex flex-col max-h-[90vh] modal-card" style="background: #0f172a; border-radius: 20px; width: 100%; max-width: 840px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.2); border: 1.5px solid rgba(245, 158, 11, 0.35); display: flex; flex-direction: column; max-height: 90vh;">
             
             <!-- Modal Header: E-Sports Competitive Theme -->
