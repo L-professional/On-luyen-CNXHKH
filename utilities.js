@@ -1658,18 +1658,18 @@ function renderHistoryTab() {
     }
 
     container.innerHTML = `
-        <div class="table-responsive" style="margin-top: 10px;">
-            <table class="ancient-table">
+        <div class="table-responsive w-full overflow-x-auto" style="margin-top: 10px;">
+            <table class="ancient-table w-full">
                 <thead>
                     <tr>
-                        <th style="width: 50px; text-align: center;">STT</th>
-                        <th style="width: 160px;">Thời Khắc Độ Kiếp</th>
-                        <th>Bí Cảnh Khảo Hạch</th>
-                        <th style="width: 140px; text-align: center;">Kiếp Nạn Vượt Qua</th>
-                        <th style="width: 110px; text-align: center;">Thời Thần</th>
-                        <th style="width: 100px; text-align: center;">Linh Lực</th>
-                        <th style="width: 130px; text-align: center;">Đạo Quả</th>
-                        <th style="width: 80px; text-align: center;">Tẩy</th>
+                        <th class="whitespace-nowrap" style="width: 50px; text-align: center;">STT</th>
+                        <th class="whitespace-nowrap" style="width: 160px;">Thời Khắc Độ Kiếp</th>
+                        <th class="whitespace-nowrap">Bí Cảnh Khảo Hạch</th>
+                        <th class="whitespace-nowrap" style="width: 140px; text-align: center;">Kiếp Nạn Vượt Qua</th>
+                        <th class="whitespace-nowrap" style="width: 110px; text-align: center;">Thời Thần</th>
+                        <th class="whitespace-nowrap" style="width: 100px; text-align: center;">Linh Lực</th>
+                        <th class="whitespace-nowrap" style="width: 130px; text-align: center;">Đạo Quả</th>
+                        <th class="whitespace-nowrap" style="width: 80px; text-align: center;">Tẩy</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1678,33 +1678,33 @@ function renderHistoryTab() {
                         const scoreVal = Number(item.score).toFixed(1);
                         return `
                             <tr>
-                                <td style="text-align: center; font-weight: 700; color: #78350f;">${idx + 1}</td>
-                                <td style="color: #78350f; font-size: 13px;">
+                                <td class="whitespace-nowrap" style="text-align: center; font-weight: 700; color: #78350f;">${idx + 1}</td>
+                                <td class="whitespace-nowrap" style="color: #78350f; font-size: 13px;">
                                     <i class="fa-regular fa-calendar-check" style="margin-right: 4px; font-size: 11px;"></i>
                                     ${escapeHtml(item.date)}
                                 </td>
-                                <td>
+                                <td class="whitespace-nowrap">
                                     <strong style="color: #451a03; font-size: 13.5px;">${escapeHtml(item.topicName)}</strong>
                                 </td>
-                                <td style="text-align: center; font-weight: 700; color: #78350f;">
+                                <td class="whitespace-nowrap" style="text-align: center; font-weight: 700; color: #78350f;">
                                     ${item.correctCount} / ${item.totalQuestions}
                                 </td>
-                                <td style="text-align: center; color: #78350f; font-size: 13px;">
+                                <td class="whitespace-nowrap" style="text-align: center; color: #78350f; font-size: 13px;">
                                     <i class="fa-regular fa-clock" style="margin-right: 3px; font-size: 11px;"></i>
                                     ${item.timeSpent || '15:00'}
                                 </td>
-                                <td style="text-align: center;">
+                                <td class="whitespace-nowrap" style="text-align: center;">
                                     <span style="font-size: 16px; font-weight: 900; color: ${isPass ? '#15803d' : '#b91c1c'};">
                                         ${scoreVal}
                                     </span>
                                 </td>
-                                <td style="text-align: center;">
+                                <td class="whitespace-nowrap" style="text-align: center;">
                                     <span class="${isPass ? 'badge-pass' : 'badge-fail'}" style="${isPass ? 'background: #dcfce7; color: #15803d; border: 1px solid #86efac;' : 'background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;'} font-weight: 800; border-radius: 9999px; padding: 2px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
                                         <i class="fa-solid ${isPass ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
                                         <span>${isPass ? 'Đắc Đạo' : 'Chưa Đạt'}</span>
                                     </span>
                                 </td>
-                                <td style="text-align: center;">
+                                <td class="whitespace-nowrap" style="text-align: center;">
                                     <button type="button" class="btn-action" style="padding: 4px 8px; background: rgba(254, 242, 242, 0.85); color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px;" onclick="deleteHistoryItem(${item.id})" title="Tẩy xóa lượt thi này khỏi bia đá">
                                         <i class="fa-solid fa-trash-can" style="font-size: 12px;"></i>
                                     </button>
@@ -1906,33 +1906,33 @@ async function renderUserFeedbackList() {
     }
 
     container.innerHTML = `
-        <div class="table-responsive" style="margin-top: 8px;">
-            <table class="feedback-history-table">
+        <div class="table-responsive w-full overflow-x-auto" style="margin-top: 8px;">
+            <table class="feedback-history-table w-full">
                 <thead>
                     <tr>
-                        <th style="width: 150px;">Thời gian</th>
-                        <th style="width: 180px;">Phân loại</th>
-                        <th>Tiêu đề & Nội dung</th>
-                        <th style="width: 110px; text-align: center;">Trạng thái</th>
+                        <th class="whitespace-nowrap" style="width: 150px;">Thời gian</th>
+                        <th class="whitespace-nowrap" style="width: 180px;">Phân loại</th>
+                        <th class="whitespace-nowrap">Tiêu đề & Nội dung</th>
+                        <th class="whitespace-nowrap" style="width: 110px; text-align: center;">Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${myFeedbacks.map(f => `
                         <tr>
-                            <td style="color: #64748b; font-size: 12.5px;">
+                            <td class="whitespace-nowrap" style="color: #64748b; font-size: 12.5px;">
                                 <i class="fa-regular fa-calendar" style="margin-right: 4px; font-size: 11px;"></i>
                                 ${escapeHtml(f.createdAt)}
                             </td>
-                            <td>
+                            <td class="whitespace-nowrap">
                                 <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 600;">
                                     ${escapeHtml(f.type)}
                                 </span>
                             </td>
-                            <td>
+                            <td class="whitespace-nowrap">
                                 <div style="font-weight: 700; color: #1e293b; margin-bottom: 3px;">${escapeHtml(f.title)}</div>
                                 <div style="color: #475569; font-size: 13px; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(f.content)}</div>
                             </td>
-                            <td style="text-align: center;">
+                            <td class="whitespace-nowrap" style="text-align: center;">
                                 <span style="display: inline-block; padding: 3px 8px; border-radius: 9999px; background: ${f.status === 'Đã xử lý' ? '#ecfdf5' : '#fffbeb'}; color: ${f.status === 'Đã xử lý' ? '#059669' : '#d97706'}; font-size: 11.5px; font-weight: 700; border: 1px solid ${f.status === 'Đã xử lý' ? '#a7f3d0' : '#fde68a'};">
                                     ${escapeHtml(f.status || 'Chờ duyệt')}
                                 </span>
@@ -1975,6 +1975,7 @@ function showModal({ title, icon, content, actionText = 'Đóng', actionCallback
     const modalCard = document.getElementById('modal-card');
     if (!modalBackdrop || !modalCard) return;
 
+    modalCard.className = 'modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto';
     modalCard.innerHTML = `
         <div class="modal-header">
             <h3 class="modal-title">

@@ -891,7 +891,7 @@ function renderUserTable(searchKeyword = '') {
                         </div>
                     </div>
                 </td>
-                <td class="px-3 py-2 text-sm" style="min-width: 220px;">
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="min-width: 220px;">
                     ${statusHtml}
                 </td>
                 <td class="whitespace-nowrap px-3 py-2 text-sm">
@@ -1916,6 +1916,8 @@ function showAdminModal({ title, icon, content, actionText = 'Đóng', actionCal
     const modalCard = document.getElementById('modal-card');
     if (!modalBackdrop || !modalCard) return;
 
+    modalCard.className = 'modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto';
+
     modalCard.innerHTML = `
         <div class="modal-header">
             <h3 class="modal-title">
@@ -2382,35 +2384,35 @@ function renderFeedbackTable(searchKeyword = '', statusFilter = 'all') {
 
         return `
             <tr>
-                <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
-                <td>
+                <td class="whitespace-nowrap" style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
+                <td class="whitespace-nowrap">
                     <div class="user-row-name">
-                        <div class="avatar-circle" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">${initial}</div>
+                        <div class="avatar-circle shrink-0" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">${initial}</div>
                         <div>
                             <strong style="color: #1e293b; font-size: 13.5px;">${escapeHtml(sender)}</strong>
                         </div>
                     </div>
                 </td>
-                <td style="color: #64748b; font-size: 12.5px;">
+                <td class="whitespace-nowrap" style="color: #64748b; font-size: 12.5px;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px; font-size: 11px;"></i>
                     ${escapeHtml(f.createdAt || '')}
                 </td>
-                <td>
+                <td class="whitespace-nowrap">
                     <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 600;">
                         ${escapeHtml(f.type || 'Góp ý')}
                     </span>
                 </td>
-                <td>
+                <td class="whitespace-nowrap">
                     <div class="fb-content-title" title="${escapeHtml(f.title || '')}">${escapeHtml(f.title || '(Không có tiêu đề)')}</div>
                     <div class="fb-content-snippet" title="${escapeHtml(f.content || '')}">${escapeHtml(f.content || '')}</div>
                 </td>
-                <td style="text-align: center;">
+                <td class="whitespace-nowrap" style="text-align: center;">
                     <span class="fb-status-badge ${isResolved ? 'status-resolved' : 'status-pending'}" onclick="toggleFeedbackStatus(${f.id})" title="Nhấn để chuyển đổi trạng thái">
                         <i class="fa-solid ${isResolved ? 'fa-circle-check' : 'fa-clock'}"></i>
                         <span>${isResolved ? 'Đã xử lý' : 'Chờ duyệt'}</span>
                     </span>
                 </td>
-                <td>
+                <td class="whitespace-nowrap">
                     <div class="action-buttons-group">
                         <button type="button" class="btn-action" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;" onclick="viewFeedbackDetail(${f.id})" title="Xem chi tiết nội dung">
                             <i class="fa-regular fa-eye"></i>

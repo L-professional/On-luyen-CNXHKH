@@ -15,6 +15,16 @@
     <!-- Stylesheet dùng chung toàn hệ thống -->
     <link rel="stylesheet" href="style.css">
 
+    <!-- Tailwind CSS (preflight: false để bảo toàn toàn bộ CSS hiện hữu) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
+
     <!-- Chart.js CDN (cho Lục Đạo Luân Hồi Trận Radar Chart) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -29,7 +39,7 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
             <div class="header-brand-wrap" onclick="window.location.href='index.html'" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                <div class="logo-icon">
+                <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
                 <div class="logo-text">
@@ -48,14 +58,14 @@
 
         <div class="header-right">
             <div class="notification-wrap" id="notification-wrap">
-                <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
+                <button class="header-icon-btn shrink-0" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
                     <i class="fa-solid fa-bell"></i>
                     <span class="notification-dot" id="notification-dot" style="display: none;"></span>
                 </button>
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
-                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">U</div>
+                <div class="avatar-wrapper rank-1 avatar-mini shrink-0" id="header-avatar-frame">U</div>
                 <span class="user-name" id="header-user-name">Đang tải...</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -65,9 +75,9 @@
     <!-- ====================================================================
          MAIN APPLICATION LAYOUT (SIDEBAR + RIGHT CONTENT)
          ==================================================================== -->
-    <div class="app-layout">
+    <div class="app-layout max-w-7xl mx-auto w-full">
         <!-- Sidebar Menu (Trái) -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar hidden md:flex" id="sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -179,7 +189,7 @@
             <!-- Header Card Tiện ích -->
             <section class="util-header-card">
                 <div class="util-header-info">
-                    <div class="util-icon-circle" id="util-header-icon">
+                    <div class="util-icon-circle shrink-0" id="util-header-icon">
                         <i class="fa-solid fa-dharmachakra"></i>
                     </div>
                     <div>
@@ -219,9 +229,9 @@
                 </div>
 
                 <!-- 4 Thẻ Card Thống kê tu vi tổng quát -->
-                <div class="util-stats-grid">
+                <div class="util-stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                     <div class="util-stat-card">
-                        <div class="usc-icon-box blue">
+                        <div class="usc-icon-box blue shrink-0">
                             <i class="fa-solid fa-scroll"></i>
                         </div>
                         <div class="usc-info">
@@ -231,7 +241,7 @@
                     </div>
 
                     <div class="util-stat-card">
-                        <div class="usc-icon-box green">
+                        <div class="usc-icon-box green shrink-0">
                             <i class="fa-solid fa-bolt"></i>
                         </div>
                         <div class="usc-info">
@@ -241,7 +251,7 @@
                     </div>
 
                     <div class="util-stat-card">
-                        <div class="usc-icon-box amber">
+                        <div class="usc-icon-box amber shrink-0">
                             <i class="fa-solid fa-feather-pointed"></i>
                         </div>
                         <div class="usc-info">
@@ -251,7 +261,7 @@
                     </div>
 
                     <div class="util-stat-card">
-                        <div class="usc-icon-box purple">
+                        <div class="usc-icon-box purple shrink-0">
                             <i class="fa-solid fa-crown"></i>
                         </div>
                         <div class="usc-info">
@@ -550,7 +560,7 @@
 
     <!-- Modal Cửa sổ Dùng chung -->
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-card" id="modal-card"></div>
+        <div class="modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" id="modal-card"></div>
     </div>
 
     <!-- Toast Notification -->

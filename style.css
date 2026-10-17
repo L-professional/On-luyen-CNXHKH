@@ -239,6 +239,7 @@ button {
     align-items: center;
     justify-content: center;
     font-size: 13px;
+    flex-shrink: 0;
 }
 
 .user-name {
@@ -258,6 +259,10 @@ button {
 .app-layout {
     display: flex;
     min-height: calc(100vh - 68px);
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
 
 /* Sidebar (Left Menu Cố Định) */
@@ -4816,12 +4821,14 @@ body.sidebar-open .sidebar-backdrop {
     font-weight: 700;
     padding: 10px 14px;
     border-bottom: 1.5px solid #e2e8f0;
+    white-space: nowrap;
 }
 .feedback-history-table td {
     padding: 12px 14px;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
     vertical-align: top;
+    white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -4952,6 +4959,7 @@ body.sidebar-open .sidebar-backdrop {
 
     .sidebar.open,
     body.sidebar-open .sidebar {
+        display: flex !important;
         transform: translateX(320px);
         box-shadow: 6px 0 25px rgba(0, 0, 0, 0.22);
     }
@@ -8139,6 +8147,7 @@ body.sidebar-open .sidebar-backdrop {
     padding: 10px 12px !important;
     font-size: 13px !important;
     text-transform: uppercase;
+    white-space: nowrap !important;
 }
 
 .ancient-table tbody tr {
@@ -8157,6 +8166,7 @@ body.sidebar-open .sidebar-backdrop {
     border-top: 1px solid rgba(180, 83, 9, 0.15) !important;
     border-bottom: 1px solid rgba(180, 83, 9, 0.15) !important;
     color: #451a03 !important;
+    white-space: nowrap !important;
 }
 
 .ancient-table td:first-child {

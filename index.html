@@ -49,11 +49,11 @@
     <!-- Top Header Bar -->
     <header class="app-header">
         <div class="header-left">
-            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
+            <button class="mobile-menu-btn shrink-0" id="mobile-menu-btn" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </button>
             <div class="header-brand-wrap" onclick="window.location.href='index.html'" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                <div class="logo-icon">
+                <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
                 <div class="logo-text">
@@ -72,14 +72,14 @@
 
         <div class="header-right">
             <div class="notification-wrap" id="notification-wrap">
-                <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
+                <button class="header-icon-btn shrink-0" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
                     <i class="fa-solid fa-bell"></i>
                     <span class="notification-dot" id="notification-dot" style="display: none;"></span>
                 </button>
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
-                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">L</div>
+                <div class="avatar-wrapper rank-1 avatar-mini shrink-0" id="header-avatar-frame">L</div>
                 <span class="user-name" id="header-user-name">Lộc</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -87,9 +87,9 @@
     </header>
 
     <!-- Main Application Layout -->
-    <div class="app-layout">
+    <div class="app-layout max-w-7xl mx-auto w-full">
         <!-- Sidebar Menu (Cột trái cố định trên PC, Drawer trượt trên điện thoại) -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar hidden md:flex" id="sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -197,10 +197,10 @@
         <!-- Main Content (Phần nội dung chính) -->
         <main class="main-content">
             <!-- Hero Banner -->
-            <section class="hero-banner">
+            <section class="hero-banner flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 p-4 md:p-6">
                 <div class="hero-content">
                     <div class="hero-icon-title-row">
-                        <div class="hero-book-icon-box">
+                        <div class="hero-book-icon-box shrink-0">
                             <i class="fa-solid fa-book-open"></i>
                         </div>
                         <div>
@@ -210,7 +210,7 @@
                     </div>
                     <p class="hero-quote">“Hiểu đúng lý luận, vững vàng tư tưởng, kiến tạo tương lai.”</p>
                 </div>
-                <div class="hero-graphic">
+                <div class="hero-graphic shrink-0">
                     <img src="banner-art.jpg" alt="Chủ nghĩa xã hội khoa học" class="hero-img" onerror="this.style.display='none'">
                 </div>
             </section>
@@ -220,23 +220,23 @@
                 <!-- Tiêu đề khu vực -->
                 <div class="section-header-row">
                     <div class="section-title-box">
-                        <div class="section-icon-box">
+                        <div class="section-icon-box shrink-0">
                             <i class="fa-solid fa-book-open"></i>
                         </div>
                         <h3 class="section-heading-text">Danh sách Chủ đề ôn luyện & Kiểm tra</h3>
                     </div>
-                    <div class="section-badge-total">
+                    <div class="section-badge-total shrink-0">
                         <i class="fa-solid fa-book-bookmark"></i>
                         <span>Tổng số chủ đề: 6</span>
                     </div>
                 </div>
 
                 <!-- Lưới 2 cột thẻ (2 Columns Grid) -->
-                <div class="topic-cards-grid">
+                <div class="topic-cards-grid grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <!-- Thẻ Chủ đề 1 -->
                     <div class="topic-dashboard-card card-theme-1" id="topic-card-1" data-topic-id="1">
                         <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-1">
+                            <div class="tdc-icon-circle bg-theme-1 shrink-0">
                                 <i class="fa-solid fa-book-open"></i>
                             </div>
                             <div class="tdc-header-text">
@@ -419,14 +419,14 @@
 
     <!-- Reusable Modal Window (Popup chọn chế độ Ôn luyện / Kiểm tra) -->
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-card" id="modal-card">
+        <div class="modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" id="modal-card">
             <!-- Modal Header, Body, Footer injected dynamically by app.js -->
         </div>
     </div>
 
     <!-- Modal Bảng Xếp Hạng "Huyết chiến đoạt vị" (Leaderboard) -->
     <div id="leaderboardModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden modal-backdrop" onclick="if(event.target.id === 'leaderboardModal') closeLeaderboardModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
-        <div class="bg-slate-900 text-white rounded-3xl shadow-2xl w-full max-w-4xl mx-auto overflow-hidden border border-amber-500/40 flex flex-col max-h-[90vh] modal-card" style="background: #0f172a; border-radius: 20px; width: 100%; max-width: 840px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.2); border: 1.5px solid rgba(245, 158, 11, 0.35); display: flex; flex-direction: column; max-height: 90vh;">
+        <div class="bg-slate-900 text-white rounded-3xl shadow-2xl w-[90%] md:w-full max-w-lg md:max-w-4xl mx-auto overflow-hidden border border-amber-500/40 flex flex-col max-h-[90vh] overflow-y-auto modal-card" style="background: #0f172a; border-radius: 20px; width: 100%; max-width: 840px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.2); border: 1.5px solid rgba(245, 158, 11, 0.35); display: flex; flex-direction: column; max-height: 90vh;">
             
             <!-- Modal Header: E-Sports Competitive Theme -->
             <div class="relative px-6 py-4 md:py-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 flex items-center justify-between" style="position: relative; padding: 16px 24px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); background: linear-gradient(90deg, rgba(120, 53, 15, 0.25) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(120, 53, 15, 0.25) 100%); display: flex; align-items: center; justify-content: space-between;">

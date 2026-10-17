@@ -167,11 +167,11 @@
     <!-- Top Header Bar -->
     <header class="app-header">
         <div class="header-left">
-            <button class="mobile-menu-btn" id="mobile-menu-btn-admin" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
+            <button class="mobile-menu-btn shrink-0" id="mobile-menu-btn-admin" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </button>
             <div class="header-brand-wrap" onclick="window.location.href='index.html'" title="Về trang chủ" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                <div class="logo-icon">
+                <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
                 <div class="logo-text">
@@ -189,12 +189,12 @@
         </div>
 
         <div class="header-right">
-            <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="openAdminNotification()">
+            <button class="header-icon-btn shrink-0" id="btn-notification" title="Thông báo" onclick="openAdminNotification()">
                 <i class="fa-solid fa-bell"></i>
                 <span class="notification-dot"></span>
             </button>
             <div class="user-pill" id="user-pill" onclick="openAdminUserMenu()" title="Tài khoản Quản trị">
-                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">A</div>
+                <div class="avatar-wrapper rank-1 avatar-mini shrink-0" id="header-avatar-frame">A</div>
                 <span class="user-name" id="admin-user-display-name">Admin</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -202,9 +202,9 @@
     </header>
 
     <!-- Main Layout -->
-    <div class="app-layout">
+    <div class="app-layout max-w-7xl mx-auto w-full">
         <!-- Sidebar Menu -->
-        <aside class="sidebar" id="admin-sidebar">
+        <aside class="sidebar hidden md:flex" id="admin-sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -320,9 +320,9 @@
         <!-- Main Content (Dashboard Quản lý tài khoản & Hòm thư Góp ý) -->
         <main class="main-content admin-main-content" style="zoom: 0.9;">
             <!-- Header Thông tin trang -->
-            <div class="admin-header-box">
+            <div class="admin-header-box flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 p-4 md:p-6">
                 <div class="admin-header-info">
-                    <div class="admin-icon-circle" id="admin-header-icon">
+                    <div class="admin-icon-circle shrink-0" id="admin-header-icon">
                         <i class="fas fa-users-cog"></i>
                     </div>
                     <div>
@@ -330,7 +330,7 @@
                         <p class="admin-page-subtitle" id="admin-main-page-desc">Thêm mới, phân quyền và quản lý tài khoản người dùng trong hệ thống.</p>
                     </div>
                 </div>
-                <div class="admin-stats-badge" id="admin-header-stat-badge">
+                <div class="admin-stats-badge shrink-0" id="admin-header-stat-badge">
                     <i class="fa-solid fa-users"></i>
                     <span>Tổng số: <strong id="total-users-count">2</strong> tài khoản</span>
                 </div>
@@ -353,9 +353,9 @@
             <!-- TAB PANE 1: QUẢN LÝ TÀI KHOẢN -->
             <div id="admin-pane-users" class="admin-pane active">
                 <!-- Khối 1: Thêm tài khoản mới (Create Account) -->
-                <section class="admin-card">
+                <section class="admin-card p-4 md:p-6">
                     <div class="admin-card-header">
-                        <div class="ach-icon-box">
+                        <div class="ach-icon-box shrink-0">
                             <i class="fa-solid fa-user-plus"></i>
                         </div>
                         <div>
@@ -364,7 +364,7 @@
                         </div>
                     </div>
 
-                    <form id="create-user-form" class="create-user-form" onsubmit="handleCreateUser(event)">
+                    <form id="create-user-form" class="create-user-form grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4" onsubmit="handleCreateUser(event)">
                         <div class="form-group">
                             <label for="new-username"><i class="fa-regular fa-user"></i> Tên đăng nhập</label>
                             <input type="text" id="new-username" placeholder="Nhập tên đăng nhập..." required autocomplete="off">
@@ -395,10 +395,10 @@
                 </section>
 
                 <!-- Khối 2: Danh sách tài khoản (User List) -->
-                <section class="admin-card">
-                    <div class="admin-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <section class="admin-card p-4 md:p-6">
+                    <div class="admin-card-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <div class="ach-icon-box" style="background: #eff6ff; color: #2563eb;">
+                            <div class="ach-icon-box shrink-0" style="background: #eff6ff; color: #2563eb;">
                                 <i class="fa-solid fa-address-book"></i>
                             </div>
                             <div>
@@ -413,7 +413,7 @@
                     </div>
 
                     <!-- Thẻ thống kê trạng thái Online / Treo máy / Offline -->
-                    <div class="user-status-stats-grid" id="user-status-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 0 0 16px 0; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <div class="user-status-stats-grid grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4 p-3 md:p-4" id="user-status-stats" style="margin: 0 0 16px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
                         <div class="status-stat-card" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #ffffff; border-radius: 10px; border: 1px solid #bbf7d0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                             <span style="font-size: 22px; line-height: 1;">🟢</span>
                             <div>
@@ -437,21 +437,22 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive overflow-x-auto" style="overflow-x: auto; width: 100%;">
-                        <table class="admin-table" style="min-width: 100%;">
+                    <div class="table-responsive w-full overflow-x-auto" style="overflow-x: auto; width: 100%;">
+                        <table class="admin-table w-full" style="min-width: 100%;">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px; text-align: center;">STT</th>
-                                    <th>Tên đăng nhập</th>
-                                    <th style="min-width: 220px;" class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">TRẠNG THÁI & HÀNH TUNG</th>
-                                    <th style="width: 160px;">TIẾN ĐỘ</th>
-                                    <th style="width: 130px;">Mật khẩu</th>
-                                    <th style="width: 110px;">Vai trò</th>
-                                    <th style="width: 110px;">Ngày tạo</th>
-                                    <th style="width: 220px; text-align: center; white-space: nowrap;">Hành động</th>
+                                    <th class="whitespace-nowrap" style="width: 50px; text-align: center;">STT</th>
+                                    <th class="whitespace-nowrap">Tên đăng nhập</th>
+                                    <th class="whitespace-nowrap text-left text-xs font-semibold text-gray-500 uppercase tracking-wider" style="min-width: 220px;">TRẠNG THÁI & HÀNH TUNG</th>
+                                    <th class="whitespace-nowrap" style="width: 160px;">TIẾN ĐỘ</th>
+                                    <th class="whitespace-nowrap" style="width: 130px;">Mật khẩu</th>
+                                    <th class="whitespace-nowrap" style="width: 110px;">Vai trò</th>
+                                    <th class="whitespace-nowrap" style="width: 110px;">Ngày tạo</th>
+                                    <th class="whitespace-nowrap" style="width: 220px; text-align: center;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="user-table-body">
+                                <!-- Injected dynamically by admin.js -->
                                 <!-- Injected dynamically by admin.js -->
                             </tbody>
                         </table>
@@ -461,10 +462,10 @@
 
             <!-- TAB PANE 2: HÒM THƯ GÓP Ý & BÁO LỖI (BONUS) -->
             <div id="admin-pane-feedbacks" class="admin-pane hidden">
-                <section class="admin-card">
-                    <div class="admin-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <section class="admin-card p-4 md:p-6">
+                    <div class="admin-card-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <div class="ach-icon-box" style="background: #ecfdf5; color: #059669;">
+                            <div class="ach-icon-box shrink-0" style="background: #ecfdf5; color: #059669;">
                                 <i class="fa-solid fa-inbox"></i>
                             </div>
                             <div>
@@ -490,7 +491,7 @@
                     </div>
 
                     <!-- Thống kê nhỏ của Hòm thư -->
-                    <div class="admin-fb-stats-bar">
+                    <div class="admin-fb-stats-bar grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
                         <div class="fb-stat-pill">
                             <span class="fb-sp-label">Tổng phản hồi:</span>
                             <strong class="fb-sp-val" id="fb-stat-total">0</strong>
@@ -505,17 +506,17 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="admin-table">
+                    <div class="table-responsive w-full overflow-x-auto">
+                        <table class="admin-table w-full">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px; text-align: center;">STT</th>
-                                    <th style="width: 140px;">Người gửi</th>
-                                    <th style="width: 140px;">Thời gian</th>
-                                    <th style="width: 150px;">Phân loại</th>
-                                    <th>Tiêu đề & Nội dung</th>
-                                    <th style="width: 130px; text-align: center;">Trạng thái</th>
-                                    <th style="width: 160px; text-align: center;">Hành động</th>
+                                    <th class="whitespace-nowrap" style="width: 50px; text-align: center;">STT</th>
+                                    <th class="whitespace-nowrap" style="width: 140px;">Người gửi</th>
+                                    <th class="whitespace-nowrap" style="width: 140px;">Thời gian</th>
+                                    <th class="whitespace-nowrap" style="width: 150px;">Phân loại</th>
+                                    <th class="whitespace-nowrap">Tiêu đề & Nội dung</th>
+                                    <th class="whitespace-nowrap" style="width: 130px; text-align: center;">Trạng thái</th>
+                                    <th class="whitespace-nowrap" style="width: 160px; text-align: center;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="feedback-table-body">
@@ -530,7 +531,7 @@
 
     <!-- Modal chi tiết thống kê 6 chủ đề (statsDetailModal) -->
     <div id="statsDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'statsDetailModal') closeStatsDetailModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center;">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-slate-200 transform transition-all modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 680px; margin: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column; max-height: 90vh;">
+        <div class="bg-white rounded-2xl shadow-2xl w-[90%] md:w-full max-w-lg md:max-w-2xl mx-auto overflow-hidden border border-slate-200 transform transition-all max-h-[90vh] overflow-y-auto modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 680px; margin: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column; max-height: 90vh;">
             <!-- Modal Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 modal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
                 <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
@@ -563,12 +564,12 @@
 
     <!-- Modal "Ban phát Cơ duyên" (Ban tạo hóa buff EXP) -->
     <div id="buffExpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'buffExpModal') closeBuffExpModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 16px;">
-        <div class="bg-slate-900 text-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden border border-amber-500/40 flex flex-col modal-card" style="background: #0f172a; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 35px rgba(245, 158, 11, 0.25); border: 1.5px solid rgba(245, 158, 11, 0.45); display: flex; flex-direction: column;">
+        <div class="bg-slate-900 text-white rounded-2xl shadow-2xl w-[90%] md:w-full max-w-lg md:max-w-2xl mx-auto overflow-hidden border border-amber-500/40 flex flex-col max-h-[90vh] overflow-y-auto modal-card" style="background: #0f172a; border-radius: 18px; width: 100%; max-width: 680px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 35px rgba(245, 158, 11, 0.25); border: 1.5px solid rgba(245, 158, 11, 0.45); display: flex; flex-direction: column;">
             
             <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-amber-500/30 bg-gradient-to-r from-amber-950/60 via-slate-900 to-amber-950/60 flex items-center justify-between" style="padding: 16px 24px; border-bottom: 1px solid rgba(245, 158, 11, 0.25); background: linear-gradient(90deg, rgba(120, 53, 15, 0.3) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(120, 53, 15, 0.3) 100%); display: flex; align-items: center; justify-content: space-between;">
                 <div class="flex items-center gap-3">
-                    <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);">
+                    <div class="shrink-0" style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <div>
@@ -649,7 +650,7 @@
 
     <!-- Modal "Giáng hạ Lôi Kiếp" (Giáng Thiên Kiếp trừ EXP) -->
     <div id="thienKiepModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden modal-backdrop" onclick="if(event.target.id === 'thienKiepModal') closeThienKiepModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(10, 10, 20, 0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
-        <div class="bg-slate-950 text-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden border border-red-600/50 flex flex-col modal-card" style="background: #090d16; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(220, 38, 38, 0.35); border: 1.5px solid rgba(220, 38, 38, 0.6); display: flex; flex-direction: column;">
+        <div class="bg-slate-950 text-white rounded-2xl shadow-2xl w-[90%] md:w-full max-w-lg md:max-w-2xl mx-auto max-h-[90vh] overflow-y-auto border border-red-600/50 flex flex-col modal-card" style="background: #090d16; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(220, 38, 38, 0.35); border: 1.5px solid rgba(220, 38, 38, 0.6); display: flex; flex-direction: column;">
             
             <!-- Modal Header: Sắc thái hắc ám, tia sét -->
             <div class="px-6 py-4 border-b border-red-600/30 bg-gradient-to-r from-red-950/80 via-slate-950 to-purple-950/80 flex items-center justify-between" style="padding: 16px 24px; border-bottom: 1px solid rgba(220, 38, 38, 0.3); background: linear-gradient(90deg, rgba(127, 29, 29, 0.5) 0%, rgba(9, 13, 22, 0.95) 50%, rgba(88, 28, 135, 0.4) 100%); display: flex; align-items: center; justify-content: space-between;">
@@ -735,7 +736,7 @@
 
     <!-- Reusable Modal Window -->
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeAdminModalOnBackdrop(event)">
-        <div class="modal-card" id="modal-card">
+        <div class="modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" id="modal-card">
             <!-- Modal Header, Body, Footer injected dynamically -->
         </div>
     </div>
