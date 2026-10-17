@@ -931,7 +931,7 @@ function updateHeaderRankDisplay() {
         let badgeEl = pill.querySelector('.header-user-rank-badge');
         if (!badgeEl) {
             badgeEl = document.createElement('span');
-            badgeEl.className = 'header-user-rank-badge';
+            badgeEl.className = 'header-user-rank-badge hidden md:flex';
             const nameEl = pill.querySelector('.user-name');
             if (nameEl && nameEl.parentNode) {
                 nameEl.parentNode.insertBefore(badgeEl, nameEl.nextSibling);
@@ -941,11 +941,11 @@ function updateHeaderRankDisplay() {
         }
 
         if (isAdm) {
-            badgeEl.className = 'header-user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]';
+            badgeEl.className = 'header-user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)] hidden md:flex';
             badgeEl.innerHTML = `<i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s;"></i> <span>Thiên Địa Pháp Tắc</span>`;
             badgeEl.title = `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)`;
         } else {
-            badgeEl.className = `header-user-rank-badge ${rank.badgeClass}`;
+            badgeEl.className = `header-user-rank-badge ${rank.badgeClass} hidden md:flex`;
             badgeEl.innerHTML = `<i class="${rank.icon}"></i> <span>${rank.displayName || rank.name}</span>`;
             badgeEl.title = `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
         }
@@ -1099,7 +1099,7 @@ function openAvatarShowcaseModal() {
     }).join('');
 
     backdrop.innerHTML = `
-        <div class="avatar-showcase-dialog w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="avatar-showcase-dialog">
             <button type="button" class="avatar-showcase-close" onclick="closeAvatarShowcaseModal()" title="Đóng">
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -1863,7 +1863,7 @@ function showLevelUpModal(newRank, oldRank = null, callback = null) {
     const stats = getUserStats();
 
     modal.innerHTML = `
-        <div class="levelup-modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="levelup-modal-card">
             <!-- Confetti Container -->
             <div class="confetti-wrapper" id="levelup-confetti-box"></div>
 
@@ -5233,8 +5233,6 @@ function showModal({ title, icon, content, actionText = 'Đóng', actionCallback
     const modalCard = document.getElementById('modal-card');
     if (!modalBackdrop || !modalCard) return;
 
-    modalCard.className = 'modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto';
-
     modalCard.innerHTML = `
         <div class="modal-header">
             <h3 class="modal-title">
@@ -5967,7 +5965,7 @@ function openFoundationSetupModal(isFirstTime = false) {
     window._foundationSelectedPhotoURL = (user && user.photoURL) || 'images/avatars/avatar_m1.jpg';
 
     backdrop.innerHTML = `
-        <div class="foundation-modal-dialog w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" style="max-width: 520px; width: 100%; background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 2px solid #eab308; box-shadow: 0 0 35px rgba(234, 179, 8, 0.35), 0 20px 40px rgba(0, 0, 0, 0.8); border-radius: 18px; padding: 24px; color: #f8fafc; position: relative;">
+        <div class="foundation-modal-dialog" style="max-width: 520px; width: 100%; background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 2px solid #eab308; box-shadow: 0 0 35px rgba(234, 179, 8, 0.35), 0 20px 40px rgba(0, 0, 0, 0.8); border-radius: 18px; padding: 24px; color: #f8fafc; position: relative;">
             ${!isFirstTime ? `
                 <button type="button" onclick="closeFoundationModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Đóng">
                     <i class="fa-solid fa-xmark"></i>
@@ -5975,7 +5973,7 @@ function openFoundationSetupModal(isFirstTime = false) {
             ` : ''}
 
             <div style="text-align: center; margin-bottom: 20px;">
-                <div class="shrink-0" style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle, rgba(234, 179, 8, 0.3) 0%, rgba(234, 179, 8, 0.05) 100%); border: 1.5px solid #facc15; margin-bottom: 10px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle, rgba(234, 179, 8, 0.3) 0%, rgba(234, 179, 8, 0.05) 100%); border: 1.5px solid #facc15; margin-bottom: 10px;">
                     <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 8s; color: #fde047; font-size: 24px;"></i>
                 </div>
                 <h3 style="font-size: 20px; font-weight: 900; color: #fde047; margin: 0 0 6px 0; letter-spacing: 0.5px; text-shadow: 0 0 12px rgba(250, 204, 21, 0.4);">
@@ -5988,8 +5986,8 @@ function openFoundationSetupModal(isFirstTime = false) {
 
             <!-- KHU VỰC LIVE PREVIEW AVATAR ĐƯỢC CHỌN -->
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 18px;">
-                <div class="shrink-0" style="position: relative; width: 84px; height: 84px;">
-                    <img id="foundation-preview-avatar" class="shrink-0" src="${escapeHtml(window._foundationSelectedPhotoURL)}" alt="Preview Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);" />
+                <div style="position: relative; width: 84px; height: 84px;">
+                    <img id="foundation-preview-avatar" src="${escapeHtml(window._foundationSelectedPhotoURL)}" alt="Preview Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);" />
                     <div style="position: absolute; bottom: 0; right: 0; background: #eab308; color: #1e293b; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; box-shadow: 0 0 8px rgba(0,0,0,0.5);">
                         <i class="fa-solid fa-sparkles"></i>
                     </div>

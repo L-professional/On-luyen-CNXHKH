@@ -47,49 +47,49 @@
 
 <body class="dashboard-body">
     <!-- Top Header Bar -->
-    <header class="app-header">
-        <div class="header-left">
-            <button class="mobile-menu-btn shrink-0" id="mobile-menu-btn" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
+    <header class="app-header flex items-center justify-between w-full px-2 md:px-4">
+        <div class="header-left flex items-center gap-2 md:gap-3">
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <div class="header-brand-wrap" onclick="window.location.href='index.html'" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <div class="header-brand-wrap truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="window.location.href='index.html'">
                 <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
-                <div class="logo-text">
-                    <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
-                    <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+                <div class="logo-text truncate min-w-0">
+                    <h1 class="logo-title truncate">Ôn luyện trắc nghiệm</h1>
+                    <p class="logo-subtitle hidden md:block">Chủ nghĩa xã hội khoa học</p>
                 </div>
             </div>
         </div>
 
-        <div class="header-center">
+        <div class="header-center hidden md:flex">
             <div class="slogan-badge">
                 <i class="fa-solid fa-graduation-cap slogan-icon"></i>
                 <span class="slogan-text">Học đúng trọng tâm &nbsp;–&nbsp; Ôn chắc kiến thức &nbsp;–&nbsp; Vững bước tương lai!</span>
             </div>
         </div>
 
-        <div class="header-right">
+        <div class="header-right flex items-center gap-2 md:gap-3">
             <div class="notification-wrap" id="notification-wrap">
-                <button class="header-icon-btn shrink-0" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
+                <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
                     <i class="fa-solid fa-bell"></i>
                     <span class="notification-dot" id="notification-dot" style="display: none;"></span>
                 </button>
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
-            <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
+            <div class="user-pill flex items-center gap-1.5 md:gap-2 cursor-pointer" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
                 <div class="avatar-wrapper rank-1 avatar-mini shrink-0" id="header-avatar-frame">L</div>
-                <span class="user-name" id="header-user-name">Lộc</span>
-                <i class="fa-solid fa-chevron-down user-chevron"></i>
+                <span class="user-name hidden md:inline-block" id="header-user-name">Lộc</span>
+                <i class="fa-solid fa-chevron-down user-chevron hidden md:inline-block"></i>
             </div>
         </div>
     </header>
 
     <!-- Main Application Layout -->
-    <div class="app-layout max-w-7xl mx-auto w-full">
+    <div class="app-layout">
         <!-- Sidebar Menu (Cột trái cố định trên PC, Drawer trượt trên điện thoại) -->
-        <aside class="sidebar hidden md:flex" id="sidebar">
+        <aside class="sidebar" id="sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -195,12 +195,12 @@
         <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Phần nội dung chính) -->
-        <main class="main-content">
+        <main class="main-content pb-20 md:pb-0">
             <!-- Hero Banner -->
-            <section class="hero-banner flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 p-4 md:p-6">
+            <section class="hero-banner">
                 <div class="hero-content">
                     <div class="hero-icon-title-row">
-                        <div class="hero-book-icon-box shrink-0">
+                        <div class="hero-book-icon-box">
                             <i class="fa-solid fa-book-open"></i>
                         </div>
                         <div>
@@ -210,7 +210,7 @@
                     </div>
                     <p class="hero-quote">“Hiểu đúng lý luận, vững vàng tư tưởng, kiến tạo tương lai.”</p>
                 </div>
-                <div class="hero-graphic shrink-0">
+                <div class="hero-graphic">
                     <img src="banner-art.jpg" alt="Chủ nghĩa xã hội khoa học" class="hero-img" onerror="this.style.display='none'">
                 </div>
             </section>
@@ -220,23 +220,23 @@
                 <!-- Tiêu đề khu vực -->
                 <div class="section-header-row">
                     <div class="section-title-box">
-                        <div class="section-icon-box shrink-0">
+                        <div class="section-icon-box">
                             <i class="fa-solid fa-book-open"></i>
                         </div>
                         <h3 class="section-heading-text">Danh sách Chủ đề ôn luyện & Kiểm tra</h3>
                     </div>
-                    <div class="section-badge-total shrink-0">
+                    <div class="section-badge-total">
                         <i class="fa-solid fa-book-bookmark"></i>
                         <span>Tổng số chủ đề: 6</span>
                     </div>
                 </div>
 
                 <!-- Lưới 2 cột thẻ (2 Columns Grid) -->
-                <div class="topic-cards-grid grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div class="topic-cards-grid">
                     <!-- Thẻ Chủ đề 1 -->
                     <div class="topic-dashboard-card card-theme-1" id="topic-card-1" data-topic-id="1">
                         <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-1 shrink-0">
+                            <div class="tdc-icon-circle bg-theme-1">
                                 <i class="fa-solid fa-book-open"></i>
                             </div>
                             <div class="tdc-header-text">
@@ -419,68 +419,69 @@
 
     <!-- Reusable Modal Window (Popup chọn chế độ Ôn luyện / Kiểm tra) -->
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" id="modal-card">
+        <div class="modal-card" id="modal-card">
             <!-- Modal Header, Body, Footer injected dynamically by app.js -->
         </div>
     </div>
 
     <!-- Modal Bảng Xếp Hạng "Huyết chiến đoạt vị" (Leaderboard) -->
-    <div id="leaderboardModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden modal-backdrop" onclick="if(event.target.id === 'leaderboardModal') closeLeaderboardModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
-        <div class="bg-slate-900 text-white rounded-3xl shadow-2xl w-[90%] md:w-full max-w-lg md:max-w-4xl mx-auto overflow-hidden border border-amber-500/40 flex flex-col max-h-[90vh] overflow-y-auto modal-card" style="background: #0f172a; border-radius: 20px; width: 100%; max-width: 840px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.2); border: 1.5px solid rgba(245, 158, 11, 0.35); display: flex; flex-direction: column; max-height: 90vh;">
-            
-            <!-- Modal Header: E-Sports Competitive Theme -->
-            <div class="relative px-6 py-4 md:py-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 flex items-center justify-between" style="position: relative; padding: 16px 24px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); background: linear-gradient(90deg, rgba(120, 53, 15, 0.25) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(120, 53, 15, 0.25) 100%); display: flex; align-items: center; justify-content: space-between;">
-                <div class="flex items-center gap-3.5" style="display: flex; align-items: center; gap: 14px;">
-                    <div class="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/40 text-2xl font-black shrink-0" style="width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); display: flex; align-items: center; justify-content: center; color: #0f172a; font-size: 22px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); flex-shrink: 0;">
-                        <i class="fa-solid fa-trophy"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-                            <h3 class="text-lg md:text-xl font-extrabold tracking-wide uppercase bg-gradient-to-r from-yellow-300 via-amber-200 to-amber-400 bg-clip-text text-transparent" style="margin: 0; font-size: 19px; font-weight: 800; background: linear-gradient(90deg, #fef08a 0%, #fde047 50%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                                HUYẾT CHIẾN ĐOẠT VỊ
-                            </h3>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40" style="padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: rgba(245, 158, 11, 0.15); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4);">
-                                LEADERBOARD
-                            </span>
+    <div id="leaderboardModal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-0 md:p-4 hidden modal-backdrop" onclick="if(event.target.id === 'leaderboardModal') closeLeaderboardModal()" style="display: none;">
+        <div class="w-full h-full md:w-[90%] md:h-[90vh] md:max-w-4xl bg-gray-900 md:rounded-xl flex flex-col text-white shadow-2xl border border-amber-500/40 overflow-hidden relative">
+            <div class="flex-1 overflow-y-auto w-full flex flex-col">
+                <!-- Modal Header: E-Sports Competitive Theme -->
+                <div class="relative px-4 md:px-6 py-4 md:py-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3 md:gap-3.5">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/40 text-xl md:text-2xl font-black shrink-0">
+                            <i class="fa-solid fa-trophy"></i>
                         </div>
-                        <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5" style="margin: 3px 0 0 0; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                            <span>Bảng xếp hạng Cảnh giới & Điểm kinh nghiệm (EXP) toàn server</span>
-                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                        </p>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base md:text-xl font-extrabold tracking-wide uppercase bg-gradient-to-r from-yellow-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">
+                                    HUYẾT CHIẾN ĐOẠT VỊ
+                                </h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                    LEADERBOARD
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                <span>Bảng xếp hạng Cảnh giới & EXP toàn server</span>
+                                <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Nút Đóng -->
+                    <button type="button" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700 cursor-pointer shrink-0" onclick="closeLeaderboardModal()" title="Đóng bảng xếp hạng">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Subheader: Tóm tắt thông tin của người chơi hiện tại (NO sticky, NO fixed) -->
+                <div id="leaderboardUserSummary" class="px-4 md:px-6 py-2.5 bg-slate-800/60 border-b border-slate-700/60 flex items-center justify-between text-xs shrink-0">
+                    <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> Đang tải thông tin xếp hạng...</span>
+                </div>
+
+                <!-- Khu vực Admin độc tôn - "Chúa Tể Không Gian" (NO sticky, NO fixed) -->
+                <div id="leaderboardAdminSection" class="px-4 md:px-6 pt-3.5 pb-1 hidden shrink-0"></div>
+
+                <!-- Modal Body: Danh sách Bảng xếp hạng (List/Table) -->
+                <div class="p-4 md:p-6 space-y-2.5 flex-1" id="leaderboardListBody" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-3" style="text-align: center; padding: 40px 20px;">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-400"></i>
+                        <p>Đang tải dữ liệu Huyết chiến đoạt vị...</p>
                     </div>
                 </div>
 
-                <!-- Nút Đóng -->
-                <button type="button" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700 cursor-pointer" onclick="closeLeaderboardModal()" title="Đóng bảng xếp hạng" style="width: 36px; height: 36px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <!-- Modal Subheader: Tóm tắt thông tin của người chơi hiện tại -->
-            <div id="leaderboardUserSummary" class="px-6 py-2.5 bg-slate-800/60 border-b border-slate-700/60 flex items-center justify-between text-xs" style="padding: 10px 24px; background: rgba(30, 41, 59, 0.55); border-bottom: 1px solid rgba(51, 65, 85, 0.5); display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
-                <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> Đang tải thông tin xếp hạng...</span>
-            </div>
-
-            <!-- Khu vực Admin độc tôn - "Chúa Tể Không Gian" (Nằm trên cùng, bên ngoài khung cuộn) -->
-            <div id="leaderboardAdminSection" class="px-4 md:px-6 pt-3.5 pb-1 hidden" style="padding: 14px 24px 4px 24px;"></div>
-
-            <!-- Modal Body: Danh sách Bảng xếp hạng (List/Table) -->
-            <div class="p-4 md:p-6 overflow-y-auto space-y-2.5 flex-1" id="leaderboardListBody" style="padding: 18px 24px; overflow-y: auto; flex: 1; max-height: calc(90vh - 165px); display: flex; flex-direction: column; gap: 10px;">
-                <div class="flex flex-col items-center justify-center py-12 text-slate-400 gap-3" style="text-align: center; padding: 40px 20px;">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-400"></i>
-                    <p>Đang tải dữ liệu Huyết chiến đoạt vị...</p>
+                <!-- Modal Footer -->
+                <div class="px-4 md:px-6 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i>
+                        <span>Ôn luyện (+2 EXP), thi thử (+10 EXP) để đột phá cảnh giới và leo rank!</span>
+                    </div>
+                    <button type="button" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition flex items-center gap-2 cursor-pointer shadow-md shadow-amber-500/20" onclick="closeLeaderboardModal()">
+                        <span>Đóng</span>
+                    </button>
                 </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="px-6 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400" style="padding: 12px 24px; background: #0b1120; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
-                <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-bolt text-amber-400"></i>
-                    <span>Ôn luyện (+2 EXP), thi thử (+10 EXP) để đột phá cảnh giới và leo rank!</span>
-                </div>
-                <button type="button" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition flex items-center gap-2 cursor-pointer shadow-md shadow-amber-500/20" onclick="closeLeaderboardModal()" style="padding: 7px 18px; border-radius: 10px; background: #f59e0b; color: #0f172a; font-weight: 700; border: none; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>Đóng</span>
-                </button>
             </div>
         </div>
     </div>

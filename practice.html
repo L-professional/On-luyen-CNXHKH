@@ -33,7 +33,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
     <!-- Tailwind CSS (preflight: false để bảo toàn toàn bộ CSS hiện hữu) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -43,36 +42,37 @@
             }
         }
     </script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="mode-learn" id="practice-body">
     <!-- ====================================================================
          HEADER CHO CHẾ ĐỘ ÔN LUYỆN (mode=learn)
          ==================================================================== -->
-    <header class="app-header learn-header-view">
-        <div class="header-left">
-            <button class="mobile-menu-btn shrink-0" id="mobile-menu-btn-learn" aria-label="Mở menu" onclick="toggleMobileSidebar()">
+    <header class="app-header learn-header-view flex items-center justify-between w-full px-2 md:px-4">
+        <div class="header-left flex items-center gap-2 md:gap-3">
+            <button class="mobile-menu-btn" id="mobile-menu-btn-learn" aria-label="Mở menu" onclick="toggleMobileSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <div class="header-brand-wrap" onclick="window.location.href='index.html'" title="Về trang chủ" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <div class="header-brand-wrap truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="window.location.href='index.html'" title="Về trang chủ">
                 <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
-                <div class="logo-text">
-                    <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
-                    <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+                <div class="logo-text truncate min-w-0">
+                    <h1 class="logo-title truncate">Ôn luyện trắc nghiệm</h1>
+                    <p class="logo-subtitle hidden md:block">Chủ nghĩa xã hội khoa học</p>
                 </div>
             </div>
         </div>
 
-        <div class="header-center">
+        <div class="header-center hidden md:flex">
             <div class="slogan-badge">
                 <i class="fa-solid fa-graduation-cap slogan-icon"></i>
                 <span class="slogan-text">Học đúng trọng tâm &nbsp;–&nbsp; Ôn chắc kiến thức &nbsp;–&nbsp; Vững bước tương lai!</span>
             </div>
         </div>
 
-        <div class="header-right">
+        <div class="header-right flex items-center gap-2 md:gap-3">
             <button class="btn-pause-learn" id="btn-header-finish-learn" onclick="finishLearnTopic()" title="Kết thúc / Nộp bài ôn tập" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: 1px solid #059669; font-weight: 700;">
                 <i class="fa-solid fa-flag-checkered"></i> <span>Kết thúc / Nộp bài</span>
             </button>
@@ -83,16 +83,16 @@
                 <i class="fa-solid fa-stopwatch-20"></i> <span>Kiểm tra</span>
             </button>
             <div class="notification-wrap" id="notification-wrap">
-                <button class="header-icon-btn shrink-0" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
+                <button class="header-icon-btn" id="btn-notification" title="Thông báo" onclick="toggleNotificationDropdown(event)">
                     <i class="fa-solid fa-bell"></i>
                     <span class="notification-dot" id="notification-dot" style="display: none;"></span>
                 </button>
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
-            <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
+            <div class="user-pill flex items-center gap-1.5 md:gap-2 cursor-pointer" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
                 <div class="avatar-wrapper rank-1 avatar-mini shrink-0" id="header-avatar-frame">L</div>
-                <span class="user-name" id="header-user-name">Khách</span>
-                <i class="fa-solid fa-chevron-down user-chevron"></i>
+                <span class="user-name hidden md:inline-block" id="header-user-name">Khách</span>
+                <i class="fa-solid fa-chevron-down user-chevron hidden md:inline-block"></i>
             </div>
         </div>
     </header>
@@ -100,14 +100,14 @@
     <!-- ====================================================================
          HEADER CHO CHẾ ĐỘ KIỂM TRA (mode=test)
          ==================================================================== -->
-    <header class="practice-header test-header-view">
-        <div class="header-left" onclick="confirmExit()" title="Quay về trang chủ">
+    <header class="practice-header test-header-view flex items-center justify-between w-full px-2 md:px-4">
+        <div class="header-left truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="confirmExit()" title="Quay về trang chủ">
             <div class="logo-icon shrink-0">
                 <i class="fa-solid fa-book-open"></i>
             </div>
-            <div class="logo-text">
-                <h1 class="logo-title">Ôn luyện trắc nghiệm</h1>
-                <p class="logo-subtitle">Chủ nghĩa xã hội khoa học</p>
+            <div class="logo-text truncate min-w-0">
+                <h1 class="logo-title truncate">Ôn luyện trắc nghiệm</h1>
+                <p class="logo-subtitle hidden md:block">Chủ nghĩa xã hội khoa học</p>
             </div>
         </div>
 
@@ -135,9 +135,9 @@
     <!-- ====================================================================
          MAIN WRAPPER: CHẾ ĐỘ ÔN LUYỆN (mode=learn) - BỐ CỤC 2 CỘT
          ==================================================================== -->
-    <div class="app-layout learn-layout-view max-w-7xl mx-auto w-full" id="learn-layout-container">
+    <div class="app-layout learn-layout-view" id="learn-layout-container">
         <!-- Sidebar Menu (Cột trái cố định trên PC, Drawer trên mobile) -->
-        <aside class="sidebar hidden md:flex" id="learn-sidebar">
+        <aside class="sidebar" id="learn-sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -220,7 +220,7 @@
         <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Right Area) -->
-        <main class="main-content">
+        <main class="main-content pb-20 md:pb-0">
             <!-- Topic Info Banner (Mockup 1) -->
             <section class="topic-info-banner">
                 <div class="tib-left">
@@ -385,7 +385,7 @@
     <!-- ====================================================================
          MAIN WRAPPER: CHẾ ĐỘ KIỂM TRA (mode=test) - BỐ CỤC 1 CỘT TẬP TRUNG
          ==================================================================== -->
-    <main class="practice-main-wrapper test-layout-view pb-24 max-w-5xl mx-auto w-full" id="test-layout-container">
+    <main class="practice-main-wrapper test-layout-view pb-24" id="test-layout-container">
         <!-- Box 1: Progress & Number Strip Card -->
         <section class="practice-progress-card">
             <div class="progress-info-row">
@@ -460,7 +460,7 @@
         <!-- Box 3: Footer Action Card (Đánh dấu câu hỏi & Nộp bài) -->
         <section class="practice-footer-card">
             <div class="flag-action-group" onclick="testToggleFlagCurrentQuestion()" title="Bấm để đánh dấu / bỏ đánh dấu câu này">
-                <div class="flag-icon-box shrink-0" id="test-flag-icon-box">
+                <div class="flag-icon-box" id="test-flag-icon-box">
                     <i class="fa-regular fa-bookmark" id="test-flag-icon"></i>
                 </div>
                 <div class="flag-text-content">
@@ -478,7 +478,7 @@
 
     <!-- Modal Cửa sổ Pop-up (Xác nhận thoát / Nộp bài / Kết quả thi) -->
     <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto" id="modal-card">
+        <div class="modal-card" id="modal-card">
             <!-- Injected dynamically -->
         </div>
     </div>

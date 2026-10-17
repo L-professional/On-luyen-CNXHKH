@@ -587,16 +587,16 @@ function updateAdminHeaderInfo() {
             let badgeEl = pill.querySelector('.header-user-rank-badge');
             if (!badgeEl && nameEl && nameEl.parentNode) {
                 badgeEl = document.createElement('span');
-                badgeEl.className = 'header-user-rank-badge';
+                badgeEl.className = 'header-user-rank-badge hidden md:flex';
                 nameEl.parentNode.insertBefore(badgeEl, nameEl.nextSibling);
             }
             if (badgeEl) {
                 if (isAdm) {
-                    badgeEl.className = 'header-user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]';
+                    badgeEl.className = 'header-user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)] hidden md:flex';
                     badgeEl.innerHTML = `<i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s;"></i> <span>Thiên Địa Pháp Tắc</span>`;
                     badgeEl.title = `Cảnh giới: Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)`;
                 } else {
-                    badgeEl.className = `header-user-rank-badge ${rank.badgeClass}`;
+                    badgeEl.className = `header-user-rank-badge ${rank.badgeClass} hidden md:flex`;
                     badgeEl.innerHTML = `<i class="${rank.icon}"></i> <span>${rank.name}</span>`;
                     badgeEl.title = `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
                 }
@@ -891,7 +891,7 @@ function renderUserTable(searchKeyword = '') {
                         </div>
                     </div>
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm" style="min-width: 220px;">
+                <td class="px-3 py-2 text-sm" style="min-width: 220px;">
                     ${statusHtml}
                 </td>
                 <td class="whitespace-nowrap px-3 py-2 text-sm">
@@ -1916,8 +1916,6 @@ function showAdminModal({ title, icon, content, actionText = 'Đóng', actionCal
     const modalCard = document.getElementById('modal-card');
     if (!modalBackdrop || !modalCard) return;
 
-    modalCard.className = 'modal-card w-[90%] md:w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto';
-
     modalCard.innerHTML = `
         <div class="modal-header">
             <h3 class="modal-title">
@@ -2384,35 +2382,35 @@ function renderFeedbackTable(searchKeyword = '', statusFilter = 'all') {
 
         return `
             <tr>
-                <td class="whitespace-nowrap" style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
-                <td class="whitespace-nowrap">
+                <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
+                <td>
                     <div class="user-row-name">
-                        <div class="avatar-circle shrink-0" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">${initial}</div>
+                        <div class="avatar-circle" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">${initial}</div>
                         <div>
                             <strong style="color: #1e293b; font-size: 13.5px;">${escapeHtml(sender)}</strong>
                         </div>
                     </div>
                 </td>
-                <td class="whitespace-nowrap" style="color: #64748b; font-size: 12.5px;">
+                <td style="color: #64748b; font-size: 12.5px;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px; font-size: 11px;"></i>
                     ${escapeHtml(f.createdAt || '')}
                 </td>
-                <td class="whitespace-nowrap">
+                <td>
                     <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 600;">
                         ${escapeHtml(f.type || 'Góp ý')}
                     </span>
                 </td>
-                <td class="whitespace-nowrap">
+                <td>
                     <div class="fb-content-title" title="${escapeHtml(f.title || '')}">${escapeHtml(f.title || '(Không có tiêu đề)')}</div>
                     <div class="fb-content-snippet" title="${escapeHtml(f.content || '')}">${escapeHtml(f.content || '')}</div>
                 </td>
-                <td class="whitespace-nowrap" style="text-align: center;">
+                <td style="text-align: center;">
                     <span class="fb-status-badge ${isResolved ? 'status-resolved' : 'status-pending'}" onclick="toggleFeedbackStatus(${f.id})" title="Nhấn để chuyển đổi trạng thái">
                         <i class="fa-solid ${isResolved ? 'fa-circle-check' : 'fa-clock'}"></i>
                         <span>${isResolved ? 'Đã xử lý' : 'Chờ duyệt'}</span>
                     </span>
                 </td>
-                <td class="whitespace-nowrap">
+                <td>
                     <div class="action-buttons-group">
                         <button type="button" class="btn-action" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;" onclick="viewFeedbackDetail(${f.id})" title="Xem chi tiết nội dung">
                             <i class="fa-regular fa-eye"></i>

@@ -239,7 +239,6 @@ button {
     align-items: center;
     justify-content: center;
     font-size: 13px;
-    flex-shrink: 0;
 }
 
 .user-name {
@@ -259,10 +258,6 @@ button {
 .app-layout {
     display: flex;
     min-height: calc(100vh - 68px);
-    max-width: 80rem;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
 }
 
 /* Sidebar (Left Menu Cố Định) */
@@ -4821,14 +4816,12 @@ body.sidebar-open .sidebar-backdrop {
     font-weight: 700;
     padding: 10px 14px;
     border-bottom: 1.5px solid #e2e8f0;
-    white-space: nowrap;
 }
 .feedback-history-table td {
     padding: 12px 14px;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
     vertical-align: top;
-    white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -4959,7 +4952,6 @@ body.sidebar-open .sidebar-backdrop {
 
     .sidebar.open,
     body.sidebar-open .sidebar {
-        display: flex !important;
         transform: translateX(320px);
         box-shadow: 6px 0 25px rgba(0, 0, 0, 0.22);
     }
@@ -8147,7 +8139,6 @@ body.sidebar-open .sidebar-backdrop {
     padding: 10px 12px !important;
     font-size: 13px !important;
     text-transform: uppercase;
-    white-space: nowrap !important;
 }
 
 .ancient-table tbody tr {
@@ -8166,7 +8157,6 @@ body.sidebar-open .sidebar-backdrop {
     border-top: 1px solid rgba(180, 83, 9, 0.15) !important;
     border-bottom: 1px solid rgba(180, 83, 9, 0.15) !important;
     color: #451a03 !important;
-    white-space: nowrap !important;
 }
 
 .ancient-table td:first-child {
@@ -8354,6 +8344,79 @@ body.sidebar-open .sidebar-backdrop {
     border-color: #f87171 !important;
     box-shadow: 0 0 10px rgba(220, 38, 38, 0.5) !important;
 }
+
+/* ==========================================================================
+   MOBILE VIEWPORT & NAVBAR ENHANCEMENTS (FREEDOM SCROLL & NO OVERLAPS)
+   ========================================================================== */
+.max-w-\[150px\] {
+    max-width: 150px !important;
+}
+
+.pb-20 {
+    padding-bottom: 5rem !important;
+}
+
+@media (min-width: 768px) {
+    .md\:max-w-none {
+        max-width: none !important;
+    }
+    .md\:pb-0 {
+        padding-bottom: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Top Navbar: justify-between, prevent overflow, space elements cleanly */
+    .app-header,
+    .practice-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-brand-wrap {
+        max-width: 150px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    /* Ẩn thẻ hiển thị vai trò / rank badge trên mobile: chỉ hiện Avatar */
+    .header-user-rank-badge {
+        display: none !important;
+    }
+
+    .user-pill .user-name,
+    .user-pill .user-chevron {
+        display: none !important;
+    }
+
+    .user-pill {
+        padding: 3px !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* Leaderboard Modal: Phủ kín màn hình di động & Giải phóng cuộn tự do */
+    #leaderboardModal {
+        padding: 0 !important;
+    }
+
+    #leaderboardModal > div {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        border: none !important;
+    }
+}
+
 
 
 
