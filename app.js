@@ -950,17 +950,23 @@ function updateHeaderRankDisplay() {
             badgeEl.title = `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
         }
 
-        // 2. Cập nhật Khung Avatar chuẩn hóa trên Header
+        // 2. Cập nhật Khung Avatar PNG thu nhỏ (.avatar-mini) trên Header
         const displayName = (user && (user.displayName || user.username)) || 'User';
-        const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+        const initial = displayName.charAt(0).toUpperCase();
         let frameEl = pill.querySelector('#header-avatar-frame') || pill.querySelector('.avatar-wrapper') || pill.querySelector('.avatar-frame');
-        if (frameEl) {
-            frameEl.outerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, 'header-avatar-frame');
-        } else {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, 'header-avatar-frame');
-            pill.insertBefore(tempDiv.firstElementChild, pill.firstChild);
+        if (!frameEl) {
+            frameEl = document.createElement('div');
+            frameEl.id = 'header-avatar-frame';
+            pill.insertBefore(frameEl, pill.firstChild);
         }
+        const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+        frameEl.className = `avatar-wrapper rank-${frameRankLevel} avatar-mini ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
+        if (user && user.photoURL) {
+            frameEl.innerHTML = `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.textContent='${initial}';" />`;
+        } else {
+            frameEl.textContent = initial;
+        }
+        frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
 
         const nameEl = pill.querySelector('.user-name');
         if (nameEl && user) {
@@ -969,14 +975,21 @@ function updateHeaderRankDisplay() {
     });
 
     // 3. Cập nhật tức thì vào Modal Tài khoản nếu Modal đang mở trên màn hình (không cần F5)
+    const displayName = (user && (user.displayName || user.username)) || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
     const modalCenterpiece = document.getElementById('modal-moba-centerpiece');
     const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+    const innerAvatar = (user && user.photoURL)
+        ? `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${initial}';" />`
+        : initial;
+
     if (modalCenterpiece) {
-        modalCenterpiece.innerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, '', 'w-16 h-16 md:w-20 md:h-20');
+        modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${frameRankLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${innerAvatar}</div>`;
     }
     const modalAvatarFrame = document.getElementById('modal-avatar-frame');
     if (modalAvatarFrame) {
-        modalAvatarFrame.outerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, 'modal-avatar-frame', 'w-12 h-12');
+        modalAvatarFrame.className = `avatar-wrapper rank-${frameRankLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
+        modalAvatarFrame.innerHTML = innerAvatar;
     }
     const modalUserCard = document.getElementById('modal-user-card');
     if (modalUserCard) {
@@ -1952,7 +1965,13 @@ function openUserMenuModal() {
     const stats = getUserStats();
     const rank = isAdm ? ADMIN_RANK : (stats.rank || getRankByExp(stats.exp));
     const displayName = user ? (user.displayName || user.username) : 'Chưa đăng nhập';
+    const initial = displayName.charAt(0).toUpperCase();
     const frameLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+    const photoURL = user ? user.photoURL : null;
+
+    const avatarInnerHtml = photoURL
+        ? `<img src="${escapeHtml(photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${initial}';" />`
+        : initial;
 
     showModal({
         title: 'Tài khoản người dùng',
@@ -1961,12 +1980,14 @@ function openUserMenuModal() {
             <div style="font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 14px;">
                 <!-- TÂM ĐIỂM KHUNG AVATAR PNG 6 CẤP ĐỘ -->
                 <div id="modal-moba-centerpiece" style="display: flex; justify-content: center; align-items: center; padding: 20px 0; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);">
-                    ${renderUniversalAvatarHtml(user, frameLevel, isAdm, '', 'w-16 h-16 md:w-20 md:h-20')}
+                    <div class="avatar-wrapper rank-${frameLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${avatarInnerHtml}</div>
                 </div>
 
                 <!-- Thông tin người dùng với Khung Avatar & Card theo Cấp độ (.rank-1 .. .rank-6) -->
                 <div class="modal-user-card rank-${frameLevel}" id="modal-user-card">
-                    ${renderUniversalAvatarHtml(user, frameLevel, isAdm, 'modal-avatar-frame', 'w-12 h-12')}
+                    <div class="avatar-wrapper rank-${frameLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}" id="modal-avatar-frame" style="width: 52px; height: 52px; font-size: 20px;">
+                        ${avatarInnerHtml}
+                    </div>
                     <div class="muc-info">
                         <div class="muc-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span style="font-weight: 700;">${escapeHtml(displayName)}</span>
@@ -5185,15 +5206,11 @@ function showModal({ title, icon, content, actionText = 'Đóng', actionCallback
     }
 
     modalBackdrop.classList.remove('hidden');
-    modalBackdrop.style.display = 'flex';
 }
 
 function closeModal() {
     const modalBackdrop = document.getElementById('modal-container');
-    if (modalBackdrop) {
-        modalBackdrop.classList.add('hidden');
-        modalBackdrop.style.display = 'none';
-    }
+    if (modalBackdrop) modalBackdrop.classList.add('hidden');
 
     if (appState.pendingLevelUp) {
         const rank = appState.pendingLevelUp;
@@ -5323,37 +5340,45 @@ function getLeaderboardUserRank(u, calculatedExp) {
  *   <img src="...avatar-frame.png..." class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110" />
  * </div>
  */
-function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '', sizeClasses = 'w-10 h-10 md:w-12 md:h-12') {
+function renderUniversalAvatarHtml(u, rankLevel, isAdm) {
     if (!u) u = {};
     const username = u.username || u.displayName || 'User';
-    const initialChar = (username.charAt(0) || 'U').toUpperCase();
+    const initialChar = username.charAt(0).toUpperCase();
     const photoURL = u.photoURL;
 
     const isGoogleUser = (username && (username.toLowerCase().includes('google') || username.startsWith('User_Google'))) ||
                          (photoURL && (photoURL.includes('googleusercontent') || photoURL.includes('google'))) ||
                          (u.email && u.email.includes('@') && photoURL);
 
-    let frameSrc = 'images/frame-1.png';
+    let frameImgSrc = 'images/frame-1.png';
+    let glowClass = '';
+
     if (isAdm) {
-        frameSrc = 'images/frame-6.png';
+        frameImgSrc = 'images/frame-6.png';
+        glowClass = 'avatar-frame-glow-admin';
     } else if (isGoogleUser) {
-        frameSrc = 'images/avatar-frame-cyan.png';
+        frameImgSrc = 'images/avatar-frame-cyan.png';
+        glowClass = 'avatar-frame-glow-google';
     } else {
         const lvl = Math.min(6, Math.max(1, parseInt(rankLevel, 10) || 1));
-        frameSrc = `images/frame-${lvl}.png`;
+        frameImgSrc = `images/frame-${lvl}.png`;
+        glowClass = `avatar-frame-glow-rank-${lvl}`;
     }
 
-    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(initialChar)}&background=1e293b&color=ffffff&bold=true`;
-    const avatarSrc = (photoURL && String(photoURL).trim()) ? photoURL : defaultAvatar;
-    const idAttr = customId ? ` id="${customId}"` : '';
+    const fallbackSvg = "data:image/svg+xml," + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#1e293b"/><text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-family="sans-serif" font-weight="800" font-size="28">${initialChar}</text></svg>`
+    );
+    const defaultAvatar = isAdm ? 'images/avatars/avatar_m1.jpg' : fallbackSvg;
+    const avatarUrl = (photoURL && photoURL.trim()) ? photoURL.trim() : defaultAvatar;
 
     return `
-<div${idAttr} class="relative flex items-center justify-center ${sizeClasses} shrink-0 rounded-full bg-gray-800">
-    <!-- 1. Ảnh Avatar thật hoặc Chữ cái -->
-    <img src="${avatarSrc}" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" onerror="this.onerror=null; this.src='${defaultAvatar}';" />
-    <!-- 2. Khung viền (Overlay Frame) - Bắt buộc dùng absolute và -translate -->
-    <img src="${frameSrc}" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10" />
-</div>
+        <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-gray-800" style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 9999px; background-color: #1f2937;" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+            <!-- 1. Ảnh Avatar hoặc Chữ cái -->
+            <img src="${escapeHtml(avatarUrl)}" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" style="width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; z-index: 0;" onerror="this.onerror=null; this.src='${fallbackSvg}';" />
+            
+            <!-- 2. Khung viền rồng (Frame) -->
+            <img src="${frameImgSrc}" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10 ${glowClass}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 135%; height: 135%; max-width: none; object-fit: contain; pointer-events: none; z-index: 10;" onerror="this.style.display='none'" />
+        </div>
     `.trim();
 }
 

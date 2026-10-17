@@ -519,37 +519,45 @@ function renderRankContainerHtml(level, username, options = {}) {
  *   <img src="...avatar-frame.png..." class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110" />
  * </div>
  */
-function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '', sizeClasses = 'w-10 h-10 md:w-12 md:h-12') {
+function renderUniversalAvatarHtml(u, rankLevel, isAdm) {
     if (!u) u = {};
     const username = u.username || u.displayName || 'User';
-    const initialChar = (username.charAt(0) || 'U').toUpperCase();
+    const initialChar = username.charAt(0).toUpperCase();
     const photoURL = u.photoURL;
 
     const isGoogleUser = (username && (username.toLowerCase().includes('google') || username.startsWith('User_Google'))) ||
                          (photoURL && (photoURL.includes('googleusercontent') || photoURL.includes('google'))) ||
                          (u.email && u.email.includes('@') && photoURL);
 
-    let frameSrc = 'images/frame-1.png';
+    let frameImgSrc = 'images/frame-1.png';
+    let glowClass = '';
+
     if (isAdm) {
-        frameSrc = 'images/frame-6.png';
+        frameImgSrc = 'images/frame-6.png';
+        glowClass = 'avatar-frame-glow-admin';
     } else if (isGoogleUser) {
-        frameSrc = 'images/avatar-frame-cyan.png';
+        frameImgSrc = 'images/avatar-frame-cyan.png';
+        glowClass = 'avatar-frame-glow-google';
     } else {
         const lvl = Math.min(6, Math.max(1, parseInt(rankLevel, 10) || 1));
-        frameSrc = `images/frame-${lvl}.png`;
+        frameImgSrc = `images/frame-${lvl}.png`;
+        glowClass = `avatar-frame-glow-rank-${lvl}`;
     }
 
-    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(initialChar)}&background=1e293b&color=ffffff&bold=true`;
-    const avatarSrc = (photoURL && String(photoURL).trim()) ? photoURL : defaultAvatar;
-    const idAttr = customId ? ` id="${customId}"` : '';
+    const fallbackSvg = "data:image/svg+xml," + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#1e293b"/><text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-family="sans-serif" font-weight="800" font-size="28">${initialChar}</text></svg>`
+    );
+    const defaultAvatar = isAdm ? 'images/avatars/avatar_m1.jpg' : fallbackSvg;
+    const avatarUrl = (photoURL && photoURL.trim()) ? photoURL.trim() : defaultAvatar;
 
     return `
-<div${idAttr} class="relative flex items-center justify-center ${sizeClasses} shrink-0 rounded-full bg-gray-800">
-    <!-- 1. Ảnh Avatar thật hoặc Chữ cái -->
-    <img src="${avatarSrc}" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" onerror="this.onerror=null; this.src='${defaultAvatar}';" />
-    <!-- 2. Khung viền (Overlay Frame) - Bắt buộc dùng absolute và -translate -->
-    <img src="${frameSrc}" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10" />
-</div>
+        <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-gray-800" style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 9999px; background-color: #1f2937;" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+            <!-- 1. Ảnh Avatar hoặc Chữ cái -->
+            <img src="${escapeHtml(avatarUrl)}" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" style="width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; z-index: 0;" onerror="this.onerror=null; this.src='${fallbackSvg}';" />
+            
+            <!-- 2. Khung viền rồng (Frame) -->
+            <img src="${frameImgSrc}" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10 ${glowClass}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 135%; height: 135%; max-width: none; object-fit: contain; pointer-events: none; z-index: 10;" onerror="this.style.display='none'" />
+        </div>
     `.trim();
 }
 
@@ -590,10 +598,13 @@ function updateAdminHeaderInfo() {
             }
         }
 
-        // Cập nhật Khung Avatar chuẩn hóa trên Header Admin
-        let frameEl = document.getElementById('header-avatar-frame');
+        // Cập nhật Khung Avatar PNG thu nhỏ trên Header Admin
+        const frameEl = document.getElementById('header-avatar-frame');
         if (frameEl) {
-            frameEl.outerHTML = renderUniversalAvatarHtml(user, isAdm ? 99 : rankLevel, isAdm, 'header-avatar-frame');
+            const initial = (user.username) ? user.username.charAt(0).toUpperCase() : 'A';
+            frameEl.className = isAdm ? `avatar-wrapper rank-6 avatar-mini` : `avatar-wrapper rank-${rankLevel} avatar-mini`;
+            frameEl.textContent = initial;
+            frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
         }
     } catch (e) {
         console.warn(e);
@@ -689,8 +700,6 @@ function renderUserTable(searchKeyword = '') {
                              (u.photoURL && (u.photoURL.includes('googleusercontent') || u.photoURL.includes('google'))) ||
                              (u.email && u.email.includes('@') && u.photoURL);
 
-        // Ký tự viết tắt chữ cái đầu
-        const initialChar = (u.username || 'U').charAt(0).toUpperCase();
 
         // Trạng thái hoạt động Online / Offline (Tách thành cột riêng)
         const isOnline = u.status === 'online';
@@ -821,8 +830,8 @@ function renderUserTable(searchKeyword = '') {
 
         return `
             <tr>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle" style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle">
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     <div class="user-row-name" style="display: flex; align-items: center; gap: 10px;">
                         <!-- Universal Avatar Frame Wrapper chuẩn -->
                         ${renderUniversalAvatarHtml(u, rankLevel, isUserAdmin)}
@@ -840,26 +849,26 @@ function renderUserTable(searchKeyword = '') {
                         </div>
                     </div>
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle">
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     ${statusHtml}
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle">
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     ${progressCellHtml}
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle">
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     ${passwordCellHtml}
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle">
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     <span class="role-badge ${roleClass}">
                         <i class="fa-solid ${roleIcon}"></i>
                         <span>${roleLabel}</span>
                     </span>
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle" style="color: #64748b; font-size: 12px;">
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="color: #64748b; font-size: 12px;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px; font-size: 10.5px;"></i>
                     ${u.createdAt || '08/10/2026'}
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 text-sm align-middle" style="text-align: center;">
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="text-align: center;">
                     ${actionsHtml}
                 </td>
             </tr>
@@ -1034,7 +1043,7 @@ function openBuffExpModal(userIdOrName) {
         targetInfoEl.innerHTML = `
             <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 38px; height: 38px; border-radius: 50%; background: #1e293b; border: 2px solid ${userRank.borderColor || '#3b82f6'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; overflow: hidden;">
-                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><span style="display: none;">${initialChar}</span>` : initialChar}
+                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${initialChar}';">` : initialChar}
                 </div>
                 <div>
                     <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
@@ -1190,7 +1199,7 @@ function openThienKiepModal(userIdOrName) {
         targetInfoEl.innerHTML = `
             <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 38px; height: 38px; border-radius: 50%; background: #180d1b; border: 2px solid ${userRank.borderColor || '#ef4444'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; overflow: hidden; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);">
-                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><span style="display: none;">${initialChar}</span>` : initialChar}
+                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${initialChar}';">` : initialChar}
                 </div>
                 <div>
                     <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
@@ -1897,15 +1906,11 @@ function showAdminModal({ title, icon, content, actionText = 'Đóng', actionCal
     }
 
     modalBackdrop.classList.remove('hidden');
-    modalBackdrop.style.display = 'flex';
 }
 
 function closeAdminModal() {
     const modalBackdrop = document.getElementById('modal-container');
-    if (modalBackdrop) {
-        modalBackdrop.classList.add('hidden');
-        modalBackdrop.style.display = 'none';
-    }
+    if (modalBackdrop) modalBackdrop.classList.add('hidden');
 }
 
 function closeAdminModalOnBackdrop(e) {
@@ -1962,9 +1967,8 @@ function openAdminUserMenu() {
     const userStr = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     const user = userStr ? JSON.parse(userStr) : { username: 'Admin', role: 'admin' };
 
-    const isAdm = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || user.isRoot;
-    const exp = isAdm ? Infinity : getUserExp(user.username, user);
-    const rank = isAdm ? ADMIN_RANK : getRankByExp(exp);
+    const exp = getUserExp(user.username, user);
+    const rank = getRankByExp(exp);
     const rankLevel = rank.level;
 
     showAdminModal({
@@ -1974,14 +1978,16 @@ function openAdminUserMenu() {
             <div style="font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 14px;">
                 <!-- TÂM ĐIỂM KHUNG AVATAR PNG 6 CẤP ĐỘ -->
                 <div id="modal-moba-centerpiece" style="display: flex; justify-content: center; align-items: center; padding: 20px 0; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);">
-                    ${renderUniversalAvatarHtml(user, rankLevel, isAdm, '', 'w-16 h-16 md:w-20 md:h-20')}
+                    <div class="avatar-wrapper rank-${rankLevel} avatar-large">${user.username ? user.username.charAt(0).toUpperCase() : 'A'}</div>
                 </div>
 
                 <div class="modal-user-card rank-${rankLevel}" id="modal-user-card">
-                    ${renderUniversalAvatarHtml(user, rankLevel, isAdm, 'modal-avatar-frame', 'w-12 h-12')}
+                    <div class="avatar-wrapper rank-${rankLevel}" id="modal-avatar-frame" style="width: 52px; height: 52px; font-size: 20px;">
+                        ${user.username ? user.username.charAt(0).toUpperCase() : 'A'}
+                    </div>
                     <div class="muc-info">
-                        <strong class="muc-name">${escapeHtml(user.displayName || user.username || 'Admin')}</strong>
-                        <div class="muc-role">${isAdm ? 'Chúa Tể Không Gian (Admin)' : 'Quản trị viên hệ thống (Admin)'}</div>
+                        <strong class="muc-name">${user.username}</strong>
+                        <div class="muc-role">Quản trị viên hệ thống (Admin)</div>
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">

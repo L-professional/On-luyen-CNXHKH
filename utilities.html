@@ -55,12 +55,7 @@
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
-                <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-gray-800" id="header-avatar-frame">
-                    <!-- 1. Ảnh Avatar thật hoặc Chữ cái -->
-                    <img src="https://ui-avatars.com/api/?name=U&background=1e293b&color=ffffff&bold=true" alt="Avatar" class="w-full h-full rounded-full object-cover z-0" />
-                    <!-- 2. Khung viền (Overlay Frame) - Bắt buộc dùng absolute và -translate -->
-                    <img src="images/frame-1.png" alt="Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[135%] h-[135%] max-w-none object-contain pointer-events-none z-10" />
-                </div>
+                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">U</div>
                 <span class="user-name" id="header-user-name">Đang tải...</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -554,7 +549,7 @@
     </nav>
 
     <!-- Modal Cửa sổ Dùng chung -->
-    <div id="modal-container" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="closeModalOnBackdrop(event)">
+    <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
         <div class="modal-card" id="modal-card"></div>
     </div>
 
