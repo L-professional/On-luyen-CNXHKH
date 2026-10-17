@@ -2928,18 +2928,72 @@ body.mode-test .test-layout-view {
     background-color: #f8fafc;
     color: #475569;
     font-weight: 700;
-    padding: 13px 16px;
+    padding: 8px 12px;
     border-bottom: 1.5px solid #e2e8f0;
-    font-size: 12.5px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
 .admin-table td {
-    padding: 13px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
     vertical-align: middle;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.admin-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.admin-dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    width: 200px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    z-index: 9999;
+    padding: 4px 0;
+    text-align: left;
+    animation: adminDropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes adminDropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.admin-dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-dropdown-item:hover {
+    background-color: #f1f5f9 !important;
 }
 
 .admin-table tbody tr:hover {
@@ -8026,7 +8080,7 @@ body.sidebar-open .sidebar-backdrop {
     border: 2px solid #854d0e !important;
     box-shadow: 0 4px 20px rgba(133, 77, 14, 0.18), inset 0 0 25px rgba(180, 83, 9, 0.08) !important;
     border-radius: 14px !important;
-    font-family: 'Georgia', 'Times New Roman', 'Noto Serif', serif !important;
+    font-family: 'Merriweather', 'Times New Roman', 'Noto Serif', serif !important;
 }
 
 .ancient-scroll-header {
@@ -8037,7 +8091,7 @@ body.sidebar-open .sidebar-backdrop {
 .ancient-scroll-title {
     color: #78350f !important;
     font-weight: 800 !important;
-    font-family: 'Georgia', serif !important;
+    font-family: 'Merriweather', 'Times New Roman', serif !important;
     letter-spacing: 0.5px;
 }
 
@@ -8051,7 +8105,7 @@ body.sidebar-open .sidebar-backdrop {
     width: 100%;
     border-collapse: separate !important;
     border-spacing: 0 6px !important;
-    font-family: 'Georgia', serif !important;
+    font-family: 'Merriweather', 'Times New Roman', serif !important;
 }
 
 .ancient-table thead tr th {

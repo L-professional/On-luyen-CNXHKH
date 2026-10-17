@@ -459,8 +459,9 @@ function getCurrentUser() {
 function checkAdminMenu() {
     const user = getCurrentUser();
     const adminMenuItems = document.querySelectorAll('#admin-menu-item, .admin-menu-item-sync');
+    const isAdmin = user && ((user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || user.isRoot);
     adminMenuItems.forEach(item => {
-        if (user && user.role === 'admin') {
+        if (isAdmin) {
             item.style.display = 'block';
         } else {
             item.style.display = 'none';

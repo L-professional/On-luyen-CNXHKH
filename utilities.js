@@ -1149,8 +1149,9 @@ function markAllNotificationsAsRead() {
 
 function checkAdminMenu(user) {
     const adminMenuItem = document.getElementById('admin-menu-item');
+    const isAdm = user && ((user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin') || user.isRoot);
     if (adminMenuItem) {
-        adminMenuItem.style.display = (user && user.role === 'admin') ? 'block' : 'none';
+        adminMenuItem.style.display = isAdm ? 'block' : 'none';
     }
     const leaderboardBtns = document.querySelectorAll('#btnLeaderboard, .btn-leaderboard');
     leaderboardBtns.forEach(btn => {
@@ -1373,12 +1374,12 @@ function renderStatsTab() {
         }
 
         const radarLabels = [
-            'CĐ 1: Đối Tượng & PP',
-            'CĐ 2: Sự Ra Đời CNXH',
-            'CĐ 3: Sứ Mệnh GCCN',
-            'CĐ 4: Đặc Trưng CNXH',
-            'CĐ 5: Hình Thái KT-XH',
-            'CĐ 6: Quá Độ Lên CNXH'
+            'CĐ 1: Đối tượng & PP',
+            'CĐ 2: Sự ra đời',
+            'CĐ 3: Sứ mệnh lịch sử',
+            'CĐ 4: Đặc trưng CNXH',
+            'CĐ 5: Hình thái KT-XH',
+            'CĐ 6: Quá độ lên CNXH'
         ];
 
         const radarScores = [1, 2, 3, 4, 5, 6].map(id => {
@@ -1408,6 +1409,9 @@ function renderStatsTab() {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                layout: {
+                    padding: 20
+                },
                 scales: {
                     r: {
                         min: 0,
@@ -1426,7 +1430,7 @@ function renderStatsTab() {
                         },
                         pointLabels: {
                             color: '#78350f',
-                            font: { size: 12, weight: 'bold', family: "'Georgia', serif" }
+                            font: { size: 11, weight: 'bold', family: "'Inter', sans-serif" }
                         }
                     }
                 },
@@ -1434,7 +1438,7 @@ function renderStatsTab() {
                     legend: {
                         labels: {
                             color: '#78350f',
-                            font: { size: 13, weight: 'bold' }
+                            font: { size: 13, weight: 'bold', family: "'Inter', sans-serif" }
                         }
                     }
                 }
@@ -1620,7 +1624,7 @@ function renderHistoryTab() {
                 <div class="empty-state-icon" style="background: rgba(180, 83, 9, 0.15); color: #78350f;">
                     <i class="fa-solid fa-monument"></i>
                 </div>
-                <h4 class="empty-state-title" style="color: #78350f; font-family: 'Georgia', serif;">Chưa Từng Vượt Ải Độ Kiếp Nào!</h4>
+                <h4 class="empty-state-title" style="color: #78350f; font-family: 'Merriweather', 'Times New Roman', serif;">Chưa Từng Vượt Ải Độ Kiếp Nào!</h4>
                 <p class="empty-state-desc" style="color: #92400e;">
                     Thạch bia luân hồi vẫn còn để trống. Hãy nhập trận Bí Cảnh để thiên đạo ghi danh chiến tích của đạo hữu vào sử sách.
                 </p>

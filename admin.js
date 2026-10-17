@@ -812,85 +812,115 @@ function renderUserTable(searchKeyword = '') {
                    <span>${userRank.displayName || userRank.name}</span>
                </span>`;
 
+        let actionsHtml = '';
+        if (isUserAdmin) {
+            actionsHtml = `
+                <div class="action-buttons-group flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <button type="button" class="btn-action btn-edit-pwd px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                        <i class="fa-solid fa-key text-[10px]"></i>
+                        <span>Sửa MK</span>
+                    </button>
+                    ${isRootAdmin ? `
+                        <span class="text-[11px] text-slate-400 font-semibold px-2 py-1 bg-slate-100 rounded border border-slate-200" title="Tài khoản Admin gốc mặc định bảo vệ">[Mặc định]</span>
+                    ` : `
+                        <button type="button" class="btn-action btn-edit-name px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="changeUsername('${escapeHtml(userId)}')" title="Đổi tên đăng nhập cho ${escapeHtml(u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                            <i class="fa-solid fa-pen text-[10px]"></i>
+                            <span>Sửa Tên</span>
+                        </button>
+                        <button type="button" class="btn-action btn-delete px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="handleDeleteUser('${escapeHtml(userId)}')" title="Xóa tài khoản ${escapeHtml(u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                            <i class="fa-solid fa-trash-can text-[10px]"></i>
+                            <span>Xóa</span>
+                        </button>
+                    `}
+                </div>
+            `;
+        } else {
+            actionsHtml = `
+                <div class="action-buttons-group flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <button type="button" class="btn-action btn-buff-exp px-2 py-1 text-xs whitespace-nowrap font-bold" onclick="openBuffExpModal('${escapeHtml(userId)}')" title="Ban tạo hóa buff EXP cho ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; border: 1px solid #f97316; box-shadow: 0 1px 4px rgba(245, 158, 11, 0.35); display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 6px; font-size: 11.5px; cursor: pointer;">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                        <span>✨ Ban Tạo Hóa</span>
+                    </button>
+                    <div class="admin-dropdown-wrapper relative inline-block text-left">
+                        <button type="button" class="btn-action btn-than-thong px-2 py-1 text-xs whitespace-nowrap font-semibold" onclick="toggleAdminDropdown('${escapeHtml(userId)}', event)" title="Thần Thông Chưởng Quản" style="background: #1e293b; color: #f8fafc; border: 1px solid #475569; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11.5px; cursor: pointer;">
+                            <i class="fa-solid fa-gear text-[10px]"></i>
+                            <span>⚙️ Thần Thông</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] ml-0.5"></i>
+                        </button>
+                        <div id="admin-dropdown-${escapeHtml(userId)}" class="admin-dropdown-menu">
+                            <button type="button" class="admin-dropdown-item" onclick="openThienKiepModal('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #dc2626;">
+                                <i class="fa-solid fa-bolt-lightning" style="width: 14px; color: #dc2626;"></i>
+                                <span>⚡ Giáng Thiên Kiếp</span>
+                            </button>
+                            <button type="button" class="admin-dropdown-item" onclick="pheBoTuVi('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #ea580c;">
+                                <i class="fa-solid fa-fire" style="width: 14px; color: #ea580c;"></i>
+                                <span>🔥 Phế Bỏ Tu Vi</span>
+                            </button>
+                            <button type="button" class="admin-dropdown-item" onclick="toggleBanUser('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #475569;">
+                                <i class="fa-solid ${u.banned ? 'fa-unlock' : 'fa-link'}" style="width: 14px; color: #475569;"></i>
+                                <span>${u.banned ? '🔓 Đại Xá Hắc Lao' : '⛓️ Đả Nhập Hắc Lao'}</span>
+                            </button>
+                            <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
+                            <button type="button" class="admin-dropdown-item" onclick="openEditPasswordModal('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #2563eb;">
+                                <i class="fa-solid fa-key" style="width: 14px; color: #2563eb;"></i>
+                                <span>🔑 Sửa Mật Khẩu</span>
+                            </button>
+                            <button type="button" class="admin-dropdown-item" onclick="changeUsername('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #059669;">
+                                <i class="fa-solid fa-pen" style="width: 14px; color: #059669;"></i>
+                                <span>✏️ Sửa Tên Đăng Nhập</span>
+                            </button>
+                            <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
+                            <button type="button" class="admin-dropdown-item" onclick="handleDeleteUser('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #ef4444;">
+                                <i class="fa-solid fa-trash-can" style="width: 14px; color: #ef4444;"></i>
+                                <span>🗑️ Xóa Tài Khoản</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         return `
             <tr>
-                <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
-                <td>
-                    <div class="user-row-name" style="display: flex; align-items: center; gap: 12px;">
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
+                    <div class="user-row-name" style="display: flex; align-items: center; gap: 10px;">
                         <!-- Universal Avatar Frame Wrapper chuẩn -->
                         ${renderUniversalAvatarHtml(u, rankLevel, isUserAdmin)}
 
                         <!-- Cột Tên đăng nhập và Badge cấp độ bên cạnh -->
-                        <div style="display: flex; flex-direction: column; gap: 3px;">
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <strong style="color: #1e293b; font-size: 14.5px; font-weight: 700;">${escapeHtml(u.username)}</strong>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <strong style="color: #1e293b; font-size: 14px; font-weight: 700;">${escapeHtml(u.username)}</strong>
                                 ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
                                 ${u.banned ? '<span class="badge-hac-lao" title="Đang bị giam giữ tại Hắc Lao"><i class="fa-solid fa-link"></i> Hắc Lao</span>' : ''}
                                 ${rankBadgeHtml}
                             </div>
-                            ${(isGoogleUser && u.email) ? `<div style="font-size: 11px; color: #64748b; line-height: 1;"><i class="fa-solid fa-envelope" style="font-size: 9.5px; margin-right: 3px;"></i>${escapeHtml(u.email)}</div>` : ''}
+                            ${(isGoogleUser && u.email) ? `<div style="font-size: 10.5px; color: #64748b; line-height: 1;"><i class="fa-solid fa-envelope" style="font-size: 9px; margin-right: 3px;"></i>${escapeHtml(u.email)}</div>` : ''}
                         </div>
                     </div>
                 </td>
-                <td style="white-space: nowrap;">
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     ${statusHtml}
                 </td>
-                <td>
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     ${progressCellHtml}
                 </td>
-                <td>
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     ${passwordCellHtml}
                 </td>
-                <td>
+                <td class="whitespace-nowrap px-3 py-2 text-sm">
                     <span class="role-badge ${roleClass}">
                         <i class="fa-solid ${roleIcon}"></i>
                         <span>${roleLabel}</span>
                     </span>
                 </td>
-                <td style="color: #64748b; font-size: 13px;">
-                    <i class="fa-regular fa-calendar" style="margin-right: 4px; font-size: 11px;"></i>
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="color: #64748b; font-size: 12px;">
+                    <i class="fa-regular fa-calendar" style="margin-right: 4px; font-size: 10.5px;"></i>
                     ${u.createdAt || '08/10/2026'}
                 </td>
-                <td>
-                    <div class="action-buttons-group">
-                        ${!isUserAdmin ? `
-                            <button type="button" class="btn-action btn-buff-exp" onclick="openBuffExpModal('${escapeHtml(userId)}')" title="Ban tạo hóa buff EXP cho ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; border: 1px solid #f97316; font-weight: 700; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35); display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                <span>✨ Ban tạo hóa</span>
-                            </button>
-                            <button type="button" class="btn-action btn-penalty-exp" onclick="openThienKiepModal('${escapeHtml(userId)}')" title="Giáng thiên kiếp trừ EXP của ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; border: 1px solid #ef4444; font-weight: 700; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.45); display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                                <i class="fa-solid fa-bolt-lightning"></i>
-                                <span>⚡ Giáng Thiên Kiếp</span>
-                            </button>
-                            <button type="button" class="btn-action btn-phe-bo" onclick="pheBoTuVi('${escapeHtml(userId)}')" title="Phế bỏ toàn bộ tu vi EXP về 0, giáng xuống Phàm Cảnh cho ${escapeHtml(u.username)}" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                                <i class="fa-solid fa-fire"></i>
-                                <span>🔥 Phế Bỏ Tu Vi</span>
-                            </button>
-                            <button type="button" class="btn-action btn-hac-lao" onclick="toggleBanUser('${escapeHtml(userId)}')" title="${u.banned ? 'Đại xá khỏi hắc lao cho ' + escapeHtml(u.username) : 'Đả nhập hắc lao phong ấn ' + escapeHtml(u.username)}" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                                <i class="fa-solid ${u.banned ? 'fa-unlock' : 'fa-link'}"></i>
-                                <span>${u.banned ? '🔓 Đại Xá' : '⛓️ Đả Nhập Hắc Lao'}</span>
-                            </button>
-                        ` : ''}
-                        <button type="button" class="btn-action btn-edit-pwd" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}">
-                            <i class="fa-solid fa-key"></i>
-                            <span>Sửa MK</span>
-                        </button>
-                        <button type="button" class="btn-action btn-edit-name" onclick="changeUsername('${escapeHtml(userId)}')" title="Đổi tên đăng nhập cho ${escapeHtml(u.username)}">
-                            <i class="fa-solid fa-pen"></i>
-                            <span>Sửa Tên</span>
-                        </button>
-                        ${isRootAdmin ? `
-                            <button type="button" class="btn-action btn-delete btn-disabled" disabled title="Tài khoản Admin gốc không được phép xóa">
-                                <i class="fa-solid fa-lock"></i>
-                                <span>Mặc định</span>
-                            </button>
-                        ` : `
-                            <button type="button" class="btn-action btn-delete" onclick="handleDeleteUser('${escapeHtml(userId)}')" title="Xóa tài khoản ${escapeHtml(u.username)}">
-                                <i class="fa-solid fa-trash-can"></i>
-                                <span>Xóa</span>
-                            </button>
-                        `}
-                    </div>
+                <td class="whitespace-nowrap px-3 py-2 text-sm" style="text-align: center;">
+                    ${actionsHtml}
                 </td>
             </tr>
         `;
@@ -1536,6 +1566,38 @@ async function toggleBanUser(userId) {
 
 window.pheBoTuVi = pheBoTuVi;
 window.toggleBanUser = toggleBanUser;
+
+/**
+ * Điều khiển Dropdown Thần Thông trong bảng Admin
+ */
+function toggleAdminDropdown(userId, event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const targetMenu = document.getElementById(`admin-dropdown-${userId}`);
+    const wasOpen = targetMenu && targetMenu.style.display === 'block';
+    closeAllAdminDropdowns();
+    if (targetMenu && !wasOpen) {
+        targetMenu.style.display = 'block';
+    }
+}
+
+function closeAllAdminDropdowns() {
+    document.querySelectorAll('.admin-dropdown-menu').forEach(el => {
+        el.style.display = 'none';
+    });
+}
+
+window.toggleAdminDropdown = toggleAdminDropdown;
+window.closeAllAdminDropdowns = closeAllAdminDropdowns;
+
+// Đóng dropdown khi click ra ngoài
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.admin-dropdown-wrapper')) {
+        closeAllAdminDropdowns();
+    }
+});
 
 /**
  * Đổi tên người dùng (Task 3: Admin User Rename)
