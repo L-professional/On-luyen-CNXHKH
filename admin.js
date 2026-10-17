@@ -519,10 +519,10 @@ function renderRankContainerHtml(level, username, options = {}) {
  *   <img src="...avatar-frame.png..." class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110" />
  * </div>
  */
-function renderUniversalAvatarHtml(u, rankLevel, isAdm) {
+function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '') {
     if (!u) u = {};
     const username = u.username || u.displayName || 'User';
-    const initialChar = username.charAt(0).toUpperCase();
+    const initialChar = (username.charAt(0) || 'U').toUpperCase();
     const photoURL = u.photoURL;
 
     const isGoogleUser = (username && (username.toLowerCase().includes('google') || username.startsWith('User_Google'))) ||
@@ -544,16 +544,19 @@ function renderUniversalAvatarHtml(u, rankLevel, isAdm) {
         glowClass = `avatar-frame-glow-rank-${lvl}`;
     }
 
-    const fallbackLetterHtml = `<div class="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${initialChar}</div>`;
+    const fallbackLetter = `<div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`;
 
     const avatarInnerHtml = photoURL
-        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${fallbackLetterHtml}';" />`
-        : fallbackLetterHtml;
+        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+           <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`
+        : fallbackLetter;
+
+    const idAttr = customId ? `id="${customId}" ` : '';
 
     return `
-        <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0" style="position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+        <div ${idAttr}class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
             ${avatarInnerHtml}
-            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute inset-0 w-full h-full pointer-events-none z-10 scale-110 object-contain ${glowClass}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 10; transform: scale(1.1);" onerror="this.style.display='none'" />
+            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 scale-110 ${glowClass}" onerror="this.style.display='none'" />
         </div>
     `.trim();
 }
@@ -595,13 +598,10 @@ function updateAdminHeaderInfo() {
             }
         }
 
-        // Cập nhật Khung Avatar PNG thu nhỏ trên Header Admin
-        const frameEl = document.getElementById('header-avatar-frame');
+        // Cập nhật Khung Avatar chuẩn hóa trên Header Admin
+        let frameEl = document.getElementById('header-avatar-frame');
         if (frameEl) {
-            const initial = (user.username) ? user.username.charAt(0).toUpperCase() : 'A';
-            frameEl.className = isAdm ? `avatar-wrapper rank-6 avatar-mini` : `avatar-wrapper rank-${rankLevel} avatar-mini`;
-            frameEl.textContent = initial;
-            frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.name} (${exp} EXP)`;
+            frameEl.outerHTML = renderUniversalAvatarHtml(user, isAdm ? 99 : rankLevel, isAdm, 'header-avatar-frame');
         }
     } catch (e) {
         console.warn(e);
@@ -750,11 +750,8 @@ function renderUserTable(searchKeyword = '') {
             }
         }
 
-        // Render nội dung Avatar (ảnh thật hoặc chữ cái đầu)
+        // Ký tự viết tắt chữ cái đầu
         const initialChar = (u.username || 'U').charAt(0).toUpperCase();
-        const avatarContentHtml = u.photoURL
-            ? `<img src="${escapeHtml(u.photoURL)}" alt="${escapeHtml(u.username)}" class="w-full h-full rounded-full object-cover" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'font-weight: 800; font-size: 13.5px; text-transform: uppercase;\\'>${initialChar}</span>';">`
-            : `<span style="font-weight: 800; font-size: 13.5px; text-transform: uppercase;">${initialChar}</span>`;
 
         // Trạng thái hoạt động Online / Offline (Tách thành cột riêng)
         const isOnline = u.status === 'online';
@@ -1098,7 +1095,7 @@ function openBuffExpModal(userIdOrName) {
         targetInfoEl.innerHTML = `
             <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 38px; height: 38px; border-radius: 50%; background: #1e293b; border: 2px solid ${userRank.borderColor || '#3b82f6'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; overflow: hidden;">
-                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${initialChar}';">` : initialChar}
+                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><span style="display: none;">${initialChar}</span>` : initialChar}
                 </div>
                 <div>
                     <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
@@ -1254,7 +1251,7 @@ function openThienKiepModal(userIdOrName) {
         targetInfoEl.innerHTML = `
             <div class="flex items-center gap-3" style="display: flex; align-items: center; gap: 12px;">
                 <div style="width: 38px; height: 38px; border-radius: 50%; background: #180d1b; border: 2px solid ${userRank.borderColor || '#ef4444'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; overflow: hidden; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);">
-                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerText='${initialChar}';">` : initialChar}
+                    ${user.photoURL ? `<img src="${escapeHtml(user.photoURL)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><span style="display: none;">${initialChar}</span>` : initialChar}
                 </div>
                 <div>
                     <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">

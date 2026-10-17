@@ -185,7 +185,10 @@
                 <span class="notification-dot"></span>
             </button>
             <div class="user-pill" id="user-pill" onclick="openAdminUserMenu()" title="Tài khoản Quản trị">
-                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">A</div>
+                <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" id="header-avatar-frame">
+                    <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">A</div>
+                    <img src="images/frame-6.png" alt="Avatar Frame" class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 scale-110 avatar-frame-glow-admin" onerror="this.style.display='none'" />
+                </div>
                 <span class="user-name" id="admin-user-display-name">Admin</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -513,7 +516,7 @@
     </div>
 
     <!-- Modal chi tiết thống kê 6 chủ đề (statsDetailModal) -->
-    <div id="statsDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'statsDetailModal') closeStatsDetailModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center;">
+    <div id="statsDetailModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'statsDetailModal') closeStatsDetailModal()" style="display: none; position: fixed; inset: 0; z-index: 100000; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-slate-200 transform transition-all modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 680px; margin: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column; max-height: 90vh;">
             <!-- Modal Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 modal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
@@ -546,7 +549,7 @@
     </div>
 
     <!-- Modal "Ban phát Cơ duyên" (Ban tạo hóa buff EXP) -->
-    <div id="buffExpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'buffExpModal') closeBuffExpModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 16px;">
+    <div id="buffExpModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'buffExpModal') closeBuffExpModal()" style="display: none; position: fixed; inset: 0; z-index: 100000; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px;">
         <div class="bg-slate-900 text-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden border border-amber-500/40 flex flex-col modal-card" style="background: #0f172a; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 35px rgba(245, 158, 11, 0.25); border: 1.5px solid rgba(245, 158, 11, 0.45); display: flex; flex-direction: column;">
             
             <!-- Modal Header -->
@@ -632,7 +635,7 @@
     </div>
 
     <!-- Modal "Giáng hạ Lôi Kiếp" (Giáng Thiên Kiếp trừ EXP) -->
-    <div id="thienKiepModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden modal-backdrop" onclick="if(event.target.id === 'thienKiepModal') closeThienKiepModal()" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(10, 10, 20, 0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+    <div id="thienKiepModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="if(event.target.id === 'thienKiepModal') closeThienKiepModal()" style="display: none; position: fixed; inset: 0; z-index: 100000; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px;">
         <div class="bg-slate-950 text-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden border border-red-600/50 flex flex-col modal-card" style="background: #090d16; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(220, 38, 38, 0.35); border: 1.5px solid rgba(220, 38, 38, 0.6); display: flex; flex-direction: column;">
             
             <!-- Modal Header: Sắc thái hắc ám, tia sét -->
@@ -718,7 +721,7 @@
     </div>
 
     <!-- Reusable Modal Window -->
-    <div id="modal-container" class="modal-backdrop hidden" onclick="closeAdminModalOnBackdrop(event)">
+    <div id="modal-container" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="closeAdminModalOnBackdrop(event)">
         <div class="modal-card" id="modal-card">
             <!-- Modal Header, Body, Footer injected dynamically -->
         </div>

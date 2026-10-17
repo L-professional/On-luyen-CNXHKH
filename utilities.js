@@ -286,7 +286,52 @@ function getRankProgress(exp) {
 }
 
 /**
- * Cập nhật huy hiệu cấp độ trên Header User Pill & Khung Avatar 6 Cấp độ
+ * Render Avatar khung viền chuẩn hóa
+ */
+function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '') {
+    if (!u) u = {};
+    const username = u.username || u.displayName || 'User';
+    const initialChar = (username.charAt(0) || 'U').toUpperCase();
+    const photoURL = u.photoURL;
+
+    const isGoogleUser = (username && (username.toLowerCase().includes('google') || username.startsWith('User_Google'))) ||
+                         (photoURL && (photoURL.includes('googleusercontent') || photoURL.includes('google'))) ||
+                         (u.email && u.email.includes('@') && photoURL);
+
+    let frameImgSrc = 'images/frame-1.png';
+    let glowClass = '';
+
+    if (isAdm) {
+        frameImgSrc = 'images/frame-6.png';
+        glowClass = 'avatar-frame-glow-admin';
+    } else if (isGoogleUser) {
+        frameImgSrc = 'images/avatar-frame-cyan.png';
+        glowClass = 'avatar-frame-glow-google';
+    } else {
+        const lvl = Math.min(6, Math.max(1, parseInt(rankLevel, 10) || 1));
+        frameImgSrc = `images/frame-${lvl}.png`;
+        glowClass = `avatar-frame-glow-rank-${lvl}`;
+    }
+
+    const fallbackLetter = `<div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`;
+
+    const avatarInnerHtml = photoURL
+        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+           <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`
+        : fallbackLetter;
+
+    const idAttr = customId ? `id="${customId}" ` : '';
+
+    return `
+        <div ${idAttr}class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+            ${avatarInnerHtml}
+            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 scale-110 ${glowClass}" onerror="this.style.display='none'" />
+        </div>
+    `.trim();
+}
+
+/**
+ * Cập nhật hiển thị Cảnh giới (Huy hiệu & Khung Avatar) trên Header Navbar của utilities
  */
 function updateHeaderRankDisplay() {
     const user = getCurrentUser();
@@ -321,23 +366,17 @@ function updateHeaderRankDisplay() {
             badgeEl.title = `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
         }
 
-        // 2. Cập nhật Khung Avatar PNG thu nhỏ (.avatar-mini) trên Header
+        // 2. Cập nhật Khung Avatar chuẩn hóa trên Header
         const displayName = (user && (user.displayName || user.username)) || 'User';
-        const initial = displayName.charAt(0).toUpperCase();
-        let frameEl = pill.querySelector('#header-avatar-frame') || pill.querySelector('.avatar-wrapper') || pill.querySelector('.avatar-frame');
-        if (!frameEl) {
-            frameEl = document.createElement('div');
-            frameEl.id = 'header-avatar-frame';
-            pill.insertBefore(frameEl, pill.firstChild);
-        }
         const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
-        frameEl.className = `avatar-wrapper rank-${frameRankLevel} avatar-mini ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
-        if (user && user.photoURL) {
-            frameEl.innerHTML = `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.textContent='${initial}';" />`;
+        let frameEl = pill.querySelector('#header-avatar-frame') || pill.querySelector('.avatar-wrapper') || pill.querySelector('.avatar-frame');
+        if (frameEl) {
+            frameEl.outerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, 'header-avatar-frame');
         } else {
-            frameEl.textContent = initial;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, 'header-avatar-frame');
+            pill.insertBefore(tempDiv.firstElementChild, pill.firstChild);
         }
-        frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
 
         const nameEl = pill.querySelector('.user-name');
         if (nameEl && user) {
@@ -351,8 +390,8 @@ function updateHeaderRankDisplay() {
     const modalCenterpiece = document.getElementById('modal-moba-centerpiece');
     const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
     const innerAvatar = (user && user.photoURL)
-        ? `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${initial}';" />`
-        : initial;
+        ? `<img src="${escapeHtml(user.photoURL)}" alt="avatar" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" /><span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`
+        : `<span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`;
 
     if (modalCenterpiece) {
         modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${frameRankLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${innerAvatar}</div>`;
@@ -2026,8 +2065,8 @@ function openUserMenuModal() {
     const photoURL = user ? user.photoURL : null;
 
     const avatarInnerHtml = photoURL
-        ? `<img src="${escapeHtml(photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${initial}';" />`
-        : initial;
+        ? `<img src="${escapeHtml(photoURL)}" alt="avatar" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" /><span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`
+        : `<span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`;
 
     showModal({
         title: 'Tài khoản người dùng',

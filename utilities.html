@@ -55,7 +55,10 @@
                 <div class="notification-dropdown hidden" id="notification-dropdown"></div>
             </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
-                <div class="avatar-wrapper rank-1 avatar-mini" id="header-avatar-frame">U</div>
+                <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" id="header-avatar-frame">
+                    <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">U</div>
+                    <img src="images/frame-1.png" alt="Avatar Frame" class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 scale-110" onerror="this.style.display='none'" />
+                </div>
                 <span class="user-name" id="header-user-name">Đang tải...</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>
             </div>
@@ -549,7 +552,7 @@
     </nav>
 
     <!-- Modal Cửa sổ Dùng chung -->
-    <div id="modal-container" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+    <div id="modal-container" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden modal-backdrop" onclick="closeModalOnBackdrop(event)">
         <div class="modal-card" id="modal-card"></div>
     </div>
 
