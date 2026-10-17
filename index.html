@@ -80,8 +80,8 @@
             </div>
             <div class="user-pill" id="user-pill" onclick="openUserMenuModal()" title="Thông tin tài khoản">
                 <div class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" id="header-avatar-frame">
-                    <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">L</div>
-                    <img src="images/frame-1.png" alt="Avatar Frame" class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 scale-110" onerror="this.style.display='none'" />
+                    <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none z-0" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">L</div>
+                    <img src="images/frame-1.png" alt="Avatar Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] max-w-none object-contain pointer-events-none z-10" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 125%; height: 125%; max-width: none; object-fit: contain; pointer-events: none; z-index: 10;" onerror="this.style.display='none'" />
                 </div>
                 <span class="user-name" id="header-user-name">Lộc</span>
                 <i class="fa-solid fa-chevron-down user-chevron"></i>

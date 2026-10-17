@@ -288,7 +288,7 @@ function getRankProgress(exp) {
 /**
  * Render Avatar khung viền chuẩn hóa
  */
-function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '') {
+function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '', sizeClasses = 'w-10 h-10 md:w-12 md:h-12') {
     if (!u) u = {};
     const username = u.username || u.displayName || 'User';
     const initialChar = (username.charAt(0) || 'U').toUpperCase();
@@ -313,19 +313,19 @@ function renderUniversalAvatarHtml(u, rankLevel, isAdm, customId = '') {
         glowClass = `avatar-frame-glow-rank-${lvl}`;
     }
 
-    const fallbackLetter = `<div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`;
+    const fallbackLetter = `<div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none z-0" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`;
 
     const avatarInnerHtml = photoURL
-        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
-           <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`
+        ? `<img src="${escapeHtml(photoURL)}" alt="${escapeHtml(username)}" class="w-full h-full rounded-full object-cover z-0" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+           <div class="w-full h-full rounded-full flex items-center justify-center font-extrabold text-sm uppercase text-white shadow-inner select-none z-0" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initialChar}</div>`
         : fallbackLetter;
 
     const idAttr = customId ? `id="${customId}" ` : '';
 
     return `
-        <div ${idAttr}class="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
+        <div ${idAttr}class="relative flex items-center justify-center ${sizeClasses} shrink-0 rounded-full" title="${isAdm ? 'Thiên Địa Pháp Tắc' : `Cấp ${rankLevel}`}">
             ${avatarInnerHtml}
-            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute inset-0 w-full h-full object-contain pointer-events-none z-10 scale-110 ${glowClass}" onerror="this.style.display='none'" />
+            <img src="${frameImgSrc}" alt="Avatar Frame" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] max-w-none object-contain pointer-events-none z-10 ${glowClass}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 125%; height: 125%; max-width: none; object-fit: contain; pointer-events: none; z-index: 10;" onerror="this.style.display='none'" />
         </div>
     `.trim();
 }
@@ -385,21 +385,15 @@ function updateHeaderRankDisplay() {
     });
 
     // 3. Cập nhật tức thì vào Modal Tài khoản nếu Modal đang mở trên màn hình
-    const displayName = (user && (user.displayName || user.username)) || 'User';
-    const initial = displayName.charAt(0).toUpperCase();
     const modalCenterpiece = document.getElementById('modal-moba-centerpiece');
     const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
-    const innerAvatar = (user && user.photoURL)
-        ? `<img src="${escapeHtml(user.photoURL)}" alt="avatar" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" /><span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`
-        : `<span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`;
 
     if (modalCenterpiece) {
-        modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${frameRankLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${innerAvatar}</div>`;
+        modalCenterpiece.innerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, '', 'w-16 h-16 md:w-20 md:h-20');
     }
     const modalAvatarFrame = document.getElementById('modal-avatar-frame');
     if (modalAvatarFrame) {
-        modalAvatarFrame.className = `avatar-wrapper rank-${frameRankLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
-        modalAvatarFrame.innerHTML = innerAvatar;
+        modalAvatarFrame.outerHTML = renderUniversalAvatarHtml(user, frameRankLevel, isAdm, 'modal-avatar-frame', 'w-12 h-12');
     }
     const modalUserCard = document.getElementById('modal-user-card');
     if (modalUserCard) {
@@ -2038,11 +2032,15 @@ function showModal({ title, icon, content, actionText = 'Đóng', actionCallback
     };
 
     modalBackdrop.classList.remove('hidden');
+    modalBackdrop.style.display = 'flex';
 }
 
 function closeModal() {
     const modalBackdrop = document.getElementById('modal-container');
-    if (modalBackdrop) modalBackdrop.classList.add('hidden');
+    if (modalBackdrop) {
+        modalBackdrop.classList.add('hidden');
+        modalBackdrop.style.display = 'none';
+    }
 }
 
 function closeModalOnBackdrop(e) {
@@ -2060,13 +2058,7 @@ function openUserMenuModal() {
     const stats = getUserStats();
     const rank = isAdm ? ADMIN_RANK : (stats.rank || getRankByExp(stats.exp));
     const displayName = user ? (user.displayName || user.username) : 'Chưa đăng nhập';
-    const initial = displayName.charAt(0).toUpperCase();
     const frameLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
-    const photoURL = user ? user.photoURL : null;
-
-    const avatarInnerHtml = photoURL
-        ? `<img src="${escapeHtml(photoURL)}" alt="avatar" class="w-full h-full rounded-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" /><span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="display: none; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`
-        : `<span class="w-full h-full rounded-full flex items-center justify-center font-extrabold uppercase text-white shadow-inner select-none" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">${initial}</span>`;
 
     showModal({
         title: 'Tài khoản người dùng',
@@ -2075,14 +2067,12 @@ function openUserMenuModal() {
             <div style="font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 14px;">
                 <!-- TÂM ĐIỂM KHUNG AVATAR PNG 6 CẤP ĐỘ -->
                 <div id="modal-moba-centerpiece" style="display: flex; justify-content: center; align-items: center; padding: 20px 0; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);">
-                    <div class="avatar-wrapper rank-${frameLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${avatarInnerHtml}</div>
+                    ${renderUniversalAvatarHtml(user, frameLevel, isAdm, '', 'w-16 h-16 md:w-20 md:h-20')}
                 </div>
 
                 <!-- Thông tin người dùng với Khung Avatar & Card theo Cấp độ (.rank-1 .. .rank-6) -->
                 <div class="modal-user-card rank-${frameLevel}" id="modal-user-card">
-                    <div class="avatar-wrapper rank-${frameLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}" id="modal-avatar-frame" style="width: 52px; height: 52px; font-size: 20px;">
-                        ${avatarInnerHtml}
-                    </div>
+                    ${renderUniversalAvatarHtml(user, frameLevel, isAdm, 'modal-avatar-frame', 'w-12 h-12')}
                     <div class="muc-info">
                         <div class="muc-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span style="font-weight: 700;">${escapeHtml(displayName)}</span>

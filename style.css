@@ -2488,11 +2488,25 @@ body.mode-test .test-layout-view {
     z-index: 100000;
 }
 
-/* Phòng vệ cho Khung Avatar không bị tràn màn hình */
+/* Phòng vệ tối cao: Khóa cứng Khung Avatar không thể phình to hoặc phá vỡ layout */
 img[src*="frame-"],
 img[src*="avatar-frame"] {
-    max-width: 150%;
-    max-height: 150%;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 125% !important;
+    height: 125% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+.admin-table th,
+.admin-table td {
+    vertical-align: middle !important;
 }
 
 .modal-card {
