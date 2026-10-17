@@ -479,14 +479,17 @@ function checkAdminMenu() {
 }
 
 function updateHeaderUserPill(user) {
+    const displayName = user ? (user.displayName || user.username) : 'Khách';
     const nameEls = document.querySelectorAll('#header-user-name, .user-name');
     nameEls.forEach(el => {
-        el.textContent = user ? user.username : 'Khách';
+        el.textContent = displayName;
     });
     const avatarEls = document.querySelectorAll('.user-avatar');
     avatarEls.forEach(el => {
-        if (user && user.username) {
-            el.textContent = user.username.charAt(0).toUpperCase();
+        if (user && user.photoURL) {
+            el.innerHTML = `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentElement.textContent='${escapeHtml(displayName.charAt(0).toUpperCase())}';" />`;
+        } else if (user && (user.displayName || user.username)) {
+            el.textContent = displayName.charAt(0).toUpperCase();
         } else {
             el.innerHTML = '<i class="fa-solid fa-user"></i>';
         }
@@ -948,7 +951,8 @@ function updateHeaderRankDisplay() {
         }
 
         // 2. Cập nhật Khung Avatar PNG thu nhỏ (.avatar-mini) trên Header
-        const initial = (user && user.username) ? user.username.charAt(0).toUpperCase() : 'U';
+        const displayName = (user && (user.displayName || user.username)) || 'User';
+        const initial = displayName.charAt(0).toUpperCase();
         let frameEl = pill.querySelector('#header-avatar-frame') || pill.querySelector('.avatar-wrapper') || pill.querySelector('.avatar-frame');
         if (!frameEl) {
             frameEl = document.createElement('div');
@@ -957,26 +961,35 @@ function updateHeaderRankDisplay() {
         }
         const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
         frameEl.className = `avatar-wrapper rank-${frameRankLevel} avatar-mini ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
-        frameEl.textContent = initial;
+        if (user && user.photoURL) {
+            frameEl.innerHTML = `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.textContent='${initial}';" />`;
+        } else {
+            frameEl.textContent = initial;
+        }
         frameEl.title = isAdm ? `Thiên Địa Pháp Tắc (∞ Bất Tử Bất Diệt)` : `Cấp ${rank.level}: ${rank.displayName || rank.name} (${stats.exp} EXP)`;
 
         const nameEl = pill.querySelector('.user-name');
-        if (nameEl && user && user.username) {
-            nameEl.textContent = user.username;
+        if (nameEl && user) {
+            nameEl.textContent = displayName;
         }
     });
 
     // 3. Cập nhật tức thì vào Modal Tài khoản nếu Modal đang mở trên màn hình (không cần F5)
-    const initial = (user && user.username) ? user.username.charAt(0).toUpperCase() : 'U';
+    const displayName = (user && (user.displayName || user.username)) || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
     const modalCenterpiece = document.getElementById('modal-moba-centerpiece');
     const frameRankLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+    const innerAvatar = (user && user.photoURL)
+        ? `<img src="${escapeHtml(user.photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${initial}';" />`
+        : initial;
+
     if (modalCenterpiece) {
-        modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${frameRankLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${initial}</div>`;
+        modalCenterpiece.innerHTML = `<div class="avatar-wrapper rank-${frameRankLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${innerAvatar}</div>`;
     }
     const modalAvatarFrame = document.getElementById('modal-avatar-frame');
     if (modalAvatarFrame) {
         modalAvatarFrame.className = `avatar-wrapper rank-${frameRankLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}`;
-        modalAvatarFrame.textContent = initial;
+        modalAvatarFrame.innerHTML = innerAvatar;
     }
     const modalUserCard = document.getElementById('modal-user-card');
     if (modalUserCard) {
@@ -1951,8 +1964,14 @@ function openUserMenuModal() {
 
     const stats = getUserStats();
     const rank = isAdm ? ADMIN_RANK : (stats.rank || getRankByExp(stats.exp));
-    const initial = user && user.username ? user.username.charAt(0).toUpperCase() : 'U';
+    const displayName = user ? (user.displayName || user.username) : 'Chưa đăng nhập';
+    const initial = displayName.charAt(0).toUpperCase();
     const frameLevel = isAdm ? 6 : Math.min(6, rank.level || 1);
+    const photoURL = user ? user.photoURL : null;
+
+    const avatarInnerHtml = photoURL
+        ? `<img src="${escapeHtml(photoURL)}" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.onerror=null; this.outerHTML='${initial}';" />`
+        : initial;
 
     showModal({
         title: 'Tài khoản người dùng',
@@ -1961,17 +1980,18 @@ function openUserMenuModal() {
             <div style="font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 14px;">
                 <!-- TÂM ĐIỂM KHUNG AVATAR PNG 6 CẤP ĐỘ -->
                 <div id="modal-moba-centerpiece" style="display: flex; justify-content: center; align-items: center; padding: 20px 0; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);">
-                    <div class="avatar-wrapper rank-${frameLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${initial}</div>
+                    <div class="avatar-wrapper rank-${frameLevel} avatar-large ${isAdm ? 'avatar-frame-glow-admin' : ''}">${avatarInnerHtml}</div>
                 </div>
 
                 <!-- Thông tin người dùng với Khung Avatar & Card theo Cấp độ (.rank-1 .. .rank-6) -->
                 <div class="modal-user-card rank-${frameLevel}" id="modal-user-card">
                     <div class="avatar-wrapper rank-${frameLevel} ${isAdm ? 'avatar-frame-glow-admin' : ''}" id="modal-avatar-frame" style="width: 52px; height: 52px; font-size: 20px;">
-                        ${initial}
+                        ${avatarInnerHtml}
                     </div>
                     <div class="muc-info">
                         <div class="muc-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span>${user ? user.username : 'Chưa đăng nhập'}</span>
+                            <span style="font-weight: 700;">${escapeHtml(displayName)}</span>
+                            ${(user && user.displayName && user.displayName !== user.username) ? `<span style="font-size: 12px; color: #64748b; font-weight: normal;">(@${escapeHtml(user.username)})</span>` : ''}
                             ${isAdm ? `<span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="padding: 1px 8px; border-radius: 9999px; font-size: 10px; border: 1px solid #fde047;"><i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 9px;"></i> Thiên Địa Pháp Tắc</span>` : ''}
                         </div>
                         <div class="muc-role" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 3px;">
@@ -1984,11 +2004,19 @@ function openUserMenuModal() {
                 <!-- KHU VỰC THẺ BÀI (RANK CARD) HIỂN THỊ CẤP ĐỘ & EXP -->
                 ${renderRankCardHtml()}
 
-                <!-- Nút Đăng xuất -->
+                <!-- Nút Sửa Đạo Hiệu & Dung Mạo và Nút Xuất Quan -->
                 <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button type="button" style="padding: 10px 14px; border-radius: 8px; border: 1px solid #fde047; background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.25)); text-align: left; cursor: pointer; font-size: 13.5px; display: flex; align-items: center; justify-content: space-between; color: #b45309; font-weight: 700;" onclick="closeModal(); openFoundationSetupModal(false);">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-user-pen" style="color: #d97706;"></i>
+                            <span>Sửa Đạo Hiệu & Dung Mạo</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 11px;"></i>
+                    </button>
+
                     <button type="button" style="padding: 10px 14px; border-radius: 8px; border: 1px solid #fecdd3; background: #fef2f2; text-align: left; cursor: pointer; font-size: 13.5px; display: flex; align-items: center; gap: 10px; color: #dc2626; font-weight: 600;" onclick="logoutUser()">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        <span>Đăng xuất (Về trang đăng nhập)</span>
+                        <span>🚪 Xuất Quan</span>
                     </button>
                 </div>
             </div>
@@ -2059,12 +2087,24 @@ function setupUserRealtimeWatcher(userId) {
                     return;
                 }
 
-                // Đồng bộ tức thời tên đăng nhập mới nếu Admin vừa thực hiện đổi tên
+                // Đồng bộ tức thời tên đăng nhập, Đạo Hiệu, Avatar mới nếu có thay đổi từ Firebase
                 const val = snapshot.val();
-                if (val && val.username) {
+                if (val) {
                     const curr = getCurrentUser();
-                    if (curr && curr.username !== val.username) {
+                    let updated = false;
+                    if (curr && val.username && curr.username !== val.username) {
                         curr.username = val.username;
+                        updated = true;
+                    }
+                    if (curr && val.displayName && curr.displayName !== val.displayName) {
+                        curr.displayName = val.displayName;
+                        updated = true;
+                    }
+                    if (curr && val.photoURL && curr.photoURL !== val.photoURL) {
+                        curr.photoURL = val.photoURL;
+                        updated = true;
+                    }
+                    if (updated) {
                         if (localStorage.getItem('currentUser')) {
                             localStorage.setItem('currentUser', JSON.stringify(curr));
                         } else if (sessionStorage.getItem('currentUser')) {
@@ -2174,6 +2214,12 @@ async function checkAuthentication() {
                 }
                 if (userData.username && user.username !== userData.username) {
                     user.username = userData.username;
+                }
+                if (userData.displayName) {
+                    user.displayName = userData.displayName;
+                }
+                if (userData.photoURL) {
+                    user.photoURL = userData.photoURL;
                 }
                 if (localStorage.getItem('currentUser')) {
                     localStorage.setItem('currentUser', JSON.stringify(user));
@@ -2443,6 +2489,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     checkAdminMenu();
     updateHeaderRankDisplay();
     updateNotificationBellUI();
+
+    // Kiểm tra Khởi Tạo Đạo Cơ (Lần đầu đăng nhập hoặc chưa có Đạo Hiệu/Avatar)
+    checkFirstTimeFoundationSetup();
 
     const isPracticePage = !!document.getElementById('practice-body');
 
@@ -5805,3 +5854,303 @@ document.addEventListener('DOMContentLoaded', function() {
 window.openLeaderboardModal = openLeaderboardModal;
 window.closeLeaderboardModal = closeLeaderboardModal;
 window.renderLeaderboard = renderLeaderboard;
+
+// ==========================================================================
+// HỆ THỐNG KHỞI TẠO ĐẠO CƠ (FIRST-TIME LOGIN & AVATAR/DISPLAY NAME SETUP)
+// ==========================================================================
+const XIANXIA_PRESET_AVATARS = [
+    { id: 'm1', name: 'Kiếm Tôn (Nam)', src: 'images/avatars/avatar_m1.jpg' },
+    { id: 'm2', name: 'Ma Hoàng (Nam)', src: 'images/avatars/avatar_m2.jpg' },
+    { id: 'm3', name: 'Đan Thánh (Nam)', src: 'images/avatars/avatar_m3.jpg' },
+    { id: 'f1', name: 'Băng Cơ (Nữ)', src: 'images/avatars/avatar_f1.jpg' },
+    { id: 'f2', name: 'Thánh Nữ (Nữ)', src: 'images/avatars/avatar_f2.jpg' },
+    { id: 'f3', name: 'Huyền Nữ (Nữ)', src: 'images/avatars/avatar_f3.jpg' }
+];
+
+window._foundationSelectedPhotoURL = null;
+
+function checkFirstTimeFoundationSetup() {
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user) return;
+
+    // Check điều kiện: if (!currentUser.displayName || !currentUser.photoURL)
+    const hasDisplayName = !!(user.displayName && String(user.displayName).trim());
+    const hasPhotoURL = !!(user.photoURL && String(user.photoURL).trim());
+
+    if (!hasDisplayName || !hasPhotoURL) {
+        openFoundationSetupModal(true);
+    }
+}
+
+function openFoundationSetupModal(isFirstTime = false) {
+    let backdrop = document.getElementById('foundation-setup-backdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
+
+    backdrop = document.createElement('div');
+    backdrop.id = 'foundation-setup-backdrop';
+    backdrop.style.cssText = 'position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); padding: 16px; overflow-y: auto;';
+
+    if (!isFirstTime) {
+        backdrop.onclick = function(e) {
+            if (e.target === backdrop) closeFoundationModal();
+        };
+    }
+
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : { username: 'User' };
+    const defaultName = (user && (user.displayName || user.username)) || '';
+    window._foundationSelectedPhotoURL = (user && user.photoURL) || 'images/avatars/avatar_m1.jpg';
+
+    backdrop.innerHTML = `
+        <div class="foundation-modal-dialog" style="max-width: 520px; width: 100%; background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 2px solid #eab308; box-shadow: 0 0 35px rgba(234, 179, 8, 0.35), 0 20px 40px rgba(0, 0, 0, 0.8); border-radius: 18px; padding: 24px; color: #f8fafc; position: relative;">
+            ${!isFirstTime ? `
+                <button type="button" onclick="closeFoundationModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            ` : ''}
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle, rgba(234, 179, 8, 0.3) 0%, rgba(234, 179, 8, 0.05) 100%); border: 1.5px solid #facc15; margin-bottom: 10px;">
+                    <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 8s; color: #fde047; font-size: 24px;"></i>
+                </div>
+                <h3 style="font-size: 20px; font-weight: 900; color: #fde047; margin: 0 0 6px 0; letter-spacing: 0.5px; text-shadow: 0 0 12px rgba(250, 204, 21, 0.4);">
+                    Khởi Tạo Đạo Cơ - Nhập Môn Tông Môn
+                </h3>
+                <p style="font-size: 12.5px; color: #94a3b8; margin: 0; line-height: 1.5;">
+                    ${isFirstTime ? 'Chào mừng tân đệ tử nhập môn! Hãy lập Đạo Hiệu và lựa chọn Pháp Tướng đại diện cho căn cơ trước khi bắt đầu tu tập.' : 'Thay đổi Đạo Hiệu giang hồ và Pháp Tướng đại diện cho căn cơ tu vi của bạn.'}
+                </p>
+            </div>
+
+            <!-- KHU VỰC LIVE PREVIEW AVATAR ĐƯỢC CHỌN -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 18px;">
+                <div style="position: relative; width: 84px; height: 84px;">
+                    <img id="foundation-preview-avatar" src="${escapeHtml(window._foundationSelectedPhotoURL)}" alt="Preview Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);" />
+                    <div style="position: absolute; bottom: 0; right: 0; background: #eab308; color: #1e293b; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; box-shadow: 0 0 8px rgba(0,0,0,0.5);">
+                        <i class="fa-solid fa-sparkles"></i>
+                    </div>
+                </div>
+                <div id="foundation-preview-name" style="margin-top: 8px; font-size: 14px; font-weight: 800; color: #fef08a; text-shadow: 0 0 8px rgba(254, 240, 138, 0.5);">
+                    ${escapeHtml(defaultName || 'Tân Đệ Tử')}
+                </div>
+            </div>
+
+            <!-- INPUT 1: NHẬP ĐẠO HIỆU -->
+            <div style="margin-bottom: 18px;">
+                <label for="foundation-display-name-input" style="display: block; font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">
+                    <i class="fa-solid fa-feather-pointed" style="color: #fbbf24; margin-right: 5px;"></i>
+                    <span>Đạo Hiệu (Tên giang hồ của bạn):</span>
+                </label>
+                <input type="text" id="foundation-display-name-input" value="${escapeHtml(defaultName)}" placeholder="Ví dụ: Tiêu Viêm, Hàn Lập, Bạch Y Kiếm Tiên..." maxlength="30" oninput="updateFoundationPreviewName(this.value)" style="width: 100%; padding: 11px 14px; background: rgba(30, 41, 59, 0.9); border: 1.5px solid #475569; border-radius: 10px; color: #ffffff; font-size: 14.5px; font-weight: 600; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#475569'" />
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+                    <i class="fa-solid fa-circle-info"></i> Lệnh bài đăng nhập (Username: <strong>${escapeHtml(user.username || 'User')}</strong>) được giữ nguyên để xác thực.
+                </div>
+            </div>
+
+            <!-- GRID CHỌN AVATAR: 6 MẪU CÓ SẴN -->
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 10px;">
+                    <i class="fa-solid fa-user-astronaut" style="color: #60a5fa; margin-right: 5px;"></i>
+                    <span>Lựa chọn Dung Mạo / Pháp Tướng (6 Căn Cơ Mặc Định):</span>
+                </label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    ${XIANXIA_PRESET_AVATARS.map(av => {
+                        const isSelected = window._foundationSelectedPhotoURL === av.src;
+                        return `
+                            <div class="foundation-preset-card" onclick="selectFoundationAvatar('${av.src}', this)" style="display: flex; flex-direction: column; align-items: center; padding: 10px 6px; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: ${isSelected ? 'rgba(234, 179, 8, 0.15)' : 'rgba(30, 41, 59, 0.6)'}; border: 1.5px solid ${isSelected ? '#facc15' : 'rgba(255,255,255,0.1)'}; box-shadow: ${isSelected ? '0 0 14px rgba(250, 204, 21, 0.45)' : 'none'}; transform: ${isSelected ? 'scale(1.03)' : 'scale(1)'};">
+                                <div style="position: relative; width: 56px; height: 56px; margin-bottom: 6px;">
+                                    <img src="${av.src}" alt="${av.name}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid ${isSelected ? '#facc15' : '#64748b'};" />
+                                    <div class="f-check-icon" style="display: ${isSelected ? 'flex' : 'none'}; position: absolute; bottom: -2px; right: -2px; background: #eab308; color: #000; width: 18px; height: 18px; border-radius: 50%; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 700; color: ${isSelected ? '#fef08a' : '#cbd5e1'}; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
+                                    ${av.name}
+                                </span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- (OPTIONAL) UPLOAD ẢNH MỘC TỪ THIẾT BỊ -->
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 22px;">
+                <input type="file" id="foundation-avatar-file-input" accept="image/*" style="display: none;" onchange="handleFoundationUpload(event)" />
+                <button type="button" onclick="document.getElementById('foundation-avatar-file-input').click()" style="padding: 7px 16px; border-radius: 8px; background: rgba(51, 65, 85, 0.6); border: 1px dashed #64748b; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all 0.2s;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color: #38bdf8;"></i>
+                    <span>Hoặc tải ảnh mộc từ thiết bị của bạn</span>
+                </button>
+            </div>
+
+            <!-- NÚT HÀNH ĐỘNG: TRÚC CƠ THÀNH CÔNG -->
+            <div style="display: flex; gap: 10px;">
+                ${!isFirstTime ? `
+                    <button type="button" onclick="closeFoundationModal()" style="flex: 1; padding: 12px 16px; border-radius: 10px; background: transparent; border: 1px solid #64748b; color: #cbd5e1; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+                        Hủy bỏ
+                    </button>
+                ` : ''}
+                <button type="button" id="btn-foundation-submit" onclick="submitFoundationSetup(${isFirstTime})" style="flex: 2; padding: 12px 20px; border-radius: 10px; background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%); border: 1.5px solid #fbbf24; color: #ffffff; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 0 16px rgba(245, 158, 11, 0.45); display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #fef08a;"></i>
+                    <span>Trúc Cơ Thành Công</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(backdrop);
+}
+
+function selectFoundationAvatar(src, el) {
+    window._foundationSelectedPhotoURL = src;
+    const preview = document.getElementById('foundation-preview-avatar');
+    if (preview) preview.src = src;
+
+    const cards = document.querySelectorAll('.foundation-preset-card');
+    cards.forEach(c => {
+        c.style.background = 'rgba(30, 41, 59, 0.6)';
+        c.style.border = '1.5px solid rgba(255, 255, 255, 0.1)';
+        c.style.boxShadow = 'none';
+        c.style.transform = 'scale(1)';
+        const check = c.querySelector('.f-check-icon');
+        if (check) check.style.display = 'none';
+        const txt = c.querySelector('span');
+        if (txt) txt.style.color = '#cbd5e1';
+    });
+
+    if (el) {
+        el.style.background = 'rgba(234, 179, 8, 0.15)';
+        el.style.border = '1.5px solid #facc15';
+        el.style.boxShadow = '0 0 14px rgba(250, 204, 21, 0.45)';
+        el.style.transform = 'scale(1.03)';
+        const check = el.querySelector('.f-check-icon');
+        if (check) check.style.display = 'flex';
+        const txt = el.querySelector('span');
+        if (txt) txt.style.color = '#fef08a';
+    }
+}
+
+function updateFoundationPreviewName(val) {
+    const preview = document.getElementById('foundation-preview-name');
+    if (preview) {
+        preview.textContent = val.trim() || 'Tân Đệ Tử';
+    }
+}
+
+function handleFoundationUpload(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file hình ảnh hợp lệ!');
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Dung lượng ảnh vượt quá 2MB, vui lòng chọn ảnh nhẹ hơn!');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        window._foundationSelectedPhotoURL = dataUrl;
+        const preview = document.getElementById('foundation-preview-avatar');
+        if (preview) preview.src = dataUrl;
+
+        const cards = document.querySelectorAll('.foundation-preset-card');
+        cards.forEach(c => {
+            c.style.background = 'rgba(30, 41, 59, 0.6)';
+            c.style.border = '1.5px solid rgba(255, 255, 255, 0.1)';
+            c.style.boxShadow = 'none';
+            c.style.transform = 'scale(1)';
+            const check = c.querySelector('.f-check-icon');
+            if (check) check.style.display = 'none';
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function closeFoundationModal() {
+    const backdrop = document.getElementById('foundation-setup-backdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
+}
+
+async function submitFoundationSetup(isFirstTime) {
+    const nameInput = document.getElementById('foundation-display-name-input');
+    const nameVal = nameInput ? nameInput.value.trim() : '';
+    if (!nameVal) {
+        alert('Vui lòng nhập Đạo Hiệu để hoàn tất Trúc Cơ!');
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    const photoURL = window._foundationSelectedPhotoURL || 'images/avatars/avatar_m1.jpg';
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user) {
+        alert('Không tìm thấy thông tin phiên đăng nhập!');
+        return;
+    }
+
+    const btn = document.getElementById('btn-foundation-submit');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang Trúc Cơ...</span>`;
+    }
+
+    const uid = user.userId || ('u_' + (user.username || '').toLowerCase());
+
+    try {
+        if (window.update && window.ref && window.db) {
+            await update(ref(db, 'users/' + uid), {
+                displayName: nameVal,
+                photoURL: photoURL
+            });
+        } else if (window.FirebaseService && typeof FirebaseService.updateUser === 'function') {
+            await FirebaseService.updateUser(uid, {
+                displayName: nameVal,
+                photoURL: photoURL
+            });
+        }
+    } catch (e) {
+        console.warn('[Foundation] Lỗi khi lưu lên Firebase:', e);
+    }
+
+    // Cập nhật session/local
+    user.displayName = nameVal;
+    user.photoURL = photoURL;
+    try {
+        if (localStorage.getItem('currentUser')) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+        if (sessionStorage.getItem('currentUser')) {
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+        }
+    } catch (e) {}
+
+    closeFoundationModal();
+
+    if (typeof updateHeaderUserPill === 'function') {
+        updateHeaderUserPill(user);
+    }
+    if (typeof updateHeaderUser === 'function') {
+        updateHeaderUser(user);
+    }
+    if (typeof updateHeaderRankDisplay === 'function') {
+        updateHeaderRankDisplay();
+    }
+    if (typeof renderLeaderboard === 'function') {
+        renderLeaderboard();
+    }
+    if (typeof showToast === 'function') {
+        showToast(`Chúc mừng đạo hữu "${nameVal}" đã Trúc Cơ Thành Công! Căn cơ vững chắc!`, 'success');
+    } else {
+        alert(`Chúc mừng đạo hữu "${nameVal}" đã Trúc Cơ Thành Công!`);
+    }
+}
+
+window.checkFirstTimeFoundationSetup = checkFirstTimeFoundationSetup;
+window.openFoundationSetupModal = openFoundationSetupModal;
+window.closeFoundationModal = closeFoundationModal;
+window.selectFoundationAvatar = selectFoundationAvatar;
+window.updateFoundationPreviewName = updateFoundationPreviewName;
+window.handleFoundationUpload = handleFoundationUpload;
+window.submitFoundationSetup = submitFoundationSetup;

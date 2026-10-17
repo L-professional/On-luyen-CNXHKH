@@ -816,20 +816,20 @@ function renderUserTable(searchKeyword = '') {
         if (isUserAdmin) {
             actionsHtml = `
                 <div class="action-buttons-group flex items-center justify-center gap-1.5 whitespace-nowrap">
-                    <button type="button" class="btn-action btn-edit-pwd px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Đổi mật khẩu cho ${escapeHtml(u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                    <button type="button" class="btn-action btn-edit-pwd px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="openEditPasswordModal('${escapeHtml(userId)}')" title="Cải biến khẩu quyết cho ${escapeHtml(u.displayName || u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
                         <i class="fa-solid fa-key text-[10px]"></i>
-                        <span>Sửa MK</span>
+                        <span>Cải Biến Khẩu Quyết</span>
                     </button>
                     ${isRootAdmin ? `
                         <span class="text-[11px] text-slate-400 font-semibold px-2 py-1 bg-slate-100 rounded border border-slate-200" title="Tài khoản Admin gốc mặc định bảo vệ">[Mặc định]</span>
                     ` : `
-                        <button type="button" class="btn-action btn-edit-name px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="changeUsername('${escapeHtml(userId)}')" title="Đổi tên đăng nhập cho ${escapeHtml(u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
-                            <i class="fa-solid fa-pen text-[10px]"></i>
-                            <span>Sửa Tên</span>
+                        <button type="button" class="btn-action btn-edit-name px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="banTangDaoHieu('${escapeHtml(userId)}')" title="Ban tặng Đạo Hiệu cho ${escapeHtml(u.displayName || u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                            <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                            <span>Ban Tặng Đạo Hiệu</span>
                         </button>
-                        <button type="button" class="btn-action btn-delete px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="handleDeleteUser('${escapeHtml(userId)}')" title="Xóa tài khoản ${escapeHtml(u.username)}" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                        <button type="button" class="btn-action btn-delete px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="handleDeleteUser('${escapeHtml(userId)}')" title="Trục xuất ${escapeHtml(u.displayName || u.username)} khỏi tông môn" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
                             <i class="fa-solid fa-trash-can text-[10px]"></i>
-                            <span>Xóa</span>
+                            <span>Trục Xuất Tông Môn</span>
                         </button>
                     `}
                 </div>
@@ -837,7 +837,7 @@ function renderUserTable(searchKeyword = '') {
         } else {
             actionsHtml = `
                 <div class="action-buttons-group flex items-center justify-center gap-1.5 whitespace-nowrap">
-                    <button type="button" class="btn-action btn-buff-exp px-2 py-1 text-xs whitespace-nowrap font-bold" onclick="openBuffExpModal('${escapeHtml(userId)}')" title="Ban tạo hóa buff EXP cho ${escapeHtml(u.username)}" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; border: 1px solid #f97316; box-shadow: 0 1px 4px rgba(245, 158, 11, 0.35); display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 6px; font-size: 11.5px; cursor: pointer;">
+                    <button type="button" class="btn-action btn-buff-exp px-2 py-1 text-xs whitespace-nowrap font-bold" onclick="openBuffExpModal('${escapeHtml(userId)}')" title="Ban tạo hóa buff EXP cho ${escapeHtml(u.displayName || u.username)}" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; border: 1px solid #f97316; box-shadow: 0 1px 4px rgba(245, 158, 11, 0.35); display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 6px; font-size: 11.5px; cursor: pointer;">
                         <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
                         <span>✨ Ban Tạo Hóa</span>
                     </button>
@@ -863,22 +863,25 @@ function renderUserTable(searchKeyword = '') {
                             <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
                             <button type="button" class="admin-dropdown-item" onclick="openEditPasswordModal('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #2563eb;">
                                 <i class="fa-solid fa-key" style="width: 14px; color: #2563eb;"></i>
-                                <span>🔑 Sửa Mật Khẩu</span>
+                                <span>🔑 Cải Biến Khẩu Quyết</span>
                             </button>
-                            <button type="button" class="admin-dropdown-item" onclick="changeUsername('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #059669;">
-                                <i class="fa-solid fa-pen" style="width: 14px; color: #059669;"></i>
-                                <span>✏️ Sửa Tên Đăng Nhập</span>
+                            <button type="button" class="admin-dropdown-item" onclick="banTangDaoHieu('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #059669;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="width: 14px; color: #059669;"></i>
+                                <span>✨ Ban Tặng Đạo Hiệu</span>
                             </button>
                             <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
                             <button type="button" class="admin-dropdown-item" onclick="handleDeleteUser('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #ef4444;">
                                 <i class="fa-solid fa-trash-can" style="width: 14px; color: #ef4444;"></i>
-                                <span>🗑️ Xóa Tài Khoản</span>
+                                <span>🗑️ Trục Xuất Tông Môn</span>
                             </button>
                         </div>
                     </div>
                 </div>
             `;
         }
+
+        const displayTitle = u.displayName || u.username;
+        const hasCustomTitle = u.displayName && u.displayName !== u.username;
 
         return `
             <tr>
@@ -888,10 +891,11 @@ function renderUserTable(searchKeyword = '') {
                         <!-- Universal Avatar Frame Wrapper chuẩn -->
                         ${renderUniversalAvatarHtml(u, rankLevel, isUserAdmin)}
 
-                        <!-- Cột Tên đăng nhập và Badge cấp độ bên cạnh -->
+                        <!-- Cột Tên Đạo Hiệu / Lệnh bài và Badge cấp độ bên cạnh -->
                         <div style="display: flex; flex-direction: column; gap: 2px;">
                             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                <strong style="color: #1e293b; font-size: 14px; font-weight: 700;">${escapeHtml(u.username)}</strong>
+                                <strong style="color: #1e293b; font-size: 14px; font-weight: 700;" title="Đạo Hiệu: ${escapeHtml(displayTitle)} (Lệnh bài: ${escapeHtml(u.username)})">${escapeHtml(displayTitle)}</strong>
+                                ${hasCustomTitle ? `<span class="text-xs text-slate-400 font-normal">(@${escapeHtml(u.username)})</span>` : ''}
                                 ${isRootAdmin ? '<span class="root-badge"><i class="fa-solid fa-crown" style="font-size: 9px;"></i> Root Admin</span>' : ''}
                                 ${u.banned ? '<span class="badge-hac-lao" title="Đang bị giam giữ tại Hắc Lao"><i class="fa-solid fa-link"></i> Hắc Lao</span>' : ''}
                                 ${rankBadgeHtml}
@@ -1600,11 +1604,11 @@ document.addEventListener('click', (e) => {
 });
 
 /**
- * Đổi tên người dùng (Task 3: Admin User Rename)
- * Lưu theo UID cố định trên Firebase, bảo toàn 100% dữ liệu lịch sử thi & tiến độ
+ * Ban Tặng Đạo Hiệu (Admin Grant Display Name)
+ * Chỉ cập nhật trường displayName trên Firebase, giữ nguyên username đăng nhập
  * @param {string} userId UID của người dùng
  */
-async function changeUsername(userId) {
+async function banTangDaoHieu(userId) {
     if (!userId) return;
     const users = getUserList();
     const user = users.find(u => u.userId === userId || (u.username && u.username.toLowerCase() === userId.toLowerCase()));
@@ -1613,43 +1617,44 @@ async function changeUsername(userId) {
         return;
     }
 
-    const promptMsg = `Nhập tên đăng nhập mới cho "${user.username}":\n(Toàn bộ điểm số, lịch sử thi và tiến độ ôn luyện của học viên đều được bảo toàn 100% nhờ lưu theo UID cố định)`;
-    const newName = prompt(promptMsg, user.username);
-    if (newName === null) return; // Người dùng ấn Hủy
+    const currentTitle = user.displayName || user.username;
+    const promptMsg = `Nhập Đạo Hiệu mới ban tặng cho đạo hữu "${currentTitle}":\n(Lệnh bài đăng nhập: "${user.username}" vẫn được giữ nguyên không đổi)`;
+    const newTitle = prompt(promptMsg, currentTitle);
+    if (newTitle === null) return; // Người dùng ấn Hủy
 
-    const cleanName = newName.trim();
-    if (!cleanName) {
-        alert('Tên đăng nhập không được để trống!');
+    const cleanTitle = newTitle.trim();
+    if (!cleanTitle) {
+        alert('Đạo hiệu không được để trống!');
         return;
     }
-    if (/\s/.test(cleanName)) {
-        alert('Tên đăng nhập không được chứa khoảng trắng!');
-        return;
-    }
-    if (cleanName.toLowerCase() === user.username.toLowerCase()) {
-        showToast('Tên đăng nhập không thay đổi.', 'warning');
+    if (cleanTitle === user.displayName) {
+        showToast('Đạo hiệu không thay đổi.', 'warning');
         return;
     }
 
     try {
-        if (window.FirebaseService) {
-            await FirebaseService.changeUsername(user.userId, cleanName);
-        } else {
-            // Kiểm tra trùng lặp
-            const isDup = users.some(u => u.userId !== user.userId && u.username && u.username.toLowerCase() === cleanName.toLowerCase());
-            if (isDup) {
-                alert(`Tên đăng nhập "${cleanName}" đã được sử dụng bởi một tài khoản khác!`);
-                return;
-            }
-            user.username = cleanName;
-            await saveUserList(users);
+        const targetUid = user.userId || userId;
+        if (window.update && window.ref && window.db) {
+            await update(ref(db, 'users/' + targetUid), {
+                displayName: cleanTitle
+            });
+        } else if (window.FirebaseService && typeof FirebaseService.updateUser === 'function') {
+            await FirebaseService.updateUser(targetUid, {
+                displayName: cleanTitle
+            });
         }
-        showToast(`Đã đổi tên tài khoản thành "${cleanName}" thành công!`, 'success');
+
+        user.displayName = cleanTitle;
+        await saveUserList(users);
+
+        showToast(`Đã ban tặng Đạo Hiệu "${cleanTitle}" cho đạo hữu ${user.username} thành công!`, 'success');
         renderUserTable();
     } catch (err) {
-        alert(err.message || 'Lỗi khi đổi tên người dùng!');
+        alert(err.message || 'Lỗi khi ban tặng Đạo Hiệu!');
     }
 }
+window.banTangDaoHieu = banTangDaoHieu;
+window.changeUsername = banTangDaoHieu;
 
 /**
  * Lọc bảng tài khoản khi nhập ô tìm kiếm
@@ -2047,7 +2052,7 @@ function openAdminUserMenu() {
                     </button>
                     <button type="button" style="padding: 10px 14px; border-radius: 8px; border: 1px solid #fecdd3; background: #fef2f2; text-align: left; cursor: pointer; font-size: 13.5px; display: flex; align-items: center; gap: 10px; color: #dc2626; font-weight: 600;" onclick="adminLogout()">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        <span>Đăng xuất</span>
+                        <span>🚪 Xuất Quan</span>
                     </button>
                 </div>
             </div>
