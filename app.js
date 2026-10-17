@@ -5454,42 +5454,38 @@ async function renderLeaderboard(usersData) {
                 const isCurrentAdmin = (currentUser && isAdminUser(currentUser));
 
                 adminSection.innerHTML = `
-                    <div class="admin-sovereign-card relative flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden p-4 rounded-2xl bg-gradient-to-r from-red-950/80 via-slate-900 to-amber-950/70 border-2 border-red-500/70 shadow-lg shadow-red-500/25 text-white transition mb-2" style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.85) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.75) 100%); border: 2px solid rgba(239, 68, 68, 0.75); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4); border-radius: 16px; position: relative; overflow: hidden; width: 100%;">
+                    <div class="admin-sovereign-card flex flex-col md:flex-row items-center justify-between gap-4 p-4 md:p-6 w-full rounded-xl relative overflow-hidden bg-gradient-to-r from-red-950/80 via-slate-900 to-amber-950/70 border-2 border-red-500/70 shadow-lg shadow-red-500/25 text-white transition mb-2" style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.85) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(69, 26, 3, 0.75) 100%); border: 2px solid rgba(239, 68, 68, 0.75); box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4); border-radius: 12px; position: relative; overflow: hidden; width: 100%;">
                         
-                        <!-- Cụm trái: Badge Chúa Tể Không Gian + Avatar + Tên & Rank -->
-                        <div class="flex flex-col sm:flex-row items-center gap-3.5 w-full md:w-auto min-w-0" style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-                            <!-- Tại vị trí đáng lẽ hiển thị #1, thay thế bằng dòng chữ/Badge rực rỡ: "👑 Chúa Tể Không Gian" -->
-                            <div class="leaderboard-pos flex items-center justify-center shrink-0" title="Chúa Tể Không Gian - Độc Tôn Toàn Server">
-                                <span class="admin-sovereign-badge px-3 py-1.5 rounded-xl font-black text-xs md:text-sm tracking-wide bg-gradient-to-r from-amber-400 via-rose-500 to-yellow-400 text-slate-950 shadow-md shadow-rose-500/50 uppercase flex items-center gap-1.5 animate-pulse" style="padding: 6px 12px; border-radius: 10px; font-weight: 900; font-size: 12px; background: linear-gradient(90deg, #fbbf24 0%, #f43f5e 50%, #facc15 100%); color: #020617; box-shadow: 0 0 14px rgba(244, 63, 94, 0.6); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid #fef08a;">
-                                    <span>👑 Chúa Tể Không Gian</span>
-                                </span>
-                            </div>
+                        <!-- Cột trái: Danh xưng & Avatar -->
+                        <div class="flex items-center gap-4 w-full md:w-auto">
+                            <!-- Khối 1: Hiển thị danh xưng -->
+                            <div class="font-bold text-xl text-yellow-500 whitespace-nowrap min-w-[150px] text-center md:text-left">👑 Chúa Tể Không Gian</div>
 
-                            <!-- Universal Avatar Frame Wrapper chuẩn cho Admin -->
+                            <!-- Khối 2: Khung Avatar -->
                             <div class="shrink-0 flex items-center justify-center">
                                 ${renderUniversalAvatarHtml(adminUser, 99, true)}
                             </div>
+                        </div>
 
-                            <!-- Tên Admin & Cảnh giới Thiên Địa Pháp Tắc -->
-                            <div class="flex flex-col items-center sm:items-start text-center sm:text-left min-w-0" style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
-                                <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                    <strong class="text-sm md:text-base font-black truncate text-amber-200" style="font-size: 15px; font-weight: 800; color: #fef08a; max-width: 180px;">
-                                        ${escapeHtml(adminDisplayName)}
-                                    </strong>
-                                    ${isCurrentAdmin ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #dc2626; color: #fff;">Bạn</span>' : ''}
-                                    <span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #fde047; white-space: nowrap;">
-                                        <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 10px;"></i> 
-                                        <span>Thiên Địa Pháp Tắc</span>
-                                    </span>
-                                </div>
-                                <div class="text-[11px] text-amber-300/80" style="font-size: 11.5px; line-height: 1.3; color: #fde68a;">
-                                    <span>Cảnh giới: <strong>Thiên Địa Pháp Tắc</strong> &bull; Lịch sử: <strong>Vạn Kiếp Luân Hồi</strong></span>
-                                </div>
+                        <!-- Cột giữa: Thông tin chi tiết Admin -->
+                        <div class="flex-1 flex flex-col items-start gap-1 w-full md:w-auto">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <strong class="text-sm md:text-base font-black truncate text-amber-200" style="font-size: 15px; font-weight: 800; color: #fef08a; max-width: 180px;">
+                                    ${escapeHtml(adminDisplayName)}
+                                </strong>
+                                ${isCurrentAdmin ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white shadow-sm" style="padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #dc2626; color: #fff;">Bạn</span>' : ''}
+                                <span class="user-rank-badge rank-thien-dia-phap-tac bg-gradient-to-r from-red-600 to-yellow-500 text-white animate-pulse font-bold shadow-[0_0_15px_rgba(239,68,68,0.8)]" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #fde047; white-space: nowrap;">
+                                    <i class="fa-solid fa-yin-yang fa-spin" style="--fa-animation-duration: 6s; font-size: 10px;"></i> 
+                                    <span>Thiên Địa Pháp Tắc</span>
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-amber-300/80" style="font-size: 11.5px; line-height: 1.3; color: #fde68a;">
+                                <span>Cảnh giới: <strong>Thiên Địa Pháp Tắc</strong> &bull; Lịch sử: <strong>Vạn Kiếp Luân Hồi</strong></span>
                             </div>
                         </div>
 
-                        <!-- Cụm phải: Chỉ số Vô Cực ∞ Bất Tử Bất Diệt -->
-                        <div class="flex items-center justify-center md:justify-end gap-2 shrink-0 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-red-500/20 text-red-400 font-black" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                        <!-- Cột phải: Chỉ số Vô Cực ∞ Bất Tử Bất Diệt -->
+                        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
                             <i class="fa-solid fa-infinity text-red-400 animate-pulse" style="font-size: 20px; color: #f87171;"></i>
                             <span class="text-xl md:text-2xl font-black text-red-400" style="font-size: 22px; font-weight: 900; color: #f87171;" title="Bất Tử Bất Diệt">∞</span>
                             <span class="text-xs font-bold text-amber-300 px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/30" style="font-size: 11px; color: #fde047; padding: 2px 8px; border-radius: 6px; background: rgba(120, 53, 15, 0.4); border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">Bất Tử Bất Diệt</span>
