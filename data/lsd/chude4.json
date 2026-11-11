@@ -1,0 +1,47 @@
+[
+    {
+        "id": 401,
+        "type": "single",
+        "question": "Câu 1: Đại hội đại biểu toàn quốc lần thứ mấy của Đảng (12/1986) đã đề ra đường lối đổi mới toàn diện đất nước?",
+        "options": [
+            "A. Đại hội VI",
+            "B. Đại hội V",
+            "C. Đại hội VII",
+            "D. Đại hội VIII"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Đại hội VI (12/1986) của Đảng đã khởi xướng đường lối đổi mới toàn diện, nhìn thẳng vào sự thật, đánh giá đúng sự thật và nói rõ sự thật."
+    },
+    {
+        "id": 402,
+        "type": "single",
+        "question": "Câu 2: Ba chương trình kinh tế lớn được Đại hội VI (12/1986) của Đảng xác định tập trung thực hiện là:",
+        "options": [
+            "A. Lương thực - thực phẩm, hàng tiêu dùng và hàng xuất khẩu",
+            "B. Công nghiệp nặng, khai khoáng và dầu khí",
+            "C. Cơ khí hóa, điện khí hóa và thủy lợi hóa",
+            "D. Giao thông vận tải, bưu chính và viễn thông"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Đại hội VI xác định nhiệm vụ trước mắt là tập trung vào 3 chương trình kinh tế lớn: Lương thực - thực phẩm, hàng tiêu dùng và hàng xuất khẩu."
+    },
+    {
+        "id": 403,
+        "type": "single",
+        "question": "Câu 3: 'Cương lĩnh xây dựng đất nước trong thời kỳ quá độ lên chủ nghĩa xã hội' được Đảng thông qua lần đầu tiên tại Đại hội nào?",
+        "options": [
+            "A. Đại hội VII (1991)",
+            "B. Đại hội VI (1986)",
+            "C. Đại hội VIII (1996)",
+            "D. Đại hội IX (2001)"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Cương lĩnh 1991 được thông qua tại Đại hội VII của Đảng, xác định mô hình và phương hướng đi lên CNXH ở Việt Nam."
+    }
+]

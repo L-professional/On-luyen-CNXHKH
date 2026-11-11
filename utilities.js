@@ -1564,7 +1564,8 @@ async function collectAllWrongQuestions() {
                 const tid = (t.topicId && t.topicId !== 'mock') ? parseInt(t.topicId, 10) : 1;
                 if (tid >= 1 && tid <= 6) {
                     try {
-                        const res = await fetch(`./data/chude${tid}.json`);
+                        const sub = t.subject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh'));
+                        const res = await fetch(`./data/${sub}/chude${tid}.json`);
                         if (res.ok) {
                             const qData = await res.json();
                             if (Array.isArray(qData)) {

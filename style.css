@@ -8420,3 +8420,399 @@ body.sidebar-open .sidebar-backdrop {
 
 
 
+
+/* ==========================================================================
+   MULTI-SUBJECT / ĐA MÔN PHÁI (ĐẠI ĐIỆN TÔNG MÔN) STYLES
+   ========================================================================== */
+
+.realm-selection-section {
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+.realm-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+    .realm-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+}
+
+.realm-card {
+    position: relative;
+    border-radius: 22px;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.realm-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.realm-card:hover {
+    transform: translateY(-6px);
+}
+
+.realm-card:hover::before {
+    opacity: 0.3;
+}
+
+/* Card 1: Khoa Học Chân Lý Đảo (CNXHKH) */
+.realm-card-cnxhkh {
+    background: linear-gradient(145deg, #0b132b 0%, #1c2541 55%, #1e3a8a 100%);
+    border: 1.5px solid rgba(59, 130, 246, 0.35);
+    box-shadow: 0 12px 30px -10px rgba(30, 58, 138, 0.45);
+}
+
+.realm-card-cnxhkh::before {
+    background: #38bdf8;
+}
+
+.realm-card-cnxhkh:hover {
+    border-color: rgba(96, 165, 250, 0.85);
+    box-shadow: 0 18px 40px -10px rgba(37, 99, 235, 0.6), 0 0 25px rgba(56, 189, 248, 0.25);
+}
+
+/* Card 2: Hồng Kỳ Khởi Nguyên Cung (LSD) */
+.realm-card-lsd {
+    background: linear-gradient(145deg, #20080a 0%, #3a0d12 55%, #7f1d1d 100%);
+    border: 1.5px solid rgba(239, 68, 68, 0.35);
+    box-shadow: 0 12px 30px -10px rgba(127, 29, 29, 0.45);
+}
+
+.realm-card-lsd::before {
+    background: #f59e0b;
+}
+
+.realm-card-lsd:hover {
+    border-color: rgba(248, 113, 113, 0.85);
+    box-shadow: 0 18px 40px -10px rgba(220, 38, 38, 0.6), 0 0 25px rgba(245, 158, 11, 0.25);
+}
+
+.realm-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.realm-icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.realm-card:hover .realm-icon-box {
+    transform: scale(1.08) rotate(5deg);
+}
+
+.realm-icon-cnxhkh {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.3) 0%, rgba(56, 189, 248, 0.25) 100%);
+    color: #60a5fa;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+}
+
+.realm-icon-lsd {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.35) 0%, rgba(245, 158, 11, 0.25) 100%);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.35);
+}
+
+.realm-badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.badge-cnxhkh {
+    background: rgba(37, 99, 235, 0.25);
+    color: #93c5fd;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+}
+
+.badge-lsd {
+    background: rgba(220, 38, 38, 0.25);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.realm-title-group {
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.realm-main-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+
+.realm-sub-title {
+    font-size: 13px;
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.realm-desc-text {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #94a3b8;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.realm-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.realm-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-enter-realm {
+    width: 100%;
+    padding: 13px 20px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.btn-enter-cnxhkh {
+    background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
+    color: #ffffff;
+}
+
+.btn-enter-cnxhkh:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 100%);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-enter-lsd {
+    background: linear-gradient(135deg, #dc2626 0%, #b45309 100%);
+    color: #ffffff;
+}
+
+.btn-enter-lsd:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #92400e 100%);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-enter-realm i {
+    transition: transform 0.25s ease;
+}
+
+.realm-card:hover .btn-enter-realm i {
+    transform: translateX(4px);
+}
+
+/* Thanh điều hướng Subject View */
+.subject-nav-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.btn-back-to-palace {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 16px;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.btn-back-to-palace:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #2563eb;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-back-to-palace i {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.btn-back-to-palace:hover i {
+    transform: translateX(-2px);
+}
+
+.subject-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.subject-breadcrumb .crumb-active {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.sidebar-realm-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    text-align: left;
+}
+
+.sidebar-realm-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #e2e8f0;
+}
+
+.sidebar-realm-btn.active {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+    font-weight: 700;
+}
+
+.sidebar-realm-btn.active.realm-lsd {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+/* ==========================================================================
+   MULTI-SUBJECT SIDEBAR DROPDOWN & MOCK EXAM MODAL
+   ========================================================================== */
+
+.sidebar-subject-picker {
+    width: 100%;
+}
+
+.sidebar-subject-select {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: #f8fafc;
+    color: #1e293b;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+    display: block;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-subject-select:hover,
+.sidebar-subject-select:focus {
+    border-color: #2563eb;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.mock-choice-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mock-choice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.mock-choice-cnxhkh:hover {
+    border-color: #2563eb !important;
+    background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%) !important;
+}
+
+.mock-choice-lsd:hover {
+    border-color: #dc2626 !important;
+    background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%) !important;
+}
+
+/* Đảm bảo class .hidden hoạt động độc lập không phụ thuộc CDN Tailwind */
+.hidden {
+    display: none !important;
+}

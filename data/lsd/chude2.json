@@ -1,0 +1,62 @@
+[
+    {
+        "id": 201,
+        "type": "single",
+        "question": "Câu 1: Hội nghị hợp nhất các tổ chức cộng sản thành lập Đảng Cộng sản Việt Nam họp từ ngày nào tại Cửu Long (Hương Cảng, Trung Quốc)?",
+        "options": [
+            "A. Ngày 06/01/1930 đến ngày 07/02/1930",
+            "B. Ngày 03/02/1931",
+            "C. Ngày 19/08/1945",
+            "D. Ngày 02/09/1945"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Hội nghị hợp nhất thành lập Đảng diễn ra từ ngày 06/01 đến đầu tháng 2/1930 do đồng chí Nguyễn Ái Quốc chủ trì tại Cửu Long (Hương Cảng, Trung Quốc)."
+    },
+    {
+        "id": 202,
+        "type": "single",
+        "question": "Câu 2: Cương lĩnh chính trị đầu tiên của Đảng do ai soạn thảo và được thông qua tại Hội nghị thành lập Đảng đầu năm 1930?",
+        "options": [
+            "A. Nguyễn Ái Quốc",
+            "B. Trần Phú",
+            "C. Lê Hồng Phong",
+            "D. Hà Huy Tập"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Cương lĩnh chính trị đầu tiên (Chánh cương vắn tắt, Sách lược vắn tắt) do đồng chí Nguyễn Ái Quốc khởi thảo."
+    },
+    {
+        "id": 203,
+        "type": "single",
+        "question": "Câu 3: Đỉnh cao của phong trào cách mạng 1930 - 1931 ở Việt Nam là sự kiện nào?",
+        "options": [
+            "A. Sự ra đời của chính quyền Xô viết Nghệ - Tĩnh",
+            "B. Khởi nghĩa Nam Kỳ",
+            "C. Khởi nghĩa Bắc Sơn",
+            "D. Bãi công của công nhân Ba Son"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Đỉnh cao của cao trào cách mạng 1930 - 1931 là việc thành lập chính quyền Xô viết Nghệ - Tĩnh của giai cấp công nông."
+    },
+    {
+        "id": 204,
+        "type": "single",
+        "question": "Câu 4: Thắng lợi vĩ đại của Cách mạng Tháng Tám năm 1945 đã dẫn tới sự kiện lịch sử trọng đại nào?",
+        "options": [
+            "A. Nước Việt Nam Dân chủ Cộng hòa ra đời, chấm dứt ách thống trị của thực dân phong kiến",
+            "B. Ký kết Hiệp định Genève",
+            "C. Giải phóng hoàn toàn miền Nam",
+            "D. Khởi xướng công cuộc đổi mới đất nước"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Cách mạng Tháng Tám 1945 thắng lợi đã đập tan ách thống trị thực dân phong kiến, khai sinh nước Việt Nam Dân chủ Cộng hòa vào ngày 02/09/1945."
+    }
+]

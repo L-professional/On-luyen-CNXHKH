@@ -60,7 +60,7 @@
                 </div>
                 <div class="logo-text truncate min-w-0">
                     <h1 class="logo-title truncate">Ôn luyện trắc nghiệm</h1>
-                    <p class="logo-subtitle hidden md:block">Chủ nghĩa xã hội khoa học</p>
+                    <p class="logo-subtitle hidden md:block" id="learn-header-subtitle">Chủ nghĩa xã hội khoa học</p>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
             </div>
             <div class="logo-text truncate min-w-0">
                 <h1 class="logo-title truncate">Ôn luyện trắc nghiệm</h1>
-                <p class="logo-subtitle hidden md:block">Chủ nghĩa xã hội khoa học</p>
+                <p class="logo-subtitle hidden md:block" id="test-header-subtitle">Chủ nghĩa xã hội khoa học</p>
             </div>
         </div>
 
@@ -164,10 +164,10 @@
 
             <!-- Mock Exam Action -->
             <div class="sidebar-section">
-                <a href="practice.html?topic=mock&mode=test" class="btn-mock-exam">
+                <button type="button" class="btn-mock-exam w-full cursor-pointer" onclick="openMockSubjectModal(event)" title="Làm bài thi thử mô phỏng">
                     <i class="fa-solid fa-bullseye"></i>
                     <span>Thi Mô Phỏng</span>
-                </a>
+                </button>
             </div>
 
             <!-- Khối Bảng Xếp Hạng Huyết Chiến Đoạt Vị -->
@@ -516,6 +516,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <!-- Cấu hình Đa Môn Phái & Dữ liệu Lịch sử Đảng -->
+    <script src="config.js"></script>
+    <script src="subjects-config.js"></script>
+    <script src="data-cnxhkh.js"></script>
+    <script src="data-lsd.js"></script>
     <script src="practice.js"></script>
     <script src="mock.js"></script>
     <script src="app.js"></script>

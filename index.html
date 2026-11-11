@@ -101,48 +101,36 @@
                 </button>
             </div>
 
-            <a href="index.html" class="btn-home active" id="btn-home">
+            <a href="index.html" class="btn-home active" id="btn-home" onclick="if(window.returnToHomeView){ window.returnToHomeView(); return false; }">
                 <i class="fa-solid fa-house"></i>
                 <span>Trang chủ</span>
             </a>
 
-            <!-- Khối Chủ đề ôn luyện -->
-            <div class="sidebar-section">
-                <h3 class="sidebar-title">CHỦ ĐỀ ÔN LUYỆN</h3>
+            <!-- Khối Chủ đề ôn luyện / Danh sách Môn phái (Động hóa qua JS) -->
+            <div class="sidebar-section" id="sidebar-topics-section">
+                <!-- Dropdown Chọn Môn Học -->
+                <div class="sidebar-subject-picker" id="sidebar-subject-picker" style="margin-bottom: 10px;">
+                    <label for="sidebar-subject-select" class="sidebar-title flex items-center justify-between" style="margin-bottom: 6px;">
+                        <span><i class="fa-solid fa-layer-group text-amber-500"></i> ĐỔI MÔN PHÁI</span>
+                    </label>
+                    <select id="sidebar-subject-select" class="sidebar-subject-select" onchange="onSidebarSubjectChange(this.value)">
+                        <option value="cnxhkh">⚛️ CNXH Khoa học</option>
+                        <option value="lsd">🚩 Lịch sử Đảng</option>
+                    </select>
+                </div>
+
+                <h3 class="sidebar-title" id="sidebar-topics-title">CHỦ ĐỀ ÔN LUYỆN</h3>
                 <nav class="topic-menu" id="topic-nav-menu">
-                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(1)">
-                        <i class="fa-solid fa-book-open"></i>
-                        <span>Chủ đề 1: Đối tượng, chức năng, phương pháp nghiên cứu của CNXH khoa học</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(2)">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Chủ đề 2: Sự ra đời và phát triển của CNXH khoa học</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(3)">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Chủ đề 3: Sứ mệnh lịch sử của giai cấp công nhân</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(4)">
-                        <i class="fa-regular fa-star"></i>
-                        <span>Chủ đề 4: Những đặc trưng cơ bản của CNXH và con đường đi lên CNXH ở Việt Nam</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(5)">
-                        <i class="fa-solid fa-gear"></i>
-                        <span>Chủ đề 5: Các hình thái kinh tế - xã hội</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(6)">
-                        <i class="fa-solid fa-landmark"></i>
-                        <span>Chủ đề 6: Thời kỳ quá độ lên CNXH</span>
-                    </button>
+                    <!-- Được render động bởi renderMainSidebar() trong app.js -->
                 </nav>
             </div>
 
-            <!-- Khối Thi Mô Phỏng (nền hồng nhạt, chữ đỏ) trỏ thẳng tới practice.html?topic=mock&mode=test -->
-            <div class="sidebar-section">
-                <a href="practice.html?topic=mock&mode=test" class="btn-mock-exam" id="btn-mock-exam">
+            <!-- Khối Thi Mô Phỏng (Mở Modal chọn môn học) -->
+            <div class="sidebar-section" id="sidebar-mock-section">
+                <button type="button" class="btn-mock-exam w-full cursor-pointer" id="btn-mock-exam" onclick="openMockSubjectModal(event)" title="Làm bài thi thử mô phỏng">
                     <i class="fa-solid fa-bullseye"></i>
                     <span>Thi Mô Phỏng</span>
-                </a>
+                </button>
             </div>
 
             <!-- Khối Bảng Xếp Hạng Huyết Chiến Đoạt Vị -->
@@ -196,224 +184,168 @@
 
         <!-- Main Content (Phần nội dung chính) -->
         <main class="main-content pb-20 md:pb-0">
-            <!-- Hero Banner -->
-            <section class="hero-banner">
-                <div class="hero-content">
-                    <div class="hero-icon-title-row">
-                        <div class="hero-book-icon-box">
-                            <i class="fa-solid fa-book-open"></i>
-                        </div>
-                        <div>
-                            <span class="hero-tag">Ôn luyện trắc nghiệm</span>
-                            <h2 class="hero-heading">Chủ nghĩa xã hội khoa học</h2>
-                        </div>
-                    </div>
-                    <p class="hero-quote">“Hiểu đúng lý luận, vững vàng tư tưởng, kiến tạo tương lai.”</p>
-                </div>
-                <div class="hero-graphic">
-                    <img src="banner-art.jpg" alt="Chủ nghĩa xã hội khoa học" class="hero-img" onerror="this.style.display='none'">
-                </div>
-            </section>
 
-            <!-- Lưới thẻ Chủ đề (Topic Grid) -->
-            <section class="dashboard-topics-section">
-                <!-- Tiêu đề khu vực -->
-                <div class="section-header-row">
-                    <div class="section-title-box">
-                        <div class="section-icon-box">
-                            <i class="fa-solid fa-book-open"></i>
+            <!-- ============================================================
+                 VIEW 1: ĐẠI ĐIỆN TÔNG MÔN (Home View: Chứa 2 Card Bí Cảnh)
+                 ============================================================ -->
+            <div id="home-view">
+                <!-- Hero Banner Đại Điện -->
+                <section class="hero-banner" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);">
+                    <div class="hero-content">
+                        <div class="hero-icon-title-row">
+                            <div class="hero-book-icon-box" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">
+                                <i class="fa-solid fa-synagogue"></i>
+                            </div>
+                            <div>
+                                <span class="hero-tag" style="background: rgba(245, 158, 11, 0.15); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                    Đại Điện Tông Môn
+                                </span>
+                                <h2 class="hero-heading">Bí Cảnh Khảo Hạch Đa Môn Phái</h2>
+                            </div>
                         </div>
-                        <h3 class="section-heading-text">Danh sách Chủ đề ôn luyện & Kiểm tra</h3>
+                        <p class="hero-quote">“Chọn con đường đạo tâm, bước vào bí cảnh để tôi luyện trí tuệ và đột phá cảnh giới.”</p>
                     </div>
-                    <div class="section-badge-total">
-                        <i class="fa-solid fa-book-bookmark"></i>
-                        <span>Tổng số chủ đề: 6</span>
+                    <div class="hero-graphic">
+                        <img src="banner-art.jpg" alt="Đại Điện Tông Môn" class="hero-img" onerror="this.style.display='none'">
                     </div>
-                </div>
+                </section>
 
-                <!-- Lưới 2 cột thẻ (2 Columns Grid) -->
-                <div class="topic-cards-grid">
-                    <!-- Thẻ Chủ đề 1 -->
-                    <div class="topic-dashboard-card card-theme-1" id="topic-card-1" data-topic-id="1">
-                        <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-1">
-                                <i class="fa-solid fa-book-open"></i>
+                <!-- Section: Chọn Bí Cảnh Tu Luyện (2 Cards lớn, full-width trên mobile) -->
+                <section class="realm-selection-section">
+                    <div class="section-header-row">
+                        <div class="section-title-box">
+                            <div class="section-icon-box" style="background: #eff6ff; color: #2563eb;">
+                                <i class="fa-solid fa-dungeon"></i>
                             </div>
-                            <div class="tdc-header-text">
-                                <span class="tdc-pill-tag tag-theme-1">Chủ đề 1</span>
-                                <h4 class="tdc-title">Đối tượng, chức năng, phương pháp nghiên cứu của CNXH khoa học</h4>
-                            </div>
+                            <h3 class="section-heading-text">Chọn Bí Cảnh Tu Luyện</h3>
                         </div>
-                        <p class="tdc-desc">Nghiên cứu bản chất, chức năng, phương pháp nghiên cứu của chủ nghĩa xã hội khoa học.</p>
-                        <div class="tdc-bottom">
-                            <div class="tdc-progress-group">
-                                <div class="tdc-count-info">
-                                    <i class="fa-regular fa-file-lines"></i>
-                                    <span id="topic-count-1">40 câu hỏi</span>
+                        <div class="section-badge-total">
+                            <i class="fa-solid fa-scroll"></i>
+                            <span>2 Môn Phái Khởi Tạo</span>
+                        </div>
+                    </div>
+
+                    <div class="realm-cards-grid">
+                        <!-- Card 1: Khoa Học Chân Lý Đảo (CNXHKH) -->
+                        <div class="realm-card realm-card-cnxhkh" id="card-realm-cnxhkh" onclick="showSubjectView('cnxhkh')">
+                            <div>
+                                <div class="realm-card-top">
+                                    <div class="realm-icon-box realm-icon-cnxhkh">
+                                        <i class="fa-solid fa-atom"></i>
+                                    </div>
+                                    <span class="realm-badge-tag badge-cnxhkh">
+                                        <i class="fa-solid fa-bolt"></i> Chân Lý Pháp Trận
+                                    </span>
                                 </div>
-                                <div class="tdc-progress-bar">
-                                    <div class="tdc-progress-fill" id="topic-fill-1" style="width: 0%;"></div>
+                                <div class="realm-title-group">
+                                    <h4 class="realm-main-title">Khoa Học Chân Lý Đảo</h4>
+                                    <p class="realm-sub-title">Chủ nghĩa Xã hội Khoa học</p>
                                 </div>
-                                <span class="tdc-progress-percent" id="topic-percent-1">0%</span>
+                                <p class="realm-desc-text">
+                                    Nơi tôi luyện nhận thức duy vật biện chứng, khám phá quy luật tiến hóa lịch sử, sứ mệnh của giai cấp công nhân và con đường đi lên CNXH.
+                                </p>
+                                <div class="realm-meta-tags">
+                                    <span class="realm-pill"><i class="fa-solid fa-layer-group"></i> 6 Tầng Khảo Hạch</span>
+                                    <span class="realm-pill"><i class="fa-solid fa-book-open"></i> Hơn 250+ Câu hỏi</span>
+                                    <span class="realm-pill"><i class="fa-solid fa-shield-halved"></i> Ôn &amp; Thi Thử</span>
+                                </div>
                             </div>
-                            <button class="btn-choose-topic" onclick="openModeSelectModal(1)">
-                                <span>Chọn chủ đề</span>
+                            <button type="button" class="btn-enter-realm btn-enter-cnxhkh" id="btn-enter-cnxhkh" onclick="event.stopPropagation(); showSubjectView('cnxhkh');">
+                                <span>Tiến vào Bí Cảnh</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+
+                        <!-- Card 2: Hồng Kỳ Khởi Nguyên Cung (LSD) -->
+                        <div class="realm-card realm-card-lsd" id="card-realm-lsd" onclick="showSubjectView('lsd')">
+                            <div>
+                                <div class="realm-card-top">
+                                    <div class="realm-icon-box realm-icon-lsd">
+                                        <i class="fa-solid fa-flag"></i>
+                                    </div>
+                                    <span class="realm-badge-tag badge-lsd">
+                                        <i class="fa-solid fa-fire"></i> Hồng Kỳ Trận Pháp
+                                    </span>
+                                </div>
+                                <div class="realm-title-group">
+                                    <h4 class="realm-main-title">Hồng Kỳ Khởi Nguyên Cung</h4>
+                                    <p class="realm-sub-title">Lịch sử Đảng Cộng sản Việt Nam</p>
+                                </div>
+                                <p class="realm-desc-text">
+                                    Nơi tái hiện dòng chảy lịch sử quật khởi, tôi luyện đạo tâm yêu nước, sáng tỏ chặng đường vẻ vang của tiền nhân và công cuộc đổi mới non sông.
+                                </p>
+                                <div class="realm-meta-tags">
+                                    <span class="realm-pill"><i class="fa-solid fa-layer-group"></i> 6 Tầng Khảo Hạch</span>
+                                    <span class="realm-pill"><i class="fa-solid fa-feather"></i> 40 Câu Bài 1</span>
+                                    <span class="realm-pill"><i class="fa-solid fa-shield-halved"></i> Ôn &amp; Thi Thử</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-enter-realm btn-enter-lsd" id="btn-enter-lsd" onclick="event.stopPropagation(); showSubjectView('lsd');">
+                                <span>Tiến vào Bí Cảnh</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
                     </div>
+                </section>
+            </div>
 
-                    <!-- Thẻ Chủ đề 2 -->
-                    <div class="topic-dashboard-card card-theme-2" id="topic-card-2" data-topic-id="2">
-                        <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-2">
-                                <i class="fa-solid fa-chart-line"></i>
-                            </div>
-                            <div class="tdc-header-text">
-                                <span class="tdc-pill-tag tag-theme-2">Chủ đề 2</span>
-                                <h4 class="tdc-title">Sự ra đời và phát triển của CNXH khoa học</h4>
-                            </div>
-                        </div>
-                        <p class="tdc-desc">Tìm hiểu quá trình hình thành, phát triển và những điều kiện khách quan, chủ quan của CNXH khoa học.</p>
-                        <div class="tdc-bottom">
-                            <div class="tdc-progress-group">
-                                <div class="tdc-count-info">
-                                    <i class="fa-regular fa-file-lines"></i>
-                                    <span id="topic-count-2">55 câu hỏi</span>
-                                </div>
-                                <div class="tdc-progress-bar">
-                                    <div class="tdc-progress-fill" id="topic-fill-2" style="width: 0%;"></div>
-                                </div>
-                                <span class="tdc-progress-percent" id="topic-percent-2">0%</span>
-                            </div>
-                            <button class="btn-choose-topic" onclick="openModeSelectModal(2)">
-                                <span>Chọn chủ đề</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Thẻ Chủ đề 3 -->
-                    <div class="topic-dashboard-card card-theme-3" id="topic-card-3" data-topic-id="3">
-                        <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-3">
-                                <i class="fa-solid fa-users"></i>
-                            </div>
-                            <div class="tdc-header-text">
-                                <span class="tdc-pill-tag tag-theme-3">Chủ đề 3</span>
-                                <h4 class="tdc-title">Sứ mệnh lịch sử của giai cấp công nhân</h4>
-                            </div>
-                        </div>
-                        <p class="tdc-desc">Làm rõ vai trò, sứ mệnh lịch sử của giai cấp công nhân trong quá trình phát triển xã hội.</p>
-                        <div class="tdc-bottom">
-                            <div class="tdc-progress-group">
-                                <div class="tdc-count-info">
-                                    <i class="fa-regular fa-file-lines"></i>
-                                    <span id="topic-count-3">52 câu hỏi</span>
-                                </div>
-                                <div class="tdc-progress-bar">
-                                    <div class="tdc-progress-fill" id="topic-fill-3" style="width: 0%;"></div>
-                                </div>
-                                <span class="tdc-progress-percent" id="topic-percent-3">0%</span>
-                            </div>
-                            <button class="btn-choose-topic" onclick="openModeSelectModal(3)">
-                                <span>Chọn chủ đề</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Thẻ Chủ đề 4 -->
-                    <div class="topic-dashboard-card card-theme-4" id="topic-card-4" data-topic-id="4">
-                        <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-4">
-                                <i class="fa-solid fa-star"></i>
-                            </div>
-                            <div class="tdc-header-text">
-                                <span class="tdc-pill-tag tag-theme-4">Chủ đề 4</span>
-                                <h4 class="tdc-title">Những đặc trưng cơ bản của CNXH và con đường đi lên CNXH ở Việt Nam</h4>
-                            </div>
-                        </div>
-                        <p class="tdc-desc">Nắm vững các đặc trưng cơ bản và con đường đi lên CNXH ở Việt Nam.</p>
-                        <div class="tdc-bottom">
-                            <div class="tdc-progress-group">
-                                <div class="tdc-count-info">
-                                    <i class="fa-regular fa-file-lines"></i>
-                                    <span id="topic-count-4">57 câu hỏi</span>
-                                </div>
-                                <div class="tdc-progress-bar">
-                                    <div class="tdc-progress-fill" id="topic-fill-4" style="width: 0%;"></div>
-                                </div>
-                                <span class="tdc-progress-percent" id="topic-percent-4">0%</span>
-                            </div>
-                            <button class="btn-choose-topic" onclick="openModeSelectModal(4)">
-                                <span>Chọn chủ đề</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Thẻ Chủ đề 5 -->
-                    <div class="topic-dashboard-card card-theme-5" id="topic-card-5" data-topic-id="5">
-                        <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-5">
-                                <i class="fa-solid fa-gear"></i>
-                            </div>
-                            <div class="tdc-header-text">
-                                <span class="tdc-pill-tag tag-theme-5">Chủ đề 5</span>
-                                <h4 class="tdc-title">Các hình thái kinh tế - xã hội</h4>
-                            </div>
-                        </div>
-                        <p class="tdc-desc">Tìm hiểu các hình thái kinh tế - xã hội và sự phát triển của xã hội loài người.</p>
-                        <div class="tdc-bottom">
-                            <div class="tdc-progress-group">
-                                <div class="tdc-count-info">
-                                    <i class="fa-regular fa-file-lines"></i>
-                                    <span id="topic-count-5">54 câu hỏi</span>
-                                </div>
-                                <div class="tdc-progress-bar">
-                                    <div class="tdc-progress-fill" id="topic-fill-5" style="width: 0%;"></div>
-                                </div>
-                                <span class="tdc-progress-percent" id="topic-percent-5">0%</span>
-                            </div>
-                            <button class="btn-choose-topic" onclick="openModeSelectModal(5)">
-                                <span>Chọn chủ đề</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Thẻ Chủ đề 6 -->
-                    <div class="topic-dashboard-card card-theme-6" id="topic-card-6" data-topic-id="6">
-                        <div class="tdc-top">
-                            <div class="tdc-icon-circle bg-theme-6">
-                                <i class="fa-solid fa-landmark"></i>
-                            </div>
-                            <div class="tdc-header-text">
-                                <span class="tdc-pill-tag tag-theme-6">Chủ đề 6</span>
-                                <h4 class="tdc-title">Thời kỳ quá độ lên CNXH</h4>
-                            </div>
-                        </div>
-                        <p class="tdc-desc">Nghiên cứu đặc điểm và nhiệm vụ của thời kỳ quá độ lên chủ nghĩa xã hội ở Việt Nam.</p>
-                        <div class="tdc-bottom">
-                            <div class="tdc-progress-group">
-                                <div class="tdc-count-info">
-                                    <i class="fa-regular fa-file-lines"></i>
-                                    <span id="topic-count-6">33 câu hỏi</span>
-                                </div>
-                                <div class="tdc-progress-bar">
-                                    <div class="tdc-progress-fill" id="topic-fill-6" style="width: 0%;"></div>
-                                </div>
-                                <span class="tdc-progress-percent" id="topic-percent-6">0%</span>
-                            </div>
-                            <button class="btn-choose-topic" onclick="openModeSelectModal(6)">
-                                <span>Chọn chủ đề</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
+            <!-- ============================================================
+                 VIEW 2: CHI TIẾT MÔN HỌC (Subject View: 6 Chủ Đề Của Môn Đó)
+                 ============================================================ -->
+            <div id="subject-view" class="hidden">
+                <!-- Thanh điều hướng: Nút Trở về Đại Điện & Breadcrumb -->
+                <div class="subject-nav-toolbar">
+                    <button type="button" class="btn-back-to-palace" id="btn-back-to-palace" onclick="returnToHomeView()" title="Quay lại Đại Điện Tông Môn để chọn môn khác">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>⬅️ Trở về Đại Điện</span>
+                    </button>
+                    <div class="subject-breadcrumb">
+                        <span class="cursor-pointer hover:underline" onclick="returnToHomeView()">Đại Điện Tông Môn</span>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                        <span id="subject-breadcrumb-name" class="crumb-active">Khoa Học Chân Lý Đảo</span>
                     </div>
                 </div>
-            </section>
+
+                <!-- Dynamic Hero Banner theo môn học -->
+                <section class="hero-banner" id="subject-hero-banner">
+                    <div class="hero-content">
+                        <div class="hero-icon-title-row">
+                            <div class="hero-book-icon-box" id="subject-hero-icon-box">
+                                <i class="fa-solid fa-book-open" id="subject-hero-icon"></i>
+                            </div>
+                            <div>
+                                <span class="hero-tag" id="subject-hero-tag">Bí Cảnh Tu Luyện</span>
+                                <h2 class="hero-heading" id="subject-hero-heading">Chủ nghĩa xã hội khoa học</h2>
+                            </div>
+                        </div>
+                        <p class="hero-quote" id="subject-hero-quote">“Hiểu đúng lý luận, vững vàng tư tưởng, kiến tạo tương lai.”</p>
+                    </div>
+                    <div class="hero-graphic">
+                        <img src="banner-art.jpg" alt="Bí Cảnh Môn Phái" class="hero-img" id="subject-hero-img" onerror="this.style.display='none'">
+                    </div>
+                </section>
+
+                <!-- Lưới thẻ Chủ đề (6 Topic Cards động) -->
+                <section class="dashboard-topics-section">
+                    <div class="section-header-row">
+                        <div class="section-title-box">
+                            <div class="section-icon-box">
+                                <i class="fa-solid fa-book-open" id="subject-section-icon"></i>
+                            </div>
+                            <h3 class="section-heading-text" id="subject-section-title">Danh sách Chủ đề ôn luyện &amp; Kiểm tra</h3>
+                        </div>
+                        <div class="section-badge-total">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                            <span>Tổng số chủ đề: 6</span>
+                        </div>
+                    </div>
+
+                    <!-- Lưới 6 thẻ chủ đề động -->
+                    <div class="topic-cards-grid" id="topic-cards-grid">
+                        <!-- Sẽ được hàm renderSubjectTopicCards() render tự động theo môn -->
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 
@@ -496,12 +428,12 @@
             <i class="fa-solid fa-book-open"></i>
             <span>Chủ đề</span>
         </button>
-        <a href="practice.html?topic=mock&mode=test" class="mb-nav-item mb-nav-special" title="Làm bài thi thử mô phỏng">
+        <button type="button" class="mb-nav-item mb-nav-special" onclick="openMockSubjectModal(event)" title="Làm bài thi thử mô phỏng">
             <div class="mb-nav-icon-circle">
                 <i class="fa-solid fa-bullseye"></i>
             </div>
             <span>Thi thử</span>
-        </a>
+        </button>
         <button type="button" class="mb-nav-item" onclick="openLeaderboardModal()" title="Bảng xếp hạng Huyết chiến đoạt vị">
             <i class="fa-solid fa-trophy"></i>
             <span>BXH</span>
@@ -516,6 +448,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <!-- Cấu hình Đa Môn Phái & Dữ liệu Lịch sử Đảng -->
+    <script src="config.js"></script>
+    <script src="subjects-config.js"></script>
+    <script src="data-cnxhkh.js"></script>
+    <script src="data-lsd.js"></script>
+    <script src="practice.js"></script>
+    <script src="mock.js"></script>
     <script src="index.js"></script>
     <script src="app.js"></script>
 </body>

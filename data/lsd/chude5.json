@@ -1,0 +1,47 @@
+[
+    {
+        "id": 501,
+        "type": "single",
+        "question": "Câu 1: Bài học kinh nghiệm hàng đầu, giữ vị trí quyết định mọi thắng lợi của cách mạng Việt Nam là gì?",
+        "options": [
+            "A. Nắm vững ngọn cờ độc lập dân tộc và chủ nghĩa xã hội",
+            "B. Mở rộng giao thương quốc tế thuần túy",
+            "C. Dựa vào sự viện trợ từ bên ngoài",
+            "D. Phát triển thị trường tài chính"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Bài học lớn hàng đầu là kiên định và nắm vững ngọn cờ độc lập dân tộc gắn liền với chủ nghĩa xã hội - đường lối xuyên suốt của cách mạng Việt Nam."
+    },
+    {
+        "id": 502,
+        "type": "single",
+        "question": "Câu 2: Bài học 'Sự nghiệp cách mạng là của nhân dân, do nhân dân và vì nhân dân' thể hiện quan điểm nhất quán nào của Đảng?",
+        "options": [
+            "A. Lấy dân làm gốc, nhân dân là chủ thể sáng tạo ra lịch sử",
+            "B. Ưu tiên lợi ích của tầng lớp tinh hoa",
+            "C. Mọi quyền lực tập trung cho các doanh nghiệp",
+            "D. Chỉ chú trọng phát triển quân sự"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Bài học lịch sử khẳng định: Cách mạng là sự nghiệp của quần chúng nhân dân; Đảng phải luôn gắn bó máu thịt với dân, lấy dân làm gốc."
+    },
+    {
+        "id": 503,
+        "type": "single",
+        "question": "Câu 3: Để giữ vững vai trò lãnh đạo, Đảng phải thường xuyên thực hiện công tác trọng tâm nào?",
+        "options": [
+            "A. Tự đổi mới, tự chỉnh đốn, nâng cao năng lực lãnh đạo và sức chiến đấu của Đảng",
+            "B. Tăng số lượng hội nghị và khẩu hiệu",
+            "C. Tránh tiếp xúc với dư luận quần chúng",
+            "D. Duy trì nguyên trạng không thay đổi"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Đảng không ngừng tự đổi mới, tự chỉnh đốn, kiên quyết đấu tranh chống thoái hóa biến chất để nâng cao năng lực cầm quyền."
+    }
+]

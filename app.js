@@ -4,14 +4,43 @@
  * Logic định tuyến, chấm điểm và phản hồi tương tác
  */
 
-// Danh sách URL dữ liệu 6 chủ đề (giữ nguyên không chạm vào)
+// Cấu hình môn học & kho dữ liệu namespacing
+var SUBJECTS = (typeof window !== 'undefined' && window.SUBJECTS) ? window.SUBJECTS : {
+    'cnxhkh': { id: 'cnxhkh', name: 'Chủ nghĩa Xã hội Khoa học', folder: 'data/cnxhkh', realmName: 'Khoa Học Chân Lý Đảo' },
+    'lsd': { id: 'lsd', name: 'Lịch sử Đảng', folder: 'data/lsd', realmName: 'Hồng Kỳ Khởi Nguyên Cung' }
+};
+
+var SUBJECTS_CONFIG = (typeof window !== 'undefined' && window.SUBJECTS_CONFIG) ? window.SUBJECTS_CONFIG : SUBJECTS;
+if (typeof window !== 'undefined') {
+    window.SUBJECTS = SUBJECTS;
+    window.SUBJECTS_CONFIG = SUBJECTS_CONFIG;
+}
+
+/**
+ * Trả về đường dẫn động tới file JSON của chủ đề theo môn học hiện tại
+ * @param {string} subjectId Mã môn học
+ * @param {number|string} topicId Mã chủ đề (1..6)
+ * @returns {string} Đường dẫn tương đối chuẩn: ./data/${sub}/chude${topicId}.json
+ */
+function getSubjectTopicFileUrl(subjectId, topicId) {
+    const sub = subjectId || (appState && appState.currentSubject) || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    const folder = (SUBJECTS_CONFIG[sub] && SUBJECTS_CONFIG[sub].folder) ? SUBJECTS_CONFIG[sub].folder : `data/${sub}`;
+    return `./${folder}/chude${topicId}.json`;
+}
+
+function getSubjectFileUrls(subjectId) {
+    const sub = subjectId || (appState && appState.currentSubject) || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    return [1, 2, 3, 4, 5, 6].map(i => getSubjectTopicFileUrl(sub, i));
+}
+
+// Fallback tương thích ngược
 const fileUrls = [
-    './data/chude1.json',
-    './data/chude2.json',
-    './data/chude3.json',
-    './data/chude4.json',
-    './data/chude5.json',
-    './data/chude6.json'
+    './data/cnxhkh/chude1.json',
+    './data/cnxhkh/chude2.json',
+    './data/cnxhkh/chude3.json',
+    './data/cnxhkh/chude4.json',
+    './data/cnxhkh/chude5.json',
+    './data/cnxhkh/chude6.json'
 ];
 
 // Metadata chi tiết 6 chủ đề ôn luyện
@@ -72,8 +101,20 @@ const TOPICS_METADATA = [
     }
 ];
 
+/**
+ * Trả về danh sách chủ đề của môn học đang hoạt động
+ */
+function getActiveSubjectTopics() {
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    if (typeof getSubjectTopics === 'function') {
+        return getSubjectTopics(sub);
+    }
+    return TOPICS_METADATA;
+}
+
 // Trạng thái phiên làm việc toàn cục
 const appState = {
+    currentSubject: 'cnxhkh', // 'cnxhkh' (Khoa Học Chân Lý Đảo) | 'lsd' (Hồng Kỳ Khởi Nguyên Cung)
     mode: 'learn',            // 'learn' (Ôn luyện) | 'test' (Kiểm tra)
     topicId: 1,               // 1..6 hoặc 'mock'
     topicMeta: null,
@@ -105,11 +146,15 @@ function getCurrentUserUID() {
 }
 
 /**
- * Trả về Storage Key độc lập 1-1 cho tiến trình của từng tài khoản theo UID:
- * progress_{userId}_topic_{topicId}
+ * Trả về Storage Key độc lập 1-1 cho tiến trình của từng tài khoản theo UID & Môn học:
+ * progress_{userId}_topic_{topicId} (hoặc có tiền tố môn học)
  */
 function getProgressStorageKey(topicId) {
     const uid = getCurrentUserUID();
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    if (sub && sub !== 'cnxhkh') {
+        return `progress_${uid}_${sub}_topic_${topicId}`;
+    }
     return `progress_${uid}_topic_${topicId}`;
 }
 
@@ -215,11 +260,15 @@ function clearProgress(topicId) {
 }
 
 /**
- * Trả về Storage Key cho TIẾN ĐỘ CAO NHẤT (Max Progress) theo UID:
- * max_progress_topic{topicId}_{userId}
+ * Trả về Storage Key cho TIẾN ĐỘ CAO NHẤT (Max Progress) theo UID & Môn học:
+ * max_progress_topic{topicId}_{userId} (hoặc có tiền tố môn học)
  */
 function getMaxProgressStorageKey(topicId) {
     const uid = getCurrentUserUID();
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    if (sub && sub !== 'cnxhkh') {
+        return `max_progress_${sub}_topic${topicId}_${uid}`;
+    }
     return `max_progress_topic${topicId}_${uid}`;
 }
 
@@ -2533,16 +2582,390 @@ function updateUserActivity(activityString) {
 window.updateUserActivity = updateUserActivity;
 
 // ==========================================================================
-// 2. ĐỒNG BỘ DỮ LIỆU RA DASHBOARD (INDEX.HTML)
+// 2. ĐỒNG BỘ DỮ LIỆU RA DASHBOARD & QUẢN LÝ ĐA MÔN PHÁI
 // ==========================================================================
-async function initDashboardPage() {
-    await syncDashboardProgress();
-    if (typeof broadcastHomeActivity === 'function') {
-        broadcastHomeActivity();
-    } else {
-        updateUserActivity("Đang dạo bước Tông Môn");
+
+/**
+ * Thiết lập các Event Listener điều khiển DOM theo đúng State
+ */
+function setupSubjectRoutingEvents() {
+    // 1. Nút & Card CNXHKH
+    const cardCnxhkh = document.getElementById('card-realm-cnxhkh');
+    const btnCnxhkh = document.getElementById('btn-enter-cnxhkh');
+    if (cardCnxhkh) {
+        cardCnxhkh.style.cursor = 'pointer';
+        cardCnxhkh.onclick = (e) => {
+            showSubjectView('cnxhkh');
+        };
+    }
+    if (btnCnxhkh) {
+        btnCnxhkh.onclick = (e) => {
+            e.stopPropagation();
+            showSubjectView('cnxhkh');
+        };
+    }
+
+    // 2. Nút & Card Lịch sử Đảng
+    const cardLsd = document.getElementById('card-realm-lsd');
+    const btnLsd = document.getElementById('btn-enter-lsd');
+    if (cardLsd) {
+        cardLsd.style.cursor = 'pointer';
+        cardLsd.onclick = (e) => {
+            showSubjectView('lsd');
+        };
+    }
+    if (btnLsd) {
+        btnLsd.onclick = (e) => {
+            e.stopPropagation();
+            showSubjectView('lsd');
+        };
+    }
+
+    // 3. Dropdown Sidebar: Đổi môn phái (change event)
+    const selectEl = document.getElementById('sidebar-subject-select');
+    if (selectEl) {
+        selectEl.onchange = (e) => {
+            onSidebarSubjectChange(e.target.value);
+        };
+    }
+
+    // 4. Nút ⬅️ Trở về Đại Điện
+    const backBtn = document.getElementById('btn-back-to-palace');
+    if (backBtn) {
+        backBtn.onclick = (e) => {
+            e.preventDefault();
+            returnToHomeView();
+        };
+    }
+
+    // 5. Nút Trang chủ trên Sidebar
+    const homeBtn = document.getElementById('btn-home');
+    if (homeBtn) {
+        homeBtn.onclick = (e) => {
+            e.preventDefault();
+            returnToHomeView();
+        };
     }
 }
+window.setupSubjectRoutingEvents = setupSubjectRoutingEvents;
+
+// Tự động gắn event listeners ngay khi DOM sẵn sàng
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupSubjectRoutingEvents);
+    } else {
+        setupSubjectRoutingEvents();
+    }
+}
+
+/**
+ * Khởi tạo Dashboard: Điều hướng view dựa theo state
+ */
+async function initDashboardPage() {
+    // Gắn event listeners điều khiển DOM
+    setupSubjectRoutingEvents();
+
+    // Đọc URL param ?subject= để quyết định view hiển thị
+    const urlParams = new URLSearchParams(window.location.search);
+    const subFromUrl = urlParams.get('subject');
+
+    if (subFromUrl && (subFromUrl === 'lsd' || subFromUrl === 'cnxhkh')) {
+        showSubjectView(subFromUrl);
+    } else {
+        returnToHomeView();
+    }
+
+    // Lắng nghe nút Back/Forward của trình duyệt
+    window.addEventListener('popstate', () => {
+        if (!document.getElementById('practice-body')) {
+            const p = new URLSearchParams(window.location.search);
+            const s = p.get('subject');
+            if (s && (s === 'lsd' || s === 'cnxhkh')) {
+                showSubjectView(s);
+            } else {
+                returnToHomeView();
+            }
+        }
+    });
+}
+
+/**
+ * ============================================================================
+ * VIEW TOGGLING & STATE MANAGEMENT (ROUTING CONTROLLER)
+ * ============================================================================
+ */
+
+/**
+ * Xử lý khi click Card "Tiến vào Bí Cảnh" hoặc kích hoạt môn học
+ * @param {string} subjectId - 'cnxhkh' hoặc 'lsd'
+ */
+function showSubjectView(subjectId) {
+    const sub = (subjectId === 'lsd') ? 'lsd' : 'cnxhkh';
+
+    // 1. Lưu vào bộ nhớ
+    try {
+        localStorage.setItem('currentSubject', sub);
+    } catch (e) {
+        console.warn('Lỗi lưu currentSubject vào localStorage:', e);
+    }
+    appState.currentSubject = sub;
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(sub);
+    }
+
+    // 2. Thay đổi value của thẻ <select> Dropdown ở Sidebar
+    const selectEl = document.getElementById('sidebar-subject-select');
+    if (selectEl) {
+        selectEl.value = sub;
+    }
+
+    // 3. Thêm class hidden vào home-view (và ẩn display)
+    const homeView = document.getElementById('home-view') || document.getElementById('realm-selection-view');
+    if (homeView) {
+        homeView.classList.add('hidden');
+        homeView.style.display = 'none';
+    }
+
+    // 4. Xóa class hidden khỏi subject-view (và hiện display)
+    const subjectView = document.getElementById('subject-view') || document.getElementById('subject-detail-view');
+    if (subjectView) {
+        subjectView.classList.remove('hidden');
+        subjectView.style.display = 'block';
+    }
+
+    // 5. Cập nhật URL param không reload trang
+    try {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('subject', sub);
+        window.history.pushState({ subject: sub }, '', newUrl);
+    } catch (e) {}
+
+    // 6. Gọi hàm renderTopicsList để vẽ ra 6 chủ đề của môn học
+    renderTopicsList(sub);
+}
+window.showSubjectView = showSubjectView;
+window.enterSubject = showSubjectView; // alias tương thích ngược
+window.renderSubjectView = showSubjectView; // alias tương thích ngược
+
+/**
+ * Xử lý sự kiện change của Dropdown chọn môn phái ở Sidebar
+ * @param {string} newSubject - Giá trị mới từ Dropdown ('cnxhkh' hoặc 'lsd')
+ */
+function onSidebarSubjectChange(newSubject) {
+    const sub = (newSubject === 'lsd') ? 'lsd' : 'cnxhkh';
+
+    // 1. Lưu vào localStorage
+    try {
+        localStorage.setItem('currentSubject', sub);
+    } catch (e) {}
+    appState.currentSubject = sub;
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(sub);
+    }
+
+    // Nếu đang ở practice.html: chuyển hướng sang chủ đề 1 của môn mới
+    if (document.getElementById('practice-body')) {
+        window.location.href = `practice.html?subject=${sub}&topic=1&mode=${appState.mode || 'learn'}`;
+        return;
+    }
+
+    // 2. Ẩn home-view, hiện subject-view (nếu user đang ở trang chủ)
+    const homeView = document.getElementById('home-view') || document.getElementById('realm-selection-view');
+    const subjectView = document.getElementById('subject-view') || document.getElementById('subject-detail-view');
+    if (homeView) {
+        homeView.classList.add('hidden');
+        homeView.style.display = 'none';
+    }
+    if (subjectView) {
+        subjectView.classList.remove('hidden');
+        subjectView.style.display = 'block';
+    }
+
+    // Cập nhật URL param
+    try {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('subject', sub);
+        window.history.pushState({ subject: sub }, '', newUrl);
+    } catch (e) {}
+
+    // 3. Gọi lại hàm renderTopicsList(newSubject) để tải lại danh sách bài học của môn mới
+    renderTopicsList(sub);
+}
+window.onSidebarSubjectChange = onSidebarSubjectChange;
+window.switchSubjectFromSidebar = onSidebarSubjectChange; // alias tương thích ngược
+
+/**
+ * Ẩn subject-view và hiện lại home-view (Đại Điện Tông Môn)
+ */
+function returnToHomeView() {
+    const homeView = document.getElementById('home-view') || document.getElementById('realm-selection-view');
+    const subjectView = document.getElementById('subject-view') || document.getElementById('subject-detail-view');
+
+    // Ẩn subject-view
+    if (subjectView) {
+        subjectView.classList.add('hidden');
+        subjectView.style.display = 'none';
+    }
+
+    // Hiện lại home-view
+    if (homeView) {
+        homeView.classList.remove('hidden');
+        homeView.style.display = 'block';
+    }
+
+    // Xóa param ?subject khỏi URL
+    try {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.delete('subject');
+        window.history.pushState({}, '', newUrl.pathname + (newUrl.search ? '?' + newUrl.searchParams.toString() : ''));
+    } catch (e) {}
+
+    // Cập nhật lại Sidebar cho môn hiện tại (vẫn giữ danh sách bài học, không bị rỗng)
+    const currentSub = appState.currentSubject || localStorage.getItem('currentSubject') || 'cnxhkh';
+    renderMainSidebar(currentSub);
+
+    // Gắn lại sự kiện cho các card ở Đại Điện
+    setupSubjectRoutingEvents();
+
+    if (typeof broadcastHomeActivity === 'function') {
+        broadcastHomeActivity();
+    } else if (typeof updateUserActivity === 'function') {
+        updateUserActivity("Đang dạo bước Đại Điện Tông Môn");
+    }
+}
+window.returnToHomeView = returnToHomeView;
+window.exitToPalace = returnToHomeView; // alias tương thích ngược
+window.renderPalaceView = returnToHomeView; // alias tương thích ngược
+
+/**
+ * ============================================================================
+ * RENDER DANH SÁCH 6 CHỦ ĐỀ & TIÊU ĐỀ MÔN HỌC (renderTopicsList)
+ * ============================================================================
+ * @param {string} subjectId - Mã môn học ('cnxhkh' hoặc 'lsd')
+ */
+function renderTopicsList(subjectId) {
+    const sub = (subjectId === 'lsd') ? 'lsd' : 'cnxhkh';
+    appState.currentSubject = sub;
+
+    // 1. Đồng bộ thẻ <select> Dropdown ở Sidebar
+    const selectEl = document.getElementById('sidebar-subject-select');
+    if (selectEl && selectEl.value !== sub) {
+        selectEl.value = sub;
+    }
+
+    // 2. Lấy cấu hình môn học
+    const cfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+    const realmTitle = cfg ? cfg.realmName : (sub === 'lsd' ? 'Hồng Kỳ Khởi Nguyên Cung' : 'Khoa Học Chân Lý Đảo');
+    const subName = cfg ? cfg.name : (sub === 'lsd' ? 'Lịch sử Đảng Cộng sản Việt Nam' : 'Chủ nghĩa xã hội khoa học');
+    const badgeName = cfg ? cfg.badge : (sub === 'lsd' ? 'Hồng Kỳ Trận Pháp' : 'Chân Lý Pháp Trận');
+    const quoteText = cfg ? (cfg.quote || cfg.tagline) : (sub === 'lsd' ? '“Ôn cố tri tân, sáng ngời cội nguồn cách mạng, vững bước quang vinh.”' : '“Hiểu đúng lý luận, vững vàng tư tưởng, kiến tạo tương lai.”');
+
+    // 3. Thay đổi tiêu đề lớn và thông tin tại subject-view
+    const breadcrumbEl = document.getElementById('subject-breadcrumb-name');
+    if (breadcrumbEl) breadcrumbEl.textContent = realmTitle;
+
+    const headingEl = document.getElementById('subject-hero-heading');
+    if (headingEl) headingEl.textContent = subName;
+
+    const tagEl = document.getElementById('subject-hero-tag');
+    if (tagEl) tagEl.textContent = badgeName;
+
+    const quoteEl = document.getElementById('subject-hero-quote');
+    if (quoteEl) quoteEl.textContent = quoteText;
+
+    const iconEl = document.getElementById('subject-hero-icon');
+    if (iconEl) {
+        iconEl.className = (sub === 'lsd') ? 'fa-solid fa-flag' : 'fa-solid fa-atom';
+    }
+
+    const secTitle = document.getElementById('subject-section-title');
+    if (secTitle) secTitle.textContent = `Danh sách Chủ đề: ${realmTitle}`;
+
+    // 4. Lấy danh sách 6 chủ đề của môn học
+    const topics = (typeof getSubjectTopics === 'function') ? getSubjectTopics(sub) : TOPICS_METADATA;
+
+    // 5. Render ra 6 chủ đề trong topic-cards-grid
+    const grid = document.getElementById('topic-cards-grid');
+    if (grid) {
+        grid.innerHTML = topics.map(t => `
+            <div class="topic-dashboard-card ${t.themeClass || 'card-theme-1'}" id="topic-card-${t.id}" data-topic-id="${t.id}">
+                <div class="tdc-top">
+                    <div class="tdc-icon-circle bg-theme-${t.id}">
+                        <i class="${t.icon}"></i>
+                    </div>
+                    <div class="tdc-header-text">
+                        <span class="tdc-pill-tag tag-theme-${t.id}">${t.title}</span>
+                        <h4 class="tdc-title">${t.shortTitle}</h4>
+                    </div>
+                </div>
+                <p class="tdc-desc">${t.desc || t.quote || ''}</p>
+                <div class="tdc-bottom">
+                    <div class="tdc-progress-group">
+                        <div class="tdc-count-info">
+                            <i class="fa-regular fa-file-lines"></i>
+                            <span id="topic-count-${t.id}">Đang tải...</span>
+                        </div>
+                        <div class="tdc-progress-bar">
+                            <div class="tdc-progress-fill" id="topic-fill-${t.id}" style="width: 0%;"></div>
+                        </div>
+                        <span class="tdc-progress-percent" id="topic-percent-${t.id}">0%</span>
+                    </div>
+                    <button class="btn-choose-topic" onclick="openModeSelectModal(${t.id})" title="Vào ôn luyện hoặc kiểm tra">
+                        <span>Vào Ôn Luyện</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 6. Đồng bộ các nút chủ đề trên Sidebar bên trái
+    renderMainSidebar(sub);
+
+    // 7. Đồng bộ thanh tiến độ thực tế từ folder data tương ứng
+    if (typeof syncDashboardProgress === 'function') {
+        syncDashboardProgress(sub);
+    }
+
+    // 8. Cập nhật hoạt động
+    if (typeof updateUserActivity === 'function') {
+        updateUserActivity(`Đang dạo bước ${realmTitle}`);
+    }
+}
+window.renderTopicsList = renderTopicsList;
+window.renderSubjectTopicCards = renderTopicsList; // alias tương thích ngược
+
+function renderMainSidebar(activeSubjectId) {
+    const sidebarTitle = document.getElementById('sidebar-topics-title');
+    const navMenu = document.getElementById('topic-nav-menu');
+    const subjectSelect = document.getElementById('sidebar-subject-select');
+    if (!navMenu) return;
+
+    const sub = activeSubjectId || appState.currentSubject || localStorage.getItem('currentSubject') || 'cnxhkh';
+
+    // Đồng bộ Dropdown chọn môn học trên Sidebar
+    if (subjectSelect && subjectSelect.value !== sub) {
+        subjectSelect.value = sub;
+    }
+
+    const cfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+    const subName = cfg ? (cfg.shortName || cfg.name) : (sub === 'lsd' ? 'Lịch sử Đảng' : 'CNXHKH');
+
+    if (sidebarTitle) {
+        sidebarTitle.innerHTML = `CHỦ ĐỀ ÔN LUYỆN: <span style="color: #2563eb;">${subName.toUpperCase()}</span>`;
+    }
+
+    const topics = (typeof getSubjectTopics === 'function') ? getSubjectTopics(sub) : TOPICS_METADATA;
+
+    // Render danh sách 6 <button> tương ứng với 6 chủ đề của môn học đang chọn
+    navMenu.innerHTML = topics.map(t => `
+        <button type="button" class="nav-topic-item" onclick="openModeSelectModal(${t.id})" title="${t.name}">
+            <i class="${t.icon}"></i>
+            <span>${t.name}</span>
+        </button>
+    `).join('');
+}
+window.renderMainSidebar = renderMainSidebar;
 
 /**
  * Thuật toán gom nhóm dữ liệu câu hỏi Đúng / Sai (Data Pre-processing):
@@ -2596,24 +3019,36 @@ function groupQuestions(rawQuestions) {
 }
 
 /**
- * Đồng bộ dữ liệu ra Dashboard:
- * - Dùng fetch() đọc qua 6 file JSON trong thư mục data/ (từ chude1 đến chude6)
+ * Đồng bộ dữ liệu ra Dashboard theo môn học:
+ * - Đọc dữ liệu các chủ đề của môn học tương ứng
  * - Gom nhóm câu hỏi Đúng/Sai qua groupQuestions() để lấy tổng số câu chuẩn xác
  * - Cập nhật số lượng câu thực tế và tiến độ Max Progress
  */
-async function syncDashboardProgress() {
-    const topicIds = [1, 2, 3, 4, 5, 6];
+async function syncDashboardProgress(subjectId) {
+    const sub = subjectId || appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    const topics = (typeof getSubjectTopics === 'function') ? getSubjectTopics(sub) : TOPICS_METADATA;
+    const topicIds = topics.map(t => t.id);
 
-    // Dùng fetch() đọc 6 file song song
+    // Dùng fetch() nạp động từ thư mục ./data/${sub}/chude${id}.json
     const fetchPromises = topicIds.map(async (id) => {
         try {
-            const res = await fetch(`./data/chude${id}.json`);
-            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-            const data = await res.json();
-            const grouped = groupQuestions(data);
+            let raw = [];
+            const dynamicUrl = getSubjectTopicFileUrl(sub, id);
+            try {
+                const res = await fetch(dynamicUrl);
+                if (res.ok) {
+                    raw = await res.json();
+                }
+            } catch (err) {}
+
+            // Fallback nếu chạy ở môi trường file:// không hỗ trợ fetch
+            if ((!raw || raw.length === 0) && sub === 'lsd' && window.DATA_LSD && window.DATA_LSD[id]) {
+                raw = window.DATA_LSD[id];
+            }
+            const grouped = groupQuestions(raw);
             return { id, total: grouped.length };
         } catch (e) {
-            console.warn(`Lỗi fetch chude${id}.json:`, e);
+            console.warn(`Lỗi sync progress chủ đề ${id} (${sub}):`, e);
             return { id, total: 0 };
         }
     });
@@ -2624,11 +3059,11 @@ async function syncDashboardProgress() {
     results.forEach(({ id, total }) => {
         // Cập nhật số câu thực tế
         const countEl = document.getElementById(`topic-count-${id}`);
-        if (countEl && total > 0) {
+        if (countEl) {
             countEl.textContent = `${total} câu hỏi`;
         }
 
-        // LUÔN đọc từ TIẾN ĐỘ CAO NHẤT (Max Progress): max_progress_topicX_${currentUser.username}
+        // LUÔN đọc từ TIẾN ĐỘ CAO NHẤT (Max Progress)
         let percent = getMaxProgress(id);
 
         // Fallback: nếu chưa có max_progress nhưng có resume progress cũ thì cập nhật sang max_progress
@@ -2645,7 +3080,7 @@ async function syncDashboardProgress() {
         if (percentEl) {
             percentEl.textContent = `${percent}%`;
             if (percent > 0) {
-                percentEl.style.color = '#2563eb';
+                percentEl.style.color = (sub === 'lsd') ? '#dc2626' : '#2563eb';
                 percentEl.style.fontWeight = '700';
             } else {
                 percentEl.style.color = '#94a3b8';
@@ -2653,10 +3088,15 @@ async function syncDashboardProgress() {
             }
         }
 
-        // Thay đổi độ dài (width) thanh Progress bar màu xanh nhạt
+        // Thay đổi độ dài (width) thanh Progress bar
         const fillEl = document.getElementById(`topic-fill-${id}`);
         if (fillEl) {
             fillEl.style.width = `${percent}%`;
+            if (sub === 'lsd') {
+                fillEl.style.background = 'linear-gradient(90deg, #f87171, #dc2626)';
+            } else {
+                fillEl.style.background = '';
+            }
         }
     });
 }
@@ -2665,10 +3105,31 @@ async function syncDashboardProgress() {
 // ĐIỀU HƯỚNG & PHÂN NHÁNH TRANG PRACTICE.HTML
 // ==========================================================================
 async function initPracticePage() {
-    // Đọc tham số topic và mode từ URLSearchParams
+    // Đọc tham số topic, mode và subject từ URLSearchParams
     const urlParams = new URLSearchParams(window.location.search);
     const topicParam = urlParams.get('topic') || '1';
     const modeParam = urlParams.get('mode') || 'learn';
+    const subjectParam = urlParams.get('subject') || localStorage.getItem('currentSubject') || 'cnxhkh';
+
+    appState.currentSubject = subjectParam;
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(subjectParam);
+    }
+
+    // Cập nhật tên môn học trên Header của trang Ôn luyện / Kiểm tra
+    const subCfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(subjectParam) : null;
+    if (subCfg) {
+        const learnSub = document.getElementById('learn-header-subtitle');
+        if (learnSub) learnSub.textContent = subCfg.name;
+        const testSub = document.getElementById('test-header-subtitle');
+        if (testSub) testSub.textContent = subCfg.name;
+    }
+
+    // Cập nhật liên kết Thi Mô Phỏng trên Sidebar practice
+    const mockLinks = document.querySelectorAll('.btn-mock-exam');
+    mockLinks.forEach(link => {
+        link.href = `practice.html?subject=${subjectParam}&topic=mock&mode=test`;
+    });
 
     appState.mode = (modeParam === 'test') ? 'test' : 'learn';
     renderLayout(appState.mode);
@@ -2705,7 +3166,8 @@ function switchPracticeMode(targetMode) {
         saveCurrentLearnProgress();
     }
     const topicParam = appState.topicId;
-    window.location.href = `practice.html?topic=${topicParam}&mode=${targetMode}`;
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    window.location.href = `practice.html?subject=${sub}&topic=${topicParam}&mode=${targetMode}`;
 }
 
 // ==========================================================================
@@ -2713,14 +3175,30 @@ function switchPracticeMode(targetMode) {
 // ==========================================================================
 async function loadTopicData(topicId) {
     appState.topicId = topicId;
-    const meta = TOPICS_METADATA.find(t => t.id === topicId) || TOPICS_METADATA[0];
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    const subTopics = getActiveSubjectTopics();
+    const meta = subTopics.find(t => t.id === topicId) || subTopics[0];
     appState.topicMeta = meta;
 
     try {
-        const res = await fetch(`./data/chude${topicId}.json`);
-        if (!res.ok) throw new Error(`HTTP status: ${res.status}`);
-        const data = await res.json();
-        const grouped = groupQuestions(data);
+        let raw = [];
+        const dynamicUrl = getSubjectTopicFileUrl(sub, topicId);
+        try {
+            const res = await fetch(dynamicUrl);
+            if (res.ok) {
+                raw = await res.json();
+            } else {
+                throw new Error(`HTTP status: ${res.status}`);
+            }
+        } catch (fetchErr) {
+            console.warn(`Fetch ${dynamicUrl} không thành công, thử fallback:`, fetchErr.message);
+            if (sub === 'lsd' && window.DATA_LSD && window.DATA_LSD[topicId]) {
+                raw = window.DATA_LSD[topicId];
+            } else {
+                throw fetchErr;
+            }
+        }
+        const grouped = groupQuestions(raw);
 
         appState.allQuestions = grouped;
         appState.filteredQuestions = grouped;
@@ -2729,7 +3207,9 @@ async function loadTopicData(topicId) {
         appState.isSubmitted = false;
         appState.isReviewMode = false;
 
-        document.title = `${meta.title} (${appState.mode === 'learn' ? 'Ôn luyện' : 'Kiểm tra'}) - CNXHKH`;
+        const subCfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+        const shortName = subCfg ? subCfg.shortName : 'CNXHKH';
+        document.title = `${meta.title} (${appState.mode === 'learn' ? 'Ôn luyện' : 'Kiểm tra'}) - ${shortName}`;
 
         if (appState.mode === 'learn') {
             // Phục hồi tiến trình từ localStorage (Resume)
@@ -2801,46 +3281,73 @@ async function loadTopicData(topicId) {
 
 async function loadMockExamData() {
     appState.topicId = 'mock';
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    const subCfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+    const subName = subCfg ? subCfg.name : (sub === 'lsd' ? 'Lịch sử Đảng' : 'CNXH Khoa học');
+    const subShort = subCfg ? (subCfg.shortName || subCfg.realmName) : (sub === 'lsd' ? 'Lịch sử Đảng' : 'CNXHKH');
+
     appState.topicMeta = {
         id: 'mock',
         title: "Thi Mô Phỏng",
-        name: "Đề Thi Mô Phỏng Toàn Diện (50 câu)",
-        shortTitle: "Thi Mô Phỏng Tổng Hợp 6 Chủ Đề",
-        headerDisplay: "Đề Thi Mô Phỏng Toàn Diện<br>50 câu trắc nghiệm tổng hợp",
-        quote: "Kiểm tra toàn diện kiến thức cả 6 chủ đề của môn học.",
+        name: `Đề Thi Mô Phỏng Toàn Diện (${subShort})`,
+        shortTitle: `Thi Mô Phỏng Tổng Hợp 6 Chủ Đề (${subShort})`,
+        headerDisplay: `Đề Thi Mô Phỏng Toàn Diện<br>${subName}`,
+        quote: `Khảo hạch 50 câu hỏi ngẫu nhiên tổng hợp từ cả 6 chủ đề của ${subName}.`,
         icon: "fa-solid fa-bullseye"
     };
 
     let allQuestions = [];
-    for (let i = 0; i < fileUrls.length; i++) {
-        const url = fileUrls[i];
-        const topicNum = i + 1;
-        try {
-            const res = await fetch(url);
-            if (res.ok) {
-                const data = await res.json();
-                const grouped = groupQuestions(data).map(q => ({
+    if (typeof loadMockQuestionsForSubject === 'function') {
+        allQuestions = await loadMockQuestionsForSubject(sub);
+    } else {
+        for (let i = 1; i <= 6; i++) {
+            const topicNum = i;
+            const dynamicUrl = getSubjectTopicFileUrl(sub, topicNum);
+            let loaded = false;
+            try {
+                const res = await fetch(dynamicUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    const grouped = groupQuestions(data).map(q => ({
+                        ...q,
+                        id: `${sub}_cd${topicNum}_${q.id}`,
+                        origId: q.id,
+                        sourceTopic: topicNum
+                    }));
+                    allQuestions = allQuestions.concat(grouped);
+                    loaded = true;
+                }
+            } catch (e) {
+                console.warn(`Lỗi đọc file ${dynamicUrl}:`, e);
+            }
+
+            // Fallback dự phòng nếu chạy ở môi trường file:// không hỗ trợ fetch
+            if (!loaded && sub === 'lsd' && window.DATA_LSD && window.DATA_LSD[topicNum]) {
+                const rawList = window.DATA_LSD[topicNum];
+                const grouped = groupQuestions(rawList).map(q => ({
                     ...q,
-                    id: `cd${topicNum}_${q.id}`,
+                    id: `lsd_cd${topicNum}_${q.id}`,
                     origId: q.id,
                     sourceTopic: topicNum
                 }));
                 allQuestions = allQuestions.concat(grouped);
             }
-        } catch (e) {
-            console.warn(`Lỗi đọc file ${url}:`, e);
         }
     }
 
     if (allQuestions.length === 0) {
-        alert('Không tìm thấy dữ liệu câu hỏi để tạo đề thi.');
-        window.location.href = 'index.html';
+        alert(`Không tìm thấy dữ liệu câu hỏi của môn ${subName} để tạo đề thi.`);
+        window.location.href = `index.html?subject=${sub}`;
         return;
     }
 
-    // Trộn ngẫu nhiên câu hỏi và lấy 50 câu, bảo đảm mỗi câu có ID độc nhất tuyệt đối
-    allQuestions.sort(() => 0.5 - Math.random());
-    const examQuestions = allQuestions.slice(0, 50).map((q, idx) => ({
+    // Trộn ngẫu nhiên câu hỏi (Fisher-Yates) và lấy tối đa 50 câu
+    for (let i = allQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+    }
+    const sampleCount = Math.min(50, allQuestions.length);
+    const examQuestions = allQuestions.slice(0, sampleCount).map((q, idx) => ({
         ...q,
         examIndex: idx,
         id: `mock_${idx}_${q.id}`
@@ -2856,7 +3363,15 @@ async function loadMockExamData() {
     appState.isSubmitted = false;
     appState.isReviewMode = false;
 
-    document.title = `Thi Mô Phỏng - Ôn luyện trắc nghiệm`;
+    document.title = `Thi Mô Phỏng (${subShort}) - Ôn luyện trắc nghiệm`;
+
+    // Cập nhật phụ đề trên Header bài thi
+    const testSub = document.getElementById('test-header-subtitle');
+    if (testSub) testSub.textContent = subName;
+    const testHeaderTopic = document.getElementById('test-header-topic-title');
+    if (testHeaderTopic) {
+        testHeaderTopic.innerHTML = `Đề Thi Mô Phỏng Toàn Diện (${subShort})<br><span style="font-size: 11px; opacity: 0.85;">${sampleCount} câu ngẫu nhiên từ 6 chủ đề</span>`;
+    }
 
     // Thi mô phỏng luôn chạy ở mode=test
     appState.mode = 'test';
@@ -2891,7 +3406,8 @@ async function loadTamMaExamData() {
 
     if (!Array.isArray(questions) || questions.length === 0) {
         try {
-            const res = await fetch('./data/chude1.json');
+            const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+            const res = await fetch(getSubjectTopicFileUrl(sub, 1));
             if (res.ok) {
                 const data = await res.json();
                 questions = groupQuestions(data).slice(0, 15);
@@ -2945,7 +3461,9 @@ function renderLearnSidebar() {
     const navMenu = document.getElementById('learn-topic-nav-menu');
     if (!navMenu) return;
 
-    navMenu.innerHTML = TOPICS_METADATA.map(t => `
+    const topics = getActiveSubjectTopics();
+
+    navMenu.innerHTML = topics.map(t => `
         <button type="button" class="nav-topic-item ${t.id === appState.topicId ? 'active' : ''}" onclick="switchLearnTopic(${t.id})">
             <i class="${t.icon}"></i>
             <span>${t.name}</span>
@@ -2957,7 +3475,8 @@ function switchLearnTopic(newTopicId) {
     if (appState.mode === 'learn') {
         saveCurrentLearnProgress();
     }
-    window.location.href = `practice.html?topic=${newTopicId}&mode=learn`;
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    window.location.href = `practice.html?subject=${sub}&topic=${newTopicId}&mode=learn`;
 }
 
 function renderLearnBanner() {
@@ -5130,11 +5649,91 @@ function showToast(message) {
 }
 
 // ==========================================================================
+// MODAL THI MÔ PHỎNG: CHỌN MÔN HỌC (CNXHKH HOẶC LỊCH SỬ ĐẢNG)
+// ==========================================================================
+function openMockSubjectModal(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
+
+    showModal({
+        title: 'CHỌN BÍ CẢNH THI MÔ PHỎNG',
+        icon: 'fa-solid fa-bullseye',
+        content: `
+            <div style="margin-bottom: 16px; font-size: 13.5px; color: #475569;">
+                <p style="margin-bottom: 8px;">Vui lòng chọn <strong>Bí Cảnh Môn Phái</strong> bạn muốn khảo hạch bài thi mô phỏng:</p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: #64748b; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-circle-info text-blue-500 text-base"></i>
+                    <span>Hệ thống sẽ lấy ngẫu nhiên <strong>50 câu hỏi</strong> từ toàn bộ 6 chủ đề của môn đã chọn. Thời gian: <strong>60 phút</strong>.</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Bí Cảnh 1: CNXHKH -->
+                <div class="mock-choice-card mock-choice-cnxhkh" onclick="startMockExam('cnxhkh')" style="border: 2px solid #3b82f6; border-radius: 12px; padding: 14px 16px; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(37,99,235,0.3);">
+                            <i class="fa-solid fa-atom"></i>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #dbeafe; color: #1e40af; padding: 2px 7px; border-radius: 4px;">Khoa Học Chân Lý Đảo</span>
+                            </div>
+                            <h4 style="font-size: 15px; font-weight: 700; color: #1e3a8a; margin: 0;">Thi Bí Cảnh: Chủ nghĩa Xã hội Khoa học</h4>
+                            <p style="font-size: 12px; color: #64748b; margin: 2px 0 0 0;">50 câu ngẫu nhiên từ kho dữ liệu 6 chủ đề (data/cnxhkh)</p>
+                        </div>
+                    </div>
+                    <div style="color: #2563eb; font-size: 18px; padding-right: 4px;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- Bí Cảnh 2: LSD -->
+                <div class="mock-choice-card mock-choice-lsd" onclick="startMockExam('lsd')" style="border: 2px solid #ef4444; border-radius: 12px; padding: 14px 16px; background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: #dc2626; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(220,38,38,0.3);">
+                            <i class="fa-solid fa-flag"></i>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #fee2e2; color: #991b1b; padding: 2px 7px; border-radius: 4px;">Hồng Kỳ Khởi Nguyên Cung</span>
+                            </div>
+                            <h4 style="font-size: 15px; font-weight: 700; color: #991b1b; margin: 0;">Thi Bí Cảnh: Lịch sử Đảng</h4>
+                            <p style="font-size: 12px; color: #64748b; margin: 2px 0 0 0;">50 câu ngẫu nhiên từ kho dữ liệu Lịch sử Đảng (data/lsd)</p>
+                        </div>
+                    </div>
+                    <div style="color: #dc2626; font-size: 18px; padding-right: 4px;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        `,
+        actionText: 'Hủy bỏ',
+        actionCallback: () => closeModal()
+    });
+}
+window.openMockSubjectModal = openMockSubjectModal;
+
+function startMockExam(subjectId) {
+    const sub = (subjectId === 'lsd') ? 'lsd' : 'cnxhkh';
+    try {
+        localStorage.setItem('currentSubject', sub);
+    } catch (e) {}
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(sub);
+    }
+    if (typeof closeModal === 'function') closeModal();
+    window.location.href = `practice.html?subject=${sub}&topic=mock&mode=test`;
+}
+window.startMockExam = startMockExam;
+
+// ==========================================================================
 // MODAL HỘP THOẠI TRÊN INDEX.HTML: CHỌN ÔN LUYỆN HOẶC KIỂM TRA
 // ==========================================================================
 function openModeSelectModal(topicId) {
     closeMobileSidebar();
-    const meta = TOPICS_METADATA.find(t => t.id === topicId) || TOPICS_METADATA[0];
+    const sub = appState.currentSubject || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : 'cnxhkh');
+    const topics = getActiveSubjectTopics();
+    const meta = topics.find(t => t.id === topicId) || topics[0];
     const saved = loadProgress(topicId);
     const answeredCount = saved ? countAnsweredQuestions(saved.answeredQuestions) : 0;
     const hasProgress = saved && (answeredCount > 0 || (saved.currentIndex && saved.currentIndex > 0));
@@ -5172,14 +5771,14 @@ function openModeSelectModal(topicId) {
 
                 <div class="mode-select-grid">
                     <!-- Nút 1: Vào Ôn luyện -->
-                    <div class="mode-choice-card learn-choice" onclick="window.location.href='practice.html?topic=${topicId}&mode=learn'">
+                    <div class="mode-choice-card learn-choice" onclick="window.location.href='practice.html?subject=${sub}&topic=${topicId}&mode=learn'">
                         <div class="mcc-icon"><i class="fa-solid fa-book-open-reader"></i></div>
                         <div class="mcc-title">${learnTitle}</div>
                         <div class="mcc-desc">${learnDesc}</div>
                     </div>
 
                     <!-- Nút 2: Kiểm tra lấy điểm -->
-                    <div class="mode-choice-card test-choice" onclick="window.location.href='practice.html?topic=${topicId}&mode=test'">
+                    <div class="mode-choice-card test-choice" onclick="window.location.href='practice.html?subject=${sub}&topic=${topicId}&mode=test'">
                         <div class="mcc-icon"><i class="fa-solid fa-stopwatch-20"></i></div>
                         <div class="mcc-title">Kiểm tra lấy điểm</div>
                         <div class="mcc-desc">Thi thử tập trung bấm giờ 30 phút, nộp bài tính điểm thang 10 chuẩn xác.</div>

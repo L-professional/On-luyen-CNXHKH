@@ -1,0 +1,47 @@
+[
+    {
+        "id": 301,
+        "type": "single",
+        "question": "Câu 1: Chiến thắng lịch sử nào năm 1954 đã 'lừng lẫy năm châu, chấn động địa cầu', đập tan tập đoàn cứ điểm của thực dân Pháp?",
+        "options": [
+            "A. Chiến thắng Điện Biên Phủ",
+            "B. Chiến dịch Biên giới Thu Đông 1950",
+            "C. Chiến dịch Việt Bắc Thu Đông 1947",
+            "D. Chiến thắng Ấp Bắc"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Chiến thắng Điện Biên Phủ ngày 07/05/1954 đã đập tan tập đoàn cứ điểm mạnh nhất Đông Dương của Pháp, buộc Pháp phải ký Hiệp định Genève."
+    },
+    {
+        "id": 302,
+        "type": "single",
+        "question": "Câu 2: Đại hội đại biểu toàn quốc lần thứ III của Đảng (9/1960) đã xác định đường lối chiến lược cách mạng chung của cả nước là:",
+        "options": [
+            "A. Tiến hành đồng thời hai chiến lược cách mạng: CM XHCN ở miền Bắc và CM dân tộc dân chủ nhân dân ở miền Nam",
+            "B. Chỉ tập trung xây dựng kinh tế ở miền Bắc",
+            "C. Chỉ tập trung quân sự giải phóng miền Nam",
+            "D. Hòa hoãn và chờ đợi viện trợ quốc tế"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Đại hội III (9/1960) xác định tiến hành đồng thời cách mạng XHCN ở miền Bắc (hậu phương lớn) và cách mạng dân tộc dân chủ nhân dân ở miền Nam (tiền tuyến lớn)."
+    },
+    {
+        "id": 303,
+        "type": "single",
+        "question": "Câu 3: Chiến dịch Hồ Chí Minh lịch sử kết thúc thắng lợi trọn vẹn vào thời khắc lịch sử nào?",
+        "options": [
+            "A. 11 giờ 30 phút ngày 30/4/1975",
+            "B. Ngày 19/8/1975",
+            "C. Ngày 02/9/1975",
+            "D. Ngày 26/3/1975"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Vào hồi 11 giờ 30 phút ngày 30/4/1975, lá cờ cách mạng tung bay trên nóc Dinh Độc Lập, Chiến dịch Hồ Chí Minh toàn thắng, giải phóng hoàn toàn miền Nam, thống nhất đất nước."
+    }
+]

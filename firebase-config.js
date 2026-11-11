@@ -43,6 +43,7 @@ try {
 
 // 2. Xuất các hàm Modular API theo yêu cầu kỹ thuật: ref, set, get, update, remove
 window.db = fbDb;
+var db = fbDb;
 
 window.ref = function (dbInstance, path) {
     const targetDb = dbInstance || fbDb;
@@ -51,6 +52,7 @@ window.ref = function (dbInstance, path) {
     }
     return { _mockPath: path };
 };
+var ref = window.ref;
 
 window.child = function (parentRef, path) {
     if (parentRef && typeof parentRef.child === 'function') {
@@ -60,6 +62,7 @@ window.child = function (parentRef, path) {
     const fullPath = basePath ? `${basePath.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}` : path;
     return window.ref(fbDb, fullPath);
 };
+var child = window.child;
 
 window.set = async function (refObj, data) {
     if (refObj && typeof refObj.set === 'function') {
@@ -68,6 +71,7 @@ window.set = async function (refObj, data) {
     // Fallback lưu trữ
     return FirebaseFallback.set(refObj ? refObj._mockPath : '', data);
 };
+var set = window.set;
 
 window.get = async function (refObj) {
     if (refObj && typeof refObj.once === 'function') {
@@ -75,6 +79,7 @@ window.get = async function (refObj) {
     }
     return FirebaseFallback.get(refObj ? refObj._mockPath : '');
 };
+var get = window.get;
 
 window.update = async function (refObj, data) {
     if (refObj && typeof refObj.update === 'function') {
@@ -82,6 +87,7 @@ window.update = async function (refObj, data) {
     }
     return FirebaseFallback.update(refObj ? refObj._mockPath : '', data);
 };
+var update = window.update;
 
 window.remove = async function (refObj) {
     if (refObj && typeof refObj.remove === 'function') {
@@ -89,6 +95,7 @@ window.remove = async function (refObj) {
     }
     return FirebaseFallback.remove(refObj ? refObj._mockPath : '');
 };
+var remove = window.remove;
 
 window.onValue = function (refObj, callback) {
     if (refObj && typeof refObj.on === 'function') {

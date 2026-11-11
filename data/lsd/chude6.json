@@ -1,0 +1,47 @@
+[
+    {
+        "id": 601,
+        "type": "single",
+        "question": "Câu 1: Nguyên tắc tổ chức cơ bản, mang tính sống còn trong tổ chức và hoạt động của Đảng Cộng sản Việt Nam là nguyên tắc nào?",
+        "options": [
+            "A. Tập trung dân chủ",
+            "B. Tự do tuyệt đối",
+            "C. Biểu quyết theo cảm tính",
+            "D. Quyền lực cá nhân người đứng đầu"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Tập trung dân chủ là nguyên tắc tổ chức cơ bản nhất của Đảng Cộng sản Việt Nam: thiểu số phục tùng đa số, cấp dưới phục tùng cấp trên, toàn Đảng phục tùng Đại hội và Trung ương."
+    },
+    {
+        "id": 602,
+        "type": "single",
+        "question": "Câu 2: Công tác phòng, chống tham nhũng, tiêu cực hiện nay được Đảng ta chỉ đạo với phương châm hành động như thế nào?",
+        "options": [
+            "A. 'Không có vùng cấm, không có ngoại lệ, bất kể người đó là ai'",
+            "B. Xử lý nội bộ nhẹ nhàng kín đáo",
+            "C. Tạm hoãn nếu đang giữ chức vụ cao",
+            "D. Chỉ xử lý cán bộ cấp dưới"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Phương châm nhất quán và quyết liệt của Đảng là: 'Không có vùng cấm, không có ngoại lệ, bất kể người đó là ai', giữ nghiêm kỷ cương phép nước."
+    },
+    {
+        "id": 603,
+        "type": "single",
+        "question": "Câu 3: Mục tiêu cốt lõi của công tác xây dựng, chỉnh đốn Đảng trong giai đoạn hiện nay là gì?",
+        "options": [
+            "A. Xây dựng Đảng ta thực sự trong sạch, vững mạnh, là đạo đức, là văn minh",
+            "B. Mở rộng số lượng đảng viên thuần túy",
+            "C. Tách biệt với hệ thống chính trị xã hội",
+            "D. Cắt giảm quy trình kiểm tra giám sát"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Mục tiêu là xây dựng Đảng trong sạch, vững mạnh toàn diện về chính trị, tư tưởng, đạo đức, tổ chức và cán bộ."
+    }
+]
