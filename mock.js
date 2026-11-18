@@ -77,6 +77,7 @@ async function loadMockQuestionsForSubject(subjectId) {
 
 /**
  * Phát sóng thông tin câu hỏi trong chế độ Thi thử
+ * Ví dụ: Đang thi Mô phỏng CNXHKH - Câu 1/50
  * @param {number} currentQuestionIndex Vị trí câu hỏi hiện tại (0-indexed)
  * @param {number} totalQuestions Tổng số câu hỏi
  * @param {string} [topicId]
@@ -84,26 +85,24 @@ async function loadMockQuestionsForSubject(subjectId) {
  */
 function broadcastMockActivity(currentQuestionIndex, totalQuestions, topicId, subjectId) {
     const sub = subjectId || getCurrentMockSubject();
-    let subName = '';
+    let subName = (sub === 'lsd') ? 'Lịch sử Đảng' : 'CNXHKH';
     if (typeof getSubjectConfig === 'function') {
         const cfg = getSubjectConfig(sub);
-        subName = cfg ? ` [${cfg.shortName || cfg.realmName}]` : '';
-    } else if (sub === 'lsd') {
-        subName = ' [Lịch sử Đảng]';
-    } else {
-        subName = ' [CNXHKH]';
+        if (cfg) {
+            subName = cfg.shortName || cfg.name || subName;
+        }
     }
 
     const questionNum = (currentQuestionIndex !== undefined ? currentQuestionIndex : 0) + 1;
     const total = totalQuestions || 0;
-    let activityStr = `Đang vượt Bí Cảnh${subName} (Câu ${questionNum}/${total})`;
+    let activityStr = '';
 
-    if (topicId && topicId !== 'mock') {
-        if (topicId === 'tam-ma') {
-            activityStr = `Đang vượt Bí Cảnh Trảm Tâm Ma (Câu ${questionNum}/${total})`;
-        } else {
-            activityStr = `Đang vượt Bí Cảnh${subName}: Chủ đề ${topicId} (Câu ${questionNum}/${total})`;
-        }
+    if (topicId && topicId === 'tam-ma') {
+        activityStr = `Đang thi Trảm Tâm Ma - Câu ${questionNum}/${total}`;
+    } else if (topicId && topicId !== 'mock') {
+        activityStr = `Đang thi Mô phỏng ${subName} - CĐ ${topicId} - Câu ${questionNum}/${total}`;
+    } else {
+        activityStr = `Đang thi Mô phỏng ${subName} - Câu ${questionNum}/${total}`;
     }
 
     if (typeof updateUserActivity === 'function') {
@@ -114,14 +113,14 @@ function broadcastMockActivity(currentQuestionIndex, totalQuestions, topicId, su
 }
 
 /**
- * Reset về trạng thái chờ khi thoát khỏi bài thi thử
+ * Reset về trạng thái Trang chủ khi thoát khỏi bài thi thử
  */
 function resetMockActivity() {
-    const waitStr = "Trạng thái chờ";
+    const homeStr = "Đang dạo bước Tông Môn";
     if (typeof updateUserActivity === 'function') {
-        updateUserActivity(waitStr);
+        updateUserActivity(homeStr);
     } else if (window.FirebaseService && typeof window.FirebaseService.updateUserActivity === 'function') {
-        window.FirebaseService.updateUserActivity(waitStr);
+        window.FirebaseService.updateUserActivity(homeStr);
     }
 }
 

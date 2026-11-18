@@ -54,7 +54,7 @@
             <button class="mobile-menu-btn" id="mobile-menu-btn-learn" aria-label="Mở menu" onclick="toggleMobileSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <div class="header-brand-wrap truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="window.location.href='index.html'" title="Về trang chủ">
+            <div class="header-brand-wrap truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="navigateToHome()" title="Về trang chủ">
                 <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
@@ -135,9 +135,9 @@
     <!-- ====================================================================
          MAIN WRAPPER: CHẾ ĐỘ ÔN LUYỆN (mode=learn) - BỐ CỤC 2 CỘT
          ==================================================================== -->
-    <div class="app-layout learn-layout-view" id="learn-layout-container">
+    <div class="app-layout learn-layout-view flex flex-1 h-[calc(100vh-68px)] w-full overflow-hidden bg-gray-50" id="learn-layout-container">
         <!-- Sidebar Menu (Cột trái cố định trên PC, Drawer trên mobile) -->
-        <aside class="sidebar" id="learn-sidebar">
+        <aside class="sidebar w-64 flex-shrink-0 h-full overflow-y-auto bg-white border-r" id="learn-sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -149,10 +149,10 @@
                 </button>
             </div>
 
-            <a href="index.html" class="btn-home">
+            <button type="button" class="btn-home w-full text-left cursor-pointer" onclick="navigateToHome()">
                 <i class="fa-solid fa-house"></i>
                 <span>Trang chủ</span>
-            </a>
+            </button>
 
             <!-- Topic Navigation -->
             <div class="sidebar-section">
@@ -172,10 +172,10 @@
 
             <!-- Khối Bảng Xếp Hạng Huyết Chiến Đoạt Vị -->
             <div class="sidebar-section" style="margin-top: 8px;">
-                <a href="index.html?openLeaderboard=1" class="btn-leaderboard" id="btnLeaderboard" title="Bảng xếp hạng Huyết chiến đoạt vị">
+                <button type="button" class="btn-leaderboard w-full text-left cursor-pointer" id="btnLeaderboard" onclick="navigateToLeaderboard()" title="Bảng xếp hạng Huyết chiến đoạt vị">
                     <i class="fa-solid fa-trophy"></i>
                     <span>Huyết chiến đoạt vị</span>
-                </a>
+                </button>
             </div>
 
             <!-- Khối Tông Môn Sự Vụ -->
@@ -183,34 +183,34 @@
                 <h3 class="sidebar-title">TÔNG MÔN SỰ VỤ</h3>
                 <ul class="utility-menu">
                     <li>
-                        <a href="utilities.html?tab=stats" class="utility-item" onclick="if(window.openUtilityModal) { openUtilityModal('stats'); return false; }">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('stats', event)">
                             <i class="fa-solid fa-dharmachakra"></i>
                             <span>Sổ Bộ Tu Vi</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="utilities.html?tab=history" class="utility-item" onclick="if(window.openUtilityModal) { openUtilityModal('history'); return false; }">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('history', event)">
                             <i class="fa-solid fa-monument"></i>
                             <span>Ký Lục Luân Hồi</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="utilities.html?tab=guide" class="utility-item" onclick="if(window.openUtilityModal) { openUtilityModal('guide'); return false; }">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('guide', event)">
                             <i class="fa-solid fa-book-skull"></i>
                             <span>Cẩm Nang Nhập Môn</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="utilities.html?tab=feedback" class="utility-item" onclick="if(window.openUtilityModal) { openUtilityModal('contact'); return false; }">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('feedback', event)">
                             <i class="fa-solid fa-fire-flame-curved"></i>
                             <span>Truyền Âm Phù</span>
-                        </a>
+                        </button>
                     </li>
                     <li id="admin-menu-item" class="admin-menu-item-sync" style="display: none;">
-                        <a href="admin.html" class="utility-item">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToAdmin('users', event)">
                             <i class="fas fa-users-cog"></i>
                             <span>Chưởng Quản Thiên Đạo</span>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -220,7 +220,7 @@
         <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Right Area) -->
-        <main class="main-content pb-20 md:pb-0">
+        <main class="main-content flex-1 h-full overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
             <!-- Topic Info Banner (Mockup 1) -->
             <section class="topic-info-banner">
                 <div class="tib-left">
@@ -488,10 +488,10 @@
 
     <!-- Mobile Bottom Navigation Bar (Hiển thị trong chế độ Ôn luyện) -->
     <nav class="mobile-bottom-nav" id="practice-mobile-bottom-nav">
-        <a href="index.html" class="mb-nav-item">
+        <button type="button" class="mb-nav-item cursor-pointer" onclick="navigateToHome()">
             <i class="fa-solid fa-house"></i>
             <span>Trang chủ</span>
-        </a>
+        </button>
         <button type="button" class="mb-nav-item" onclick="toggleMobileQuestionSheet()">
             <i class="fa-solid fa-list-ol"></i>
             <span>Câu hỏi</span>

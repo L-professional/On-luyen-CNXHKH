@@ -56,6 +56,8 @@ async function loadPracticeQuestionsForSubject(subjectId, topicId) {
 
 /**
  * Phát sóng thông tin câu hỏi trong chế độ Ôn tập
+ * Mỗi khi đổi môn, đổi chủ đề hoặc chuyển câu hỏi -> cập nhật Real-time:
+ * Ví dụ: Đang ôn Lịch sử Đảng - CĐ 2 - Câu 1/40
  * @param {string|number} topicId Mã chủ đề ôn tập
  * @param {number} currentQuestionIndex Vị trí câu hỏi hiện tại (0-indexed)
  * @param {number} totalQuestions Tổng số câu hỏi
@@ -63,19 +65,23 @@ async function loadPracticeQuestionsForSubject(subjectId, topicId) {
  */
 function broadcastPracticeActivity(topicId, currentQuestionIndex, totalQuestions, subjectId) {
     const sub = subjectId || getCurrentPracticeSubject();
-    let subName = '';
+    let subName = (sub === 'lsd') ? 'Lịch sử Đảng' : 'CNXHKH';
     if (typeof getSubjectConfig === 'function') {
         const cfg = getSubjectConfig(sub);
-        subName = cfg ? ` [${cfg.shortName || cfg.realmName}]` : '';
-    } else if (sub === 'lsd') {
-        subName = ' [Lịch sử Đảng]';
-    } else {
-        subName = ' [CNXHKH]';
+        if (cfg) {
+            subName = cfg.shortName || cfg.name || subName;
+        }
     }
 
     const questionNum = (currentQuestionIndex !== undefined ? currentQuestionIndex : 0) + 1;
     const total = totalQuestions || 0;
-    const activityStr = `Đang luyện khí${subName}: Chủ đề ${topicId} (Câu ${questionNum}/${total})`;
+    let activityStr = '';
+
+    if (String(topicId).toLowerCase() === 'tam-ma') {
+        activityStr = `Đang trảm Tâm Ma - Câu ${questionNum}/${total}`;
+    } else {
+        activityStr = `Đang ôn ${subName} - CĐ ${topicId} - Câu ${questionNum}/${total}`;
+    }
 
     if (typeof updateUserActivity === 'function') {
         updateUserActivity(activityStr);
@@ -85,14 +91,14 @@ function broadcastPracticeActivity(topicId, currentQuestionIndex, totalQuestions
 }
 
 /**
- * Reset về trạng thái chờ khi thoát khỏi bài ôn tập
+ * Reset về trạng thái Trang chủ khi thoát khỏi bài ôn tập
  */
 function resetPracticeActivity() {
-    const waitStr = "Trạng thái chờ";
+    const homeStr = "Đang dạo bước Tông Môn";
     if (typeof updateUserActivity === 'function') {
-        updateUserActivity(waitStr);
+        updateUserActivity(homeStr);
     } else if (window.FirebaseService && typeof window.FirebaseService.updateUserActivity === 'function') {
-        window.FirebaseService.updateUserActivity(waitStr);
+        window.FirebaseService.updateUserActivity(homeStr);
     }
 }
 

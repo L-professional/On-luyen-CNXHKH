@@ -163,20 +163,20 @@
     </style>
 </head>
 
-<body class="dashboard-body">
+<body class="dashboard-body admin-body flex flex-col h-screen w-full overflow-hidden bg-gray-50">
     <!-- Top Header Bar -->
     <header class="app-header flex items-center justify-between w-full px-2 md:px-4">
         <div class="header-left flex items-center gap-2 md:gap-3">
             <button class="mobile-menu-btn" id="mobile-menu-btn-admin" aria-label="Mở menu điều hướng" onclick="toggleMobileSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <div class="header-brand-wrap truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="window.location.href='index.html'" title="Về trang chủ">
+            <div class="header-brand-wrap truncate max-w-[150px] md:max-w-none flex items-center gap-2 md:gap-3 cursor-pointer" onclick="navigateToHome()" title="Về trang chủ">
                 <div class="logo-icon shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                 </div>
                 <div class="logo-text truncate min-w-0">
                     <h1 class="logo-title truncate">Ôn luyện trắc nghiệm</h1>
-                    <p class="logo-subtitle hidden md:block">Chủ nghĩa xã hội khoa học</p>
+                    <p class="logo-subtitle hidden md:block" id="admin-header-subtitle">Chủ nghĩa xã hội khoa học</p>
                 </div>
             </div>
         </div>
@@ -202,9 +202,9 @@
     </header>
 
     <!-- Main Layout -->
-    <div class="app-layout">
+    <div class="app-layout flex flex-1 h-[calc(100vh-68px)] w-full overflow-hidden bg-gray-50">
         <!-- Sidebar Menu -->
-        <aside class="sidebar" id="admin-sidebar">
+        <aside class="sidebar w-64 flex-shrink-0 h-full overflow-y-auto bg-white border-r" id="admin-sidebar">
             <!-- Header menu trên điện thoại -->
             <div class="sidebar-mobile-header">
                 <div class="smh-brand">
@@ -216,56 +216,47 @@
                 </button>
             </div>
 
-            <a href="index.html" class="btn-home" style="background: #f1f5f9; color: #475569; box-shadow: none;">
+            <button type="button" class="btn-home cursor-pointer w-full text-left" onclick="navigateToHome()" style="background: #f1f5f9; color: #475569; box-shadow: none;">
                 <i class="fa-solid fa-house" style="color: #64748b;"></i>
                 <span>Trang chủ</span>
-            </a>
+            </button>
 
-            <!-- Khối Chủ đề ôn luyện -->
-            <div class="sidebar-section">
-                <h3 class="sidebar-title">CHỦ ĐỀ ÔN LUYỆN</h3>
-                <nav class="topic-menu">
-                    <button type="button" class="nav-topic-item" onclick="window.location.href='index.html'">
-                        <i class="fa-solid fa-book-open"></i>
-                        <span>Chủ đề 1: Đối tượng, chức năng...</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="window.location.href='index.html'">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Chủ đề 2: Sự ra đời và phát triển...</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="window.location.href='index.html'">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Chủ đề 3: Sứ mệnh lịch sử...</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="window.location.href='index.html'">
-                        <i class="fa-regular fa-star"></i>
-                        <span>Chủ đề 4: Những đặc trưng cơ bản...</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="window.location.href='index.html'">
-                        <i class="fa-solid fa-gear"></i>
-                        <span>Chủ đề 5: Các hình thái kinh tế...</span>
-                    </button>
-                    <button type="button" class="nav-topic-item" onclick="window.location.href='index.html'">
-                        <i class="fa-solid fa-landmark"></i>
-                        <span>Chủ đề 6: Thời kỳ quá độ...</span>
-                    </button>
+            <!-- Khối Chọn Môn Phái (Đồng bộ đa môn học) -->
+            <div class="sidebar-section" id="sidebar-subject-picker-section">
+                <div class="sidebar-subject-picker">
+                    <label for="sidebar-subject-select" class="sidebar-subject-label">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Môn phái tu luyện</span>
+                    </label>
+                    <select id="sidebar-subject-select" class="sidebar-subject-select" onchange="onSidebarSubjectChange(this.value)">
+                        <option value="cnxhkh">Chủ nghĩa Xã hội Khoa học</option>
+                        <option value="lsd">Lịch sử Đảng</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Khối Chủ đề ôn luyện (Render động bằng JavaScript) -->
+            <div class="sidebar-section" id="sidebar-topics-section">
+                <h3 class="sidebar-title" id="sidebar-topics-title">CHỦ ĐỀ ÔN LUYỆN</h3>
+                <nav class="topic-menu" id="topic-nav-menu">
+                    <!-- Sẽ được render động bởi renderMainSidebar() -->
                 </nav>
             </div>
 
             <!-- Khối Thi Mô Phỏng -->
             <div class="sidebar-section">
-                <a href="practice.html?topic=mock&mode=test" class="btn-mock-exam">
+                <button type="button" class="btn-mock-exam w-full cursor-pointer text-left" id="btn-mock-exam" onclick="navigateToMockExam()">
                     <i class="fa-solid fa-bullseye"></i>
                     <span>Thi Mô Phỏng</span>
-                </a>
+                </button>
             </div>
 
             <!-- Khối Bảng Xếp Hạng Huyết Chiến Đoạt Vị -->
             <div class="sidebar-section" style="margin-top: 8px;">
-                <a href="index.html?openLeaderboard=1" class="btn-leaderboard" id="btnLeaderboard" title="Bảng xếp hạng Huyết chiến đoạt vị">
+                <button type="button" class="btn-leaderboard w-full cursor-pointer text-left" id="btnLeaderboard" onclick="navigateToLeaderboard()" title="Bảng xếp hạng Huyết chiến đoạt vị">
                     <i class="fa-solid fa-trophy"></i>
                     <span>Huyết chiến đoạt vị</span>
-                </a>
+                </button>
             </div>
 
             <!-- Khối Tông Môn Sự Vụ (Sáng/Active mục Chưởng Quản Thiên Đạo) -->
@@ -273,42 +264,42 @@
                 <h3 class="sidebar-title">TÔNG MÔN SỰ VỤ</h3>
                 <ul class="utility-menu">
                     <li>
-                        <a href="utilities.html?tab=stats" class="utility-item">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('stats', event)">
                             <i class="fa-solid fa-dharmachakra"></i>
                             <span>Sổ Bộ Tu Vi</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="utilities.html?tab=history" class="utility-item">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('history', event)">
                             <i class="fa-solid fa-monument"></i>
                             <span>Ký Lục Luân Hồi</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="utilities.html?tab=guide" class="utility-item">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('guide', event)">
                             <i class="fa-solid fa-book-skull"></i>
                             <span>Cẩm Nang Nhập Môn</span>
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a href="utilities.html?tab=feedback" class="utility-item">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" onclick="navigateToUtility('feedback', event)">
                             <i class="fa-solid fa-fire-flame-curved"></i>
                             <span>Truyền Âm Phù</span>
-                        </a>
+                        </button>
                     </li>
                     <!-- Mục Chưởng Quản Thiên Đạo ACTIVE -->
                     <li>
-                        <a href="admin.html?tab=users" class="utility-item active" id="sidebar-admin-users-item" style="background-color: #eff6ff; color: #2563eb; font-weight: 700;">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer active" id="sidebar-admin-users-item" onclick="switchAdminMainTab('users')" style="background-color: #eff6ff; color: #2563eb; font-weight: 700;">
                             <i class="fas fa-users-cog" style="color: #2563eb;"></i>
                             <span>Chưởng Quản Thiên Đạo</span>
-                        </a>
+                        </button>
                     </li>
                     <!-- Mục Hòm thư góp ý Admin -->
                     <li>
-                        <a href="admin.html?tab=feedbacks" class="utility-item" id="sidebar-admin-feedbacks-item">
+                        <button type="button" class="utility-item w-full text-left cursor-pointer" id="sidebar-admin-feedbacks-item" onclick="switchAdminMainTab('feedbacks')">
                             <i class="fa-solid fa-inbox"></i>
                             <span>Hòm thư Góp ý</span>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -318,7 +309,7 @@
         <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
         <!-- Main Content (Dashboard Quản lý tài khoản & Hòm thư Góp ý) -->
-        <main class="main-content admin-main-content pb-20 md:pb-0" style="zoom: 0.9;">
+        <main class="main-content admin-main-content flex-1 h-full overflow-y-auto p-4 md:p-6 pb-20 md:pb-6" style="zoom: 0.9;">
             <!-- Header Thông tin trang -->
             <div class="admin-header-box">
                 <div class="admin-header-info">
@@ -337,13 +328,13 @@
             </div>
 
             <!-- Thanh Tab Chuyển Đổi Quản Trị: Tài khoản vs Hòm thư Góp ý -->
-            <nav class="admin-tab-nav" aria-label="Điều hướng tính năng Quản trị">
-                <button type="button" class="admin-tab-btn active" id="btn-admin-tab-users" onclick="switchAdminMainTab('users')">
+            <nav class="flex flex-wrap items-center bg-white rounded-xl border border-gray-200 p-1.5 gap-1 mb-6" aria-label="Điều hướng tính năng Quản trị">
+                <button type="button" class="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer bg-blue-600 text-white shadow-md active" id="btn-admin-tab-users" onclick="switchAdminMainTab('users')">
                     <i class="fa-solid fa-users-gear"></i>
                     <span>Tài khoản người dùng</span>
                     <span class="admin-tab-badge" id="badge-users-count">2</span>
                 </button>
-                <button type="button" class="admin-tab-btn" id="btn-admin-tab-feedbacks" onclick="switchAdminMainTab('feedbacks')">
+                <button type="button" class="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer text-gray-500 hover:text-gray-800 hover:bg-gray-100" id="btn-admin-tab-feedbacks" onclick="switchAdminMainTab('feedbacks')">
                     <i class="fa-regular fa-envelope"></i>
                     <span>Hòm thư Góp ý & Báo lỗi</span>
                     <span class="admin-tab-badge badge-unread" id="badge-feedbacks-count">0</span>
@@ -538,8 +529,11 @@
                         <i class="fa-solid fa-chart-pie"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-slate-800 modal-title" id="statsDetailModalTitle" style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">Chi tiết tiến độ học tập</h3>
-                        <p class="text-xs text-slate-500" id="statsDetailModalSubtitle" style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Thống kê số lượt làm bài & câu đúng theo 6 chủ đề</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-lg font-bold text-slate-800 modal-title" id="statsDetailModalTitle" style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">Chi tiết tiến độ học tập</h3>
+                            <span id="statsDetailModalSubjectBadge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200" style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700; background: #dbeafe; color: #1d4ed8;">Chủ nghĩa Xã hội Khoa học</span>
+                        </div>
+                        <p class="text-xs text-slate-500" id="statsDetailModalSubtitle" style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Thống kê số lượt làm bài & câu đúng theo từng chủ đề</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600 rounded-lg p-2" onclick="closeStatsDetailModal()" style="border: none; background: transparent; cursor: pointer; color: #94a3b8; font-size: 18px; padding: 6px 10px; border-radius: 8px;">
@@ -547,10 +541,20 @@
                 </button>
             </div>
 
-            <!-- Modal Body: Chi tiết 6 Chủ đề -->
-            <div class="p-6 overflow-y-auto space-y-3 modal-body" id="statsDetailModalBody" style="padding: 20px 24px; overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
-                <!-- Dynamic 6 topics list injected by admin.js -->
+            <!-- Subject Switcher Tabs (Đa Môn Phái: CNXHKH & Lịch sử Đảng) -->
+            <div class="px-6 pt-3 pb-2 bg-white border-b border-slate-200 flex items-center gap-2" style="padding: 12px 24px 8px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+                <button type="button" id="modal-tab-cnxhkh" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer bg-blue-600 text-white shadow-sm" onclick="switchModalProgressSubject('cnxhkh')">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Chủ nghĩa Xã hội Khoa học</span>
+                </button>
+                <button type="button" id="modal-tab-lsd" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800" onclick="switchModalProgressSubject('lsd')">
+                    <i class="fa-solid fa-flag"></i>
+                    <span>Lịch sử Đảng</span>
+                </button>
             </div>
+
+            <!-- Modal Body: Container rỗng để admin.js render động -->
+            <div class="p-6 overflow-y-auto space-y-4 modal-body" id="modal-progress-content" style="padding: 20px 24px; overflow-y: auto; flex: 1; max-height: calc(90vh - 200px);"></div>
 
             <!-- Modal Footer -->
             <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end modal-footer" style="padding: 12px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
@@ -748,10 +752,10 @@
 
     <!-- Mobile Bottom Navigation Bar -->
     <nav class="mobile-bottom-nav" id="admin-mobile-bottom-nav">
-        <a href="index.html" class="mb-nav-item">
+        <button type="button" class="mb-nav-item cursor-pointer" onclick="navigateToHome()">
             <i class="fa-solid fa-house"></i>
             <span>Trang chủ</span>
-        </a>
+        </button>
         <button type="button" class="mb-nav-item active" id="mb-nav-btn-users" onclick="switchAdminMainTab('users')" title="Quản lý tài khoản">
             <i class="fa-solid fa-users"></i>
             <span>Tài khoản</span>
@@ -771,6 +775,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <!-- Cấu hình Đa Môn Phái & Dữ liệu -->
+    <script src="config.js"></script>
+    <script src="subjects-config.js"></script>
+    <script src="data-cnxhkh.js"></script>
+    <script src="data-lsd.js"></script>
     <script src="admin.js"></script>
 </body>
 

@@ -1,62 +1,746 @@
 [
     {
-        "id": 201,
+        "id": 1,
         "type": "single",
-        "question": "Câu 1: Hội nghị hợp nhất các tổ chức cộng sản thành lập Đảng Cộng sản Việt Nam họp từ ngày nào tại Cửu Long (Hương Cảng, Trung Quốc)?",
+        "question": "Câu 1: Chọn khẳng định đúng:",
         "options": [
-            "A. Ngày 06/01/1930 đến ngày 07/02/1930",
-            "B. Ngày 03/02/1931",
-            "C. Ngày 19/08/1945",
-            "D. Ngày 02/09/1945"
+            "A. Luận cương chính trị của Đảng Cộng sản Đông Dương, Án Nghị quyết của Trung ương toàn thể Đại hội, Điều lệ Đảng (tháng 10/1930) hợp thành Lời kêu gọi của Đảng",
+            "B. Luận cương chính trị của Đảng Cộng sản Đông Dương, Án Nghị quyết của Trung ương toàn thể Đại hội, Điều lệ Đảng (tháng 10/1930) hợp thành Chỉ thị của Đảng",
+            "C. Luận cương chính trị của Đảng Cộng sản Đông Dương, Án nghị quyết của Trung ương toàn thể Đại hội, Điều lệ Đảng (tháng 10/1930) hợp thành Cương lĩnh của Đảng",
+            "D. Luận cương chính trị của Đảng Cộng sản Đông Dương, Án Nghị quyết của Trung ương toàn thể Đại hội, Điều lệ Đảng (tháng 10/1930) hợp thành Nghị quyết của Đảng"
         ],
         "correctAnswers": [
-            0
+            2
         ],
-        "explanation": "Hội nghị hợp nhất thành lập Đảng diễn ra từ ngày 06/01 đến đầu tháng 2/1930 do đồng chí Nguyễn Ái Quốc chủ trì tại Cửu Long (Hương Cảng, Trung Quốc)."
+        "explanation": "Tại Hội nghị lần thứ nhất Ban Chấp hành Trung ương lâm thời (tháng 10/1930), các văn kiện gồm Luận cương chính trị, Án nghị quyết của Trung ương toàn thể Đại hội và Điều lệ Đảng đã hợp thành nội dung Cương lĩnh của Đảng (Cương lĩnh chính trị thứ hai)."
     },
     {
-        "id": 202,
+        "id": 2,
         "type": "single",
-        "question": "Câu 2: Cương lĩnh chính trị đầu tiên của Đảng do ai soạn thảo và được thông qua tại Hội nghị thành lập Đảng đầu năm 1930?",
+        "question": "Câu 2: Luận cương chính trị của Đảng Cộng sản Đông Dương khẳng định: nhiệm vụ cốt yếu của cách mạng tư sản dân quyền là gì?",
         "options": [
-            "A. Nguyễn Ái Quốc",
-            "B. Trần Phú",
-            "C. Lê Hồng Phong",
-            "D. Hà Huy Tập"
+            "A. Đánh đổ đế quốc Pháp, giành độc lập dân tộc; Đánh đổ giai cấp địa chủ phong kiến, đem lại ruộng đất cho nông dân và phát triển chế độ dân chủ nhân dân, gây cơ sở cho chủ nghĩa xã hội",
+            "B. Đánh đổ đế quốc Mỹ, giành độc lập dân tộc",
+            "C. Đánh đổ triều đình phong kiến nhà Trần, đem lại ruộng đất cho nông dân",
+            "D. Đánh đổ đế quốc Pháp, làm cho Đông Dương hoàn toàn độc lập và đánh đổ giai cấp địa chủ phong kiến, đem lại ruộng đất cho nông dân"
         ],
         "correctAnswers": [
-            0
+            3
         ],
-        "explanation": "Cương lĩnh chính trị đầu tiên (Chánh cương vắn tắt, Sách lược vắn tắt) do đồng chí Nguyễn Ái Quốc khởi thảo."
+        "explanation": "Luận cương chính trị tháng 10/1930 nêu rõ hai nhiệm vụ chiến lược cốt yếu của cách mạng tư sản dân quyền: Đánh đổ đế quốc Pháp, làm cho Đông Dương hoàn toàn độc lập và đánh đổ giai cấp địa chủ phong kiến, đem lại ruộng đất cho nông dân."
     },
     {
-        "id": 203,
+        "id": 3,
         "type": "single",
-        "question": "Câu 3: Đỉnh cao của phong trào cách mạng 1930 - 1931 ở Việt Nam là sự kiện nào?",
+        "question": "Câu 3: Luận cương chính trị của Đảng Cộng sản Đông Dương khẳng định: động lực chính của cách mạng tư sản dân quyền là gì?",
         "options": [
-            "A. Sự ra đời của chính quyền Xô viết Nghệ - Tĩnh",
-            "B. Khởi nghĩa Nam Kỳ",
-            "C. Khởi nghĩa Bắc Sơn",
-            "D. Bãi công của công nhân Ba Son"
+            "A. Tất cả các giai cấp, tầng lớp trong xã hội Việt Nam",
+            "B. Nhân dân Việt Nam, trừ bộ phận là tay sai của thực dân Pháp",
+            "C. Giai cấp vô sản và giai cấp nông dân",
+            "D. Liên minh công nhân, nông dân và trí thức"
         ],
         "correctAnswers": [
-            0
+            2
         ],
-        "explanation": "Đỉnh cao của cao trào cách mạng 1930 - 1931 là việc thành lập chính quyền Xô viết Nghệ - Tĩnh của giai cấp công nông."
+        "explanation": "Luận cương chính trị tháng 10/1930 xác định giai cấp vô sản và giai cấp nông dân là hai động lực chính của cách mạng tư sản dân quyền, trong đó giai cấp vô sản giữ vai trò lãnh đạo cách mạng."
     },
     {
-        "id": 204,
+        "id": 4,
         "type": "single",
-        "question": "Câu 4: Thắng lợi vĩ đại của Cách mạng Tháng Tám năm 1945 đã dẫn tới sự kiện lịch sử trọng đại nào?",
+        "question": "Câu 4: Cuộc họp Hội nghị của Ban Chấp hành Trung ương Đảng ngày 26/7/1936 xác định nhiệm vụ trước mắt của cách mạng Đông Dương là gì?",
         "options": [
-            "A. Nước Việt Nam Dân chủ Cộng hòa ra đời, chấm dứt ách thống trị của thực dân phong kiến",
-            "B. Ký kết Hiệp định Genève",
-            "C. Giải phóng hoàn toàn miền Nam",
-            "D. Khởi xướng công cuộc đổi mới đất nước"
+            "A. Chống phong kiến, giành ruộng đất cho dân cày",
+            "B. Chống phản động thuộc địa và bè lũ tay sai, giành độc lập cho dân tộc",
+            "C. Chống phát xít, chống chiến tranh đế quốc, chống phản động thuộc địa và tay sai, đòi tự do, dân chủ, cơm áo và hòa bình",
+            "D. Chống thực dân Pháp, giành độc lập cho dân tộc"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Hội nghị BCH Trung ương Đảng ngày 26/7/1936 tại Thượng Hải xác định nhiệm vụ trước mắt là chống phát xít, chống chiến tranh đế quốc, chống phản động thuộc địa và tay sai, đòi tự do, dân chủ, cơm áo và hòa bình."
+    },
+    {
+        "id": 5,
+        "type": "single",
+        "question": "Câu 5: Hội nghị Trung ương Đảng (ngày 29 30/3/1938) quyết định thành lập mặt trận nào?",
+        "options": [
+            "A. Mặt trận thống nhất nhân dân phản đế Đông Dương",
+            "B. Mặt trận phản đế đồng minh Đông Dương",
+            "C. Mặt trận dân chủ Đông Dương",
+            "D. Mặt trận nhân dân phản đế Đông Dương"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Hội nghị Trung ương Đảng (ngày 29-30/3/1938) quyết định đổi tên Mặt trận Thống nhất nhân dân phản đế Đông Dương thành Mặt trận Dân chủ Đông Dương để mở rộng khối đại đoàn kết đấu tranh đòi dân sinh, dân chủ."
+    },
+    {
+        "id": 6,
+        "type": "single",
+        "question": "Câu 6: Tháng 6/1945, căn cứ địa chính của cách mạng cả nước là gì?",
+        "options": [
+            "A. Khu giải phóng miền núi phía Bắc",
+            "B. Khu giải phóng Bắc Kỳ",
+            "C. Khu giải phóng Tây Bắc",
+            "D. Khu giải phóng Việt Bắc"
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Tháng 6/1945, theo chỉ thị của Hồ Chí Minh, Khu giải phóng Việt Bắc được thành lập gồm 6 tỉnh: Cao Bằng, Bắc Kạn, Lạng Sơn, Hà Giang, Tuyên Quang, Thái Nguyên, trở thành căn cứ địa chính của cách mạng cả nước."
+    },
+    {
+        "id": 7,
+        "type": "single",
+        "question": "Câu 7: Chọn nội dung có trong Hội nghị Trung ương 8 (tháng 5/1941) của Đảng:",
+        "options": [
+            "A. Nhiệm vụ trước mắt của cách mạng là giành ruộng đất cho dân cày, tạm gác nhiệm vụ giải phóng dân tộc",
+            "B. Nhiệm vụ trước mắt của cách mạng: thực hiện đồng thời 2 nhiệm vụ là giải phóng dân tộc và giành ruộng đất cho dân cày",
+            "C. Cuộc cách mạng trước mắt của Việt Nam là một cuộc cách mạng tư sản dân quyền, có tính chất thổ địa và phản đế",
+            "D. Cuộc cách mạng trước mắt của Việt Nam là một cuộc cách mạng giải phóng dân tộc, hoãn cách mạng ruộng đất"
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Hội nghị Trung ương 8 (tháng 5/1941) do Nguyễn Ái Quốc chủ trì đã hoàn chỉnh chủ trương chuyển hướng chiến lược: Cuộc cách mạng trước mắt của Việt Nam là một cuộc cách mạng giải phóng dân tộc, hoãn cách mạng ruộng đất."
+    },
+    {
+        "id": 8,
+        "type": "single",
+        "question": "Câu 8: Thời cơ cách mạng thực hiện Tổng khởi nghĩa (tháng 8/1945) tồn tại khi nào?",
+        "options": [
+            "A. Từ khi diễn ra Hội nghị Pốtxđam (tháng 7/1945) đến khi phát xít Nhật tuyên bố đầu hàng (ngày 13/8/1945)",
+            "B. Từ khi phát xít Nhật tuyên bố đầu hàng (ngày 13/8/1945) đến trước khi quân Đồng Minh vào Đông Dương tước khí giới quân Nhật (nửa cuối tháng 8/1945)",
+            "C. Từ khi phát xít Đức đầu hàng Liên Xô và Đồng minh (9/5/1945) đến khi phát xít Nhật tuyên bố đầu hàng (13/8/1945)",
+            "D. Từ khi diễn ra Hội nghị Pốtxđam (tháng 7/1945) đến trước khi quân Đồng Minh vào Đông Dương tước khí giới quân Nhật (nửa cuối tháng 8/1945)"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Thời cơ Tổng khởi nghĩa tháng Tám năm 1945 xuất hiện từ khi phát xít Nhật tuyên bố đầu hàng (13-15/8/1945) đến trước khi quân Đồng Minh vào Đông Dương tước khí giới quân Nhật."
+    },
+    {
+        "id": 9,
+        "type": "single",
+        "question": "Câu 9: Hội nghị Ban Chấp hành Trung ương Đảng (họp ngày 26/7/1936) chủ trương thành lập tổ chức nào để đấu tranh đòi quyền dân chủ?",
+        "options": [
+            "A. Mặt trận nhân dân phản đế",
+            "B. Mặt trận nông dân phản đế",
+            "C. Mặt trận công – nông phản đế",
+            "D. Mặt trận vô sản phản đế"
         ],
         "correctAnswers": [
             0
         ],
-        "explanation": "Cách mạng Tháng Tám 1945 thắng lợi đã đập tan ách thống trị thực dân phong kiến, khai sinh nước Việt Nam Dân chủ Cộng hòa vào ngày 02/09/1945."
+        "explanation": "Hội nghị Ban Chấp hành Trung ương Đảng họp ngày 26/7/1936 chủ trương thành lập Mặt trận nhân dân phản đế (Mặt trận thống nhất nhân dân phản đế Đông Dương) để đấu tranh đòi quyền tự do, dân chủ."
+    },
+    {
+        "id": 10,
+        "type": "single",
+        "question": "Câu 10: Đảng Cộng sản Đông Dương xác định mục tiêu chủ yếu trước mắt của cách mạng giai đoạn 1936 1939 là gì?",
+        "options": [
+            "A. Đấu tranh chống chống thực dân Pháp, chống phong kiến nhằm giải phóng dân tộc và giành ruộng đất cho nông dân",
+            "B. Đấu tranh chống phong kiến, giành lại ruộng đất cho dân cày",
+            "C. Đấu tranh chống phát xít, chống chiến tranh đế quốc, chống phản động thuộc địa và tay sai, đòi tự do, dân chủ, cơm áo và hòa bình",
+            "D. Đấu tranh chống phát xít, chống chiến tranh đế quốc, chống phản động thuộc địa và tay sai nhằm giải phóng dân tộc"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Trong giai đoạn 1936-1939, mục tiêu chủ yếu trước mắt là đấu tranh chống phát xít, chống chiến tranh đế quốc, chống phản động thuộc địa và tay sai, đòi tự do, dân chủ, cơm áo và hòa bình."
+    },
+    {
+        "id": 11,
+        "type": "single",
+        "question": "Câu 11: Sau 30 năm hoạt động ở nước ngoài, đầu năm 1941, lãnh tụ Nguyễn Ái Quốc về nước và làm việc ở đâu?",
+        "options": [
+            "A. Cao Bằng",
+            "B. Hà Giang",
+            "C. Lạng Sơn",
+            "D. Thái Nguyên"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Ngày 28/1/1941, lãnh tụ Nguyễn Ái Quốc vượt qua mốc 108 biên giới Việt - Trung về đến Pác Bó (xã Trường Hà, huyện Hà Quảng, tỉnh Cao Bằng) để trực tiếp lãnh đạo cách mạng Việt Nam."
+    },
+    {
+        "id": 12,
+        "type": "single",
+        "question": "Câu 12: Hội nghị lần thứ tám Ban Chấp hành Trung ương Đảng (tháng 5/1941) xác định đối tượng của cách mạng Việt Nam là gì?",
+        "options": [
+            "A. Đế quốc Pháp và phát xít Nhật",
+            "B. Phát xít Nhật",
+            "C. Đế quốc Pháp, phát xít Nhật và địa chủ phong kiến tay sai",
+            "D. Đế quốc Pháp"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Hội nghị lần thứ tám BCH Trung ương Đảng (tháng 5/1941) xác định đối tượng (kẻ thù chính) trước mắt của cách mạng Việt Nam là đế quốc Pháp và phát xít Nhật."
+    },
+    {
+        "id": 13,
+        "type": "single",
+        "question": "Câu 13: Tính chất của cuộc Cách mạng Tháng Tám năm 1945 là gì?",
+        "options": [
+            "A. Là một cuộc cách mạng giải phóng dân tộc mang tính chất dân chủ mới, toàn dân, toàn diện, lâu dài, dựa vào sức mình là chính",
+            "B. Là một cuộc cách mạng dân tộc dân chủ nhân dân có tính chất toàn dân, toàn diện, lâu dài, dựa vào sức mình là chính",
+            "C. Là một cuộc cách mạng giải phóng dân tộc mang tính chất dân chủ mới",
+            "D. Là một cuộc đấu tranh chính nghĩa có tính chất toàn dân, toàn diện, lâu dài"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Cách mạng Tháng Tám năm 1945 là một cuộc cách mạng giải phóng dân tộc mang tính chất dân chủ mới, giải quyết trọn vẹn nhiệm vụ cứu nước và mang lại quyền làm chủ cho nhân dân lao động."
+    },
+    {
+        "id": 14,
+        "type": "single",
+        "question": "Câu 14: Liệt kê các hình thức mặt trận ở Việt Nam theo thứ tự thời gian thành lập?",
+        "options": [
+            "A. Mặt trận Dân chủ Đông Dương, Mặt trận Việt Minh, Mặt trận Liên Việt, Mặt trận Tổ quốc Việt Nam",
+            "B. Mặt trận Việt Minh, Mặt trận Dân chủ Đông Dương, Mặt trận Liên Việt, Mặt trận Tổ quốc Việt Nam",
+            "C. Mặt trận Liên Việt, Mặt trận Dân chủ Đông Dương, Mặt trận Việt Minh, Mặt trận Tổ quốc Việt Nam",
+            "D. Mặt trận Liên Việt, Mặt trận Việt Minh, Mặt trận Dân chủ Đông Dương, Mặt trận Tổ quốc Việt Nam"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Thứ tự thành lập các mặt trận: Mặt trận Dân chủ Đông Dương (1938), Mặt trận Việt Minh (tháng 5/1941), Mặt trận Liên Việt (năm 1951), Mặt trận Tổ quốc Việt Nam (tháng 9/1955)."
+    },
+    {
+        "id": 15,
+        "type": "single",
+        "question": "Câu 15: Nội dung nào sau đây không phải là giải pháp để xây dựng Đảng trong giai đoạn hiện nay?",
+        "options": [
+            "A. Tăng cường đổi mới nội dung, phương thức và nâng cao chất lượng công tác giáo dục chính trị, tư tưởng",
+            "B. Kiên định và tiếp tục nghiên cứu phát triển, vận dụng sáng tạo chủ nghĩa Mác Lênin, tư tưởng Hồ Chí Minh phù hợp thực tiễn Việt Nam",
+            "C. Tập trung xây dựng đội ngũ cán bộ các cấp, nhất là cấp chiến lược và người đứng đầu gắn với đổi mới, sắp xếp tổ chức bộ máy của hệ thống chính trị tinh gọn, hoạt động hiệu lực, hiệu quả",
+            "D. Hoàn thiện hệ thống pháp luật Việt Nam và cơ chế thực hiện pháp luật hiệu quả, bảo đảm nguyên tắc “thượng tôn” Hiến pháp và pháp luật"
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Hoàn thiện hệ thống pháp luật và bảo đảm nguyên tắc thượng tôn Hiến pháp, pháp luật là giải pháp xây dựng Nhà nước pháp quyền xã hội chủ nghĩa, không phải giải pháp xây dựng nội bộ Đảng."
+    },
+    {
+        "id": 16,
+        "type": "single",
+        "question": "Câu 16: Luận cương chính trị của Đảng Cộng sản Đông Dương (tháng 10/1930) xác định mâu thuẫn chủ yếu của xã hội Việt Nam thuộc địa là:",
+        "options": [
+            "A. Mâu thuẫn giữa dân tộc Việt Nam và thực dân Pháp",
+            "B. Có 2 mâu thuẫn chủ yếu: Mâu thuẫn giữa dân tộc Việt Nam và thực dân Pháp; Mâu thuẫn giữa giai cấp nông dân và địa chủ phong kiến",
+            "C. Luận cương không nêu rõ mâu thuẫn chủ yếu của xã hội Việt Nam thuộc địa",
+            "D. Mâu thuẫn giữa giai cấp nông dân và địa chủ phong kiến"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Một trong những hạn chế lớn của Luận cương chính trị tháng 10/1930 là chưa nêu rõ mâu thuẫn chủ yếu của xã hội thuộc địa (mâu thuẫn giữa toàn thể dân tộc Việt Nam với thực dân Pháp xâm lược)."
+    },
+    {
+        "id": 17,
+        "type": "single",
+        "question": "Câu 17: Luận cương chính trị của Đảng Cộng sản Đông Dương (tháng 10/1930) do ai soạn thảo?",
+        "options": [
+            "A. Lãnh tụ Nguyễn Ái Quốc",
+            "B. Tổng Bí thư Trần Phú",
+            "C. Tổng Bí thư Lê Hồng Phong",
+            "D. Tổng Bí thư Trường Chinh"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Luận cương chính trị tháng 10/1930 do đồng chí Trần Phú - Tổng Bí thư đầu tiên của Đảng trực tiếp khởi thảo và được thông qua tại Hội nghị Ban Chấp hành Trung ương lâm thời."
+    },
+    {
+        "id": 18,
+        "type": "single",
+        "question": "Câu 18: Đảng Cộng sản Đông Dương xác định đối tượng của cách mạng giai đoạn 1936 – 1939 là gì?",
+        "options": [
+            "A. Đế quốc xâm lược",
+            "B. Địa chủ phong kiến",
+            "C. Một bộ phận đế quốc xâm lược và tay sai",
+            "D. Địa chủ phong kiến và đế quốc xâm lược"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Trong phong trào dân chủ 1936-1939, Đảng xác định kẻ thù trước mắt không phải toàn bộ chủ nghĩa đế quốc Pháp mà là một bộ phận đế quốc xâm lược (thực dân phản động Pháp ở thuộc địa) và bè lũ tay sai."
+    },
+    {
+        "id": 19,
+        "type": "single",
+        "question": "Câu 19: Hội nghị lần thứ tám Ban Chấp hành Trung ương Đảng (tháng 5/1941) chủ trương giải quyết vấn đề dân tộc trong khuôn khổ từng nước ở Đông Dương, thi hành chính sách nào?",
+        "options": [
+            "A. \"Dân tộc tự quyết\"",
+            "B. \"Khu vực tự quyết\"",
+            "C. \"Nhân dân tự quyết\"",
+            "D. \"Vô sản tự quyết\""
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Hội nghị Trung ương 8 (tháng 5/1941) quyết định giải quyết vấn đề dân tộc trong khuôn khổ từng nước ở Đông Dương và thi hành đúng chính sách \"Dân tộc tự quyết\"."
+    },
+    {
+        "id": 20,
+        "type": "single",
+        "question": "Câu 20: Tại Hội nghị cán bộ Trung ương (tháng 11-1940), Ban Chấp hành Trung ương Đảng nhận định điều gì?",
+        "options": [
+            "A. Cách mạng phản đế và cách mạng thổ địa không thể đồng thời tiến, cách mạng phản đế làm trước, cách mạng thổ địa làm sau",
+            "B. Làm tư sản dân quyền cách mạng có tính chất thổ địa và phản đế, đòi tự do, dân chủ, cơm áo, hòa bình",
+            "C. Cách mạng phản đế và cách mạng thổ địa phải đồng thời tiến, không thể cái làm trước, cái làm sau",
+            "D. Cách mạng phản đế và cách mạng thổ địa không thể đồng thời tiến, cách mạng thổ địa làm trước, cách mạng phản đế làm sau"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Tại Hội nghị cán bộ Trung ương tháng 11/1940, Đảng nhận định: \"Cách mạng phản đế và cách mạng thổ địa phải đồng thời tiến, không thể cái làm trước, cái làm sau\". Đến Hội nghị TW 8 (5/1941), Đảng mới dứt khoát hoàn chỉnh việc tạm hoãn cách mạng ruộng đất."
+    },
+    {
+        "id": 21,
+        "type": "single",
+        "question": "Câu 21: Hội nghị toàn quốc của Đảng (họp ngày 14 – 15/8/1945 tại Tân Trào) quyết định phát động toàn dân nổi dậy tổng khởi nghĩa giành chính quyền với những nguyên tắc chỉ đạo là gì?",
+        "options": [
+            "A. Đánh nhanh, thắng nhanh",
+            "B. Tập trung, thống nhất và kịp thời",
+            "C. Đánh chắc, thắng chắc",
+            "D. Đoàn kết, quyết tâm và kịp thời"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Hội nghị toàn quốc của Đảng (14-15/8/1945 tại Tân Trào) quyết định phát động Tổng khởi nghĩa giành chính quyền với ba nguyên tắc chỉ đạo hành động: Tập trung, Thống nhất và Kịp thời."
+    },
+    {
+        "id": 22,
+        "type": "single",
+        "question": "Câu 22: Bài học “phải giương cao ngọn cờ độc lập dân tộc” rút ra từ cuộc Cách mạng Tháng Tám năm 1945 được thể hiện chủ yếu như thế nào trong giai đoạn hiện nay?",
+        "options": [
+            "A. Giải quyết đúng đắn mối quan hệ giữa hai nhiệm vụ phát triển nền kinh tế thị trường định hướng xã hội chủ nghĩa và vận dụng cách mạng công nghiệp",
+            "B. Quyết tâm thực hiện hai nhiệm vụ chống chủ nghĩa tư bản và xóa bỏ tàn dư của xã hội phong kiến",
+            "C. Giải quyết đúng đắn mối quan hệ giữa hai nhiệm vụ độc lập dân tộc và cách mạng ruộng đất",
+            "D. Kết hợp chặt chẽ giữa hai nhiệm vụ xây dựng và bảo vệ Tổ quốc xã hội chủ nghĩa"
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Trong giai đoạn hiện nay, bài học giương cao ngọn cờ độc lập dân tộc gắn liền với chủ nghĩa xã hội được thể hiện chủ yếu qua việc kết hợp chặt chẽ giữa hai nhiệm vụ chiến lược: Xây dựng và Bảo vệ Tổ quốc XHCN."
+    },
+    {
+        "id": 23,
+        "type": "single",
+        "question": "Câu 23: Hội nghị lần thứ nhất của Ban Chấp hành Trung ương Đảng (tháng 10/1930) quyết định đổi tên Đảng Cộng sản Việt Nam thành Đảng Cộng sản Đông Dương là do:",
+        "options": [
+            "A. Phạm vi Đảng rộng rãi hơn và vô sản An Nam, Cao Miên, Lào cần phải liên hệ mật thiết với nhau",
+            "B. Thành lập một Đảng mới ra đời để tăng cường tổ chức lãnh đạo cuộc đấu tranh của khu vực Đông Dương",
+            "C. An Nam, Cao Miên và Lào tuy tiếng nói, phong tục khác nhau nhưng có nét tương đồng về kinh tế và chính trị, kỳ thực chỉ thành một dân tộc mà thôi",
+            "D. Theo yêu cầu của Tổng Bí thư Trần Phú"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Theo chỉ thị của Quốc tế Cộng sản, Hội nghị tháng 10/1930 quyết định đổi tên Đảng vì cho rằng: Phạm vi Đảng rộng rãi hơn và vô sản An Nam, Cao Miên, Lào cần phải liên hệ mật thiết với nhau."
+    },
+    {
+        "id": 24,
+        "type": "single",
+        "question": "Câu 24: Điều kiện nào tạo ra khả năng đấu tranh công khai, hợp pháp cho phong trào cách mạng Đông Dương giai đoạn 1936 – 1939?",
+        "options": [
+            "A. Đảng Cộng sản Đông Dương lãnh đạo",
+            "B. Sự xuất hiện của chủ nghĩa phát xít và nguy cơ chiến tranh thế giới",
+            "C. Mặt trận Nhân dân Pháp lên cầm quyền",
+            "D. Chủ trương chuyển hướng chiến lược cách mạng thế giới của Quốc tế Cộng sản"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Chính phủ Mặt trận Nhân dân Pháp lên cầm quyền năm 1936 thi hành chính sách tiến bộ và nới lỏng các quyền tự do dân chủ ở thuộc địa, tạo điều kiện thuận lợi cho phong trào đấu tranh công khai, hợp pháp ở Đông Dương."
+    },
+    {
+        "id": 25,
+        "type": "single",
+        "question": "Câu 25: Chính phủ Mặt trận nhân dân Pháp ra đời (năm 1936) tác động như thế nào đến điều kiện cách mạng ở Đông Dương?",
+        "options": [
+            "A. Tạo không khí chính trị thuận lợi cho cuộc đấu tranh đòi các quyền tự do, dân chủ, cải thiện đời sống của nhân dân các nước Đông Dương",
+            "B. Thúc đẩy mâu thuẫn trở nên gay gắt giữa nhân dân Pháp và nhân dân ở Đông Dương",
+            "C. Tạo điều kiện chín muồi cho cuộc đấu tranh giải phóng dân tộc ở các nước Đông Dương",
+            "D. Tăng cường áp bức chính trị và bóc lột kinh tế đối với nhân dân các nước Đông Dương"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Sự ra đời của Chính phủ Mặt trận Nhân dân Pháp đã tạo không khí chính trị thuận lợi cho cuộc đấu tranh đòi các quyền tự do, dân chủ, cải thiện đời sống của nhân dân các nước Đông Dương."
+    },
+    {
+        "id": 26,
+        "type": "single",
+        "question": "Câu 26: Hội nghị Ban Chấp hành Trung ương Đảng (tháng 11/1939) chủ trương thành lập Mặt trận dân tộc thống nhất phản đế Đông Dương nhằm mục đích gì?",
+        "options": [
+            "A. Tập hợp các giai cấp, tầng lớp trong xã hội Việt Nam đấu tranh đánh đổ đế quốc Pháp và tay sai, giành độc lập cho dân tộc, giành ruộng đất cho nông dân",
+            "B. Tập hợp tất cả các dân tộc, các giai cấp, đảng phái và cá nhân yêu nước ở Đông Dương đấu tranh đánh đổ đế quốc Pháp và tay sai, giành lại độc lập hoàn toàn cho các dân tộc Đông Dương",
+            "C. Tập hợp các giai cấp, tầng lớp trong xã hội Việt Nam đấu tranh đánh đổ đế quốc Pháp và tay sai, giành độc lập cho dân tộc",
+            "D. Tập hợp tất cả các dân tộc, các giai cấp, đảng phái và cá nhân yêu nước trong khu vực Đông Dương đấu tranh đánh đổ đế quốc phát xít Pháp Nhật, giành độc lập hoàn toàn cho các dân tộc Đông Dương"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Hội nghị Trung ương tháng 11/1939 quyết định thành lập Mặt trận dân tộc thống nhất phản đế Đông Dương nhằm tập hợp tất cả các dân tộc, các giai cấp, đảng phái và cá nhân yêu nước ở Đông Dương đấu tranh đánh đổ đế quốc Pháp và tay sai, giành lại độc lập hoàn toàn cho các dân tộc Đông Dương."
+    },
+    {
+        "id": 27,
+        "type": "single",
+        "question": "Câu 27: Phát huy bài học kinh nghiệm của Đảng Cộng sản Việt Nam về xây dựng lực lượng trong Cách mạng Tháng Tám năm 1945 được thể hiện chủ yếu như thế nào trong giai đoạn hiện nay?",
+        "options": [
+            "A. Xây dựng, hoàn thiện hệ thống pháp luật",
+            "B. Xây dựng nền văn hóa tiên tiến, đậm đà bản sắc dân tộc",
+            "C. Xây dựng, hoàn thiện Nhà nước pháp quyền xã hội chủ nghĩa Việt Nam",
+            "D. Nâng cao vai trò nòng cốt chính trị của Mặt trận Tổ quốc Việt Nam"
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Bài học về tập hợp và xây dựng lực lượng toàn dân tộc trong Cách mạng Tháng Tám năm 1945 ngày nay được thể hiện chủ yếu qua việc nâng cao vai trò nòng cốt chính trị của Mặt trận Tổ quốc Việt Nam."
+    },
+    {
+        "id": 28,
+        "type": "single",
+        "question": "Câu 28: Chủ trương điều chỉnh chiến lược cách mạng của Đảng được bắt đầu từ Hội nghị nào?",
+        "options": [
+            "A. Hội nghị Trung ương 7 (tháng 11/1940)",
+            "B. Hội nghị Trung ương 8 (tháng 5/1941)",
+            "C. Hội nghị Trung ương 6 (tháng 11/1939)",
+            "D. Hội nghị Trung ương 5 (tháng 3/1938)"
+        ],
+        "correctAnswers": [
+            2
+        ],
+        "explanation": "Chủ trương chuyển hướng chỉ đạo chiến lược cách mạng của Đảng được bắt đầu từ Hội nghị Trung ương 6 (tháng 11/1939) họp tại Bà Điểm (Hóc Môn, Gia Định) do Tổng Bí thư Nguyễn Văn Cừ chủ trì."
+    },
+    {
+        "id": 29,
+        "type": "single",
+        "question": "Câu 29: Để đề ra chủ trương lãnh đạo phong trào cách mạng 1936–1939, Ban Chấp hành Trung ương Đảng xác định mối quan hệ giữa nhiệm vụ phản đế và điền địa như thế nào?",
+        "options": [
+            "A. Nhiệm vụ phản đế và điền địa có mối quan hệ khăng khít với nhau, trong đó nhiệm vụ phản đế quan trọng hơn, cần giải quyết trước.",
+            "B. Nhiệm vụ phản đế và điền địa có mối quan hệ khăng khít với nhau, dựa vào hoàn cảnh thực tiễn để lựa chọn nhiệm vụ nào quan trọng hơn mà giải quyết trước.",
+            "C. Nhiệm vụ phản đế và điền địa có mối quan hệ khăng khít với nhau, trong đó nhiệm vụ điền địa quan trọng hơn, cần giải quyết trước.",
+            "D. Nhiệm vụ phản đế và điền địa có mối quan hệ khăng khít với nhau và có tầm quan trọng ngang nhau."
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Trong văn kiện \"Chung quanh vấn đề chiến sách mới\" (10/1936), Ban Chấp hành Trung ương xác định nhiệm vụ phản đế và điền địa có mối quan hệ khăng khít với nhau, dựa vào hoàn cảnh thực tiễn để lựa chọn nhiệm vụ nào quan trọng hơn mà giải quyết trước."
+    },
+    {
+        "id": 30,
+        "type": "single",
+        "question": "Câu 30: Ngay sau khi Cách mạng Tháng Tám năm 1945 thành công, đã thành lập chính quyền nhà nước nào sau đây?",
+        "options": [
+            "A. Chính quyền nhà nước theo hình thức Xô viết.",
+            "B. Chính quyền nhà nước chuyên chính vô sản.",
+            "C. Chính quyền nhà nước quân chủ lập hiến.",
+            "D. Chính quyền nhà nước dân chủ nhân dân."
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Sau thắng lợi của Cách mạng Tháng Tám năm 1945, nước Việt Nam Dân chủ Cộng hòa ra đời - đây là chính quyền nhà nước mang tính chất dân chủ nhân dân đầu tiên tại Đông Nam Á."
+    },
+    {
+        "id": 31,
+        "type": "multiple",
+        "question": "Câu 31: Đại hội đại biểu lần thứ nhất của Đảng (tháng 3/1935) xác định nhiệm vụ trước mắt của cách mạng là: (Chọn 3 đáp án đúng)",
+        "options": [
+            "A. Mở rộng tuyên truyền chống đế quốc, chống chiến tranh.",
+            "B. Đẩy mạnh cuộc vận động tập hợp quần chúng.",
+            "C. Thực hiện cải cách ruộng đất.",
+            "D. Củng cố và phát triển Đảng."
+        ],
+        "correctAnswers": [
+            0,
+            1,
+            3
+        ],
+        "explanation": "Đại hội lần thứ nhất của Đảng (tháng 3/1935 tại Ma Cao, Trung Quốc) xác định ba nhiệm vụ trước mắt: Củng cố và phát triển Đảng; Đẩy mạnh cuộc vận động tập hợp quần chúng; Mở rộng tuyên truyền chống đế quốc, chống chiến tranh."
+    },
+    {
+        "id": 32,
+        "type": "multiple",
+        "question": "Câu 32: Các tổ chức mặt trận được thành lập để tập hợp, đoàn kết các giai cấp, tầng lớp dân tộc là: (Chọn 2 đáp án đúng)",
+        "options": [
+            "A. Tân Việt cách mạng Đảng (tháng 7/1928).",
+            "B. Hội Phản đế đồng minh (tháng 11/1930).",
+            "C. Việt Nam Quốc dân Đảng (tháng 12/1927).",
+            "D. Việt Minh (tháng 5/1941)."
+        ],
+        "correctAnswers": [
+            1,
+            3
+        ],
+        "explanation": "Hội Phản đế đồng minh (tháng 11/1930) và Mặt trận Việt Minh (tháng 5/1941) là các hình thức tổ chức mặt trận dân tộc thống nhất; trong khi Tân Việt và Việt Nam Quốc dân Đảng là các chính đảng."
+    },
+    {
+        "id": 33,
+        "type": "multiple",
+        "question": "Câu 33: Những hạn chế của Luận cương chính trị (tháng 10/1930) là: (Chọn 3 đáp án đúng)",
+        "options": [
+            "A. Không đề ra được một chiến lược liên minh dân tộc và giai cấp rộng rãi.",
+            "B. Không vạch ra được điều kiện cốt yếu cho sự thắng lợi của cách mạng ở Đông Dương là cần phải có một Đảng Cộng sản lãnh đạo.",
+            "C. Không nêu rõ mâu thuẫn chủ yếu của xã hội Việt Nam thuộc địa.",
+            "D. Không nhấn mạnh nhiệm vụ giải phóng dân tộc."
+        ],
+        "correctAnswers": [
+            0,
+            2,
+            3
+        ],
+        "explanation": "Hạn chế của Luận cương tháng 10/1930 gồm: Chưa nêu rõ mâu thuẫn chủ yếu của xã hội thuộc địa; Chưa nhấn mạnh nhiệm vụ giải phóng dân tộc lên hàng đầu; Chưa đề ra được một chiến lược liên minh dân tộc và giai cấp rộng rãi (đánh giá chưa đúng vai trò của tiểu tư sản, tư sản dân tộc, trung tiểu địa chủ)."
+    },
+    {
+        "id": 34,
+        "type": "multiple",
+        "question": "Câu 34: Ý nghĩa lịch sử của Cao trào cách mạng 1930–1931 đối với cách mạng Việt Nam là: (Chọn 2 đáp án đúng)",
+        "options": [
+            "A. Khẳng định trong thực tế năng lực lãnh đạo cách mạng của Đảng Cộng sản Việt Nam.",
+            "B. Để lại cho Đảng những kinh nghiệm quý báu về kết hợp hai nhiệm vụ phản đế và phản phong.",
+            "C. Để lại cho Đảng những kinh nghiệm quý báu về thực hiện liên minh công nông dưới sự lãnh đạo của giai cấp nông dân.",
+            "D. Để lại cho Đảng những kinh nghiệm quý báu về thực hiện chiến tranh nhân dân"
+        ],
+        "correctAnswers": [
+            0,
+            1
+        ],
+        "explanation": "Cao trào cách mạng 1930-1931 khẳng định trong thực tế năng lực lãnh đạo của Đảng và để lại những bài học kinh nghiệm quý báu về việc kết hợp hai nhiệm vụ chiến lược phản đế và phản phong (liên minh công nông là dưới sự lãnh đạo của giai cấp công nhân)."
+    },
+    {
+        "id": 35,
+        "type": "multiple",
+        "question": "Câu 35: Luận cương chính trị (10/1930) xác định nhiệm vụ cốt yếu của cách mạng tư sản dân quyền là gì? (Chọn 2 đáp án đúng)",
+        "options": [
+            "A. Đánh đổ đế quốc Pháp, giành độc lập hoàn toàn.",
+            "B. Xây dựng chủ nghĩa xã hội ngay lập tức.",
+            "C. Đánh đổ phong kiến và thực hiện cách mạng thổ địa triệt để.",
+            "D. Thực hiện công nghiệp hóa đất nước."
+        ],
+        "correctAnswers": [
+            0,
+            2
+        ],
+        "explanation": "Luận cương chính trị tháng 10/1930 xác định hai nhiệm vụ cốt yếu của cách mạng tư sản dân quyền là: Đánh đổ đế quốc Pháp, giành độc lập hoàn toàn và đánh đổ phong kiến, thực hiện cách mạng thổ địa triệt để."
+    },
+    {
+        "id": 36,
+        "type": "multiple",
+        "question": "Câu 36: Luận cương chính trị (tháng 10/1930) khẳng định: (Chọn 2 đáp án đúng)",
+        "options": [
+            "A. Giải quyết vấn đề thổ địa là cơ sở để Đảng giành quyền lãnh đạo dân cày.",
+            "B. Vấn đề thổ địa là cái cốt của cách mạng tư sản dân quyền.",
+            "C. Đặt nhiệm vụ giải phóng dân tộc lên hàng đầu.",
+            "D. Cách mạng phản đế và cách mạng thổ địa phải đồng thời tiến, không thể cái làm trước, cái làm sau."
+        ],
+        "correctAnswers": [
+            0,
+            1
+        ],
+        "explanation": "Luận cương tháng 10/1930 khẳng định: \"Vấn đề thổ địa là cái cốt của cách mạng tư sản dân quyền\" và việc giải quyết quyền lợi ruộng đất cho nông dân là cơ sở để giai cấp vô sản và Đảng giành quyền lãnh đạo dân cày."
+    },
+    {
+        "id": 37,
+        "type": "multiple",
+        "question": "Câu 37: Hội nghị Trung ương Đảng (29–30/3/1938) quyết định những nội dung nào? (Chọn 2 đáp án đúng)",
+        "options": [
+            "A. Bầu đồng chí Trường Chinh làm Tổng Bí thư của Đảng.",
+            "B. Bầu đồng chí Nguyễn Văn Cừ làm Tổng Bí thư của Đảng.",
+            "C. Lập Mặt trận Việt Minh để tập hợp rộng rãi lực lượng, phát triển phong trào.",
+            "D. Lập Mặt trận Dân chủ Đông Dương để tập hợp rộng rãi lực lượng, phát triển phong trào."
+        ],
+        "correctAnswers": [
+            1,
+            3
+        ],
+        "explanation": "Hội nghị Trung ương Đảng (29-30/3/1938) quyết định bầu đồng chí Nguyễn Văn Cừ làm Tổng Bí thư và quyết định lập Mặt trận Dân chủ Đông Dương để tập hợp rộng rãi quần chúng đấu tranh."
+    },
+    {
+        "id": 38,
+        "type": "multiple",
+        "question": "Câu 38: Phong trào đấu tranh đòi tự do, dân chủ, cơm áo, hòa bình (1936–1939) được thực hiện dưới các hình thức nào? (Chọn 3 đáp án đúng)",
+        "options": [
+            "A. Đấu tranh trên mặt trận báo chí.",
+            "B. Đấu tranh nghị trường.",
+            "C. Tổ chức các cuộc mít tinh để tập hợp “dân nguyện”.",
+            "D. Đấu tranh trên mặt trận quân sự."
+        ],
+        "correctAnswers": [
+            0,
+            1,
+            2
+        ],
+        "explanation": "Phong trào dân chủ 1936-1939 sử dụng các hình thức đấu tranh công khai, hợp pháp và nửa hợp pháp phong phú: Báo chí công khai, Nghị trường (Viện Dân biểu), mít tinh biểu tình thu thập dân nguyện; phong trào không sử dụng hình thức đấu tranh quân sự."
+    },
+    {
+        "id": 391,
+        "type": "true_false",
+        "question": "Câu 39.1: Hội nghị Trung ương lần thứ nhất (10/1930) quyết định: Đổi tên Đảng Cộng sản Việt Nam thành Đảng Cộng sản Đông Dương.",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            0
+        ],
+        "explanation": "Đúng. Theo chỉ thị của Quốc tế Cộng sản, Hội nghị lần thứ nhất BCH Trung ương lâm thời (10/1930) đã quyết định đổi tên Đảng thành Đảng Cộng sản Đông Dương."
+    },
+    {
+        "id": 392,
+        "type": "true_false",
+        "question": "Câu 39.2: Hội nghị Trung ương lần thứ nhất (10/1930) quyết định: Đảng ra hoạt động công khai, tách thành 3 Đảng, ở Việt Nam, Đảng có tên là Đảng Lao động Việt Nam.",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Sai. Quyết định đưa Đảng ra hoạt động công khai với tên gọi Đảng Lao động Việt Nam được thông qua tại Đại hội đại biểu toàn quốc lần thứ II (tháng 2/1951)."
+    },
+    {
+        "id": 393,
+        "type": "true_false",
+        "question": "Câu 39.3: Hội nghị Trung ương lần thứ nhất (10/1930) quyết định: Đổi tên Đảng Cộng sản Việt Nam thành Đông Dương Cộng sản liên đoàn.",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Sai. Đông Dương Cộng sản Liên đoàn là một trong ba tổ chức tiền thân được hợp nhất vào đầu năm 1930, không phải tên gọi mới của Đảng."
+    },
+    {
+        "id": 394,
+        "type": "true_false",
+        "question": "Câu 39.4: Hội nghị Trung ương lần thứ nhất (10/1930) quyết định: Đổi tên Đảng Cộng sản Việt Nam thành An Nam Cộng sản Đảng.",
+        "options": [
+            "Đúng",
+            "Sai"
+        ],
+        "correctAnswers": [
+            1
+        ],
+        "explanation": "Sai. An Nam Cộng sản Đảng là tổ chức tiền thân thành lập năm 1929 tại Nam Kỳ, không phải quyết định của Hội nghị tháng 10/1930."
+    },
+    {
+        "id": 40,
+        "type": "drag_drop",
+        "question": "Câu 40: Sắp xếp tên tác giả tương ứng với các văn kiện Đảng:",
+        "pairs": [
+            {
+                "dropZone": "Nguyễn Ái Quốc",
+                "dragItem": "Cương lĩnh chính trị đầu tiên của Đảng (tháng 2/1930)"
+            },
+            {
+                "dropZone": "Ban Chấp hành Trung ương Đảng Cộng sản Đông Dương",
+                "dragItem": "Chung quanh vấn đề chiến sách mới (tháng 10/1936)"
+            },
+            {
+                "dropZone": "Hà Huy Tập",
+                "dragItem": "Cuốn “Tờrốtxky và phản cách mạng” (tháng 5/1937)"
+            },
+            {
+                "dropZone": "Trần Phú",
+                "dragItem": "Luận cương chính trị (tháng 10/1930)"
+            }
+        ],
+        "explanation": "Cương lĩnh chính trị đầu tiên (2/1930) do Nguyễn Ái Quốc soạn thảo; Luận cương chính trị (10/1930) do Trần Phú soạn thảo; Văn kiện \"Chung quanh vấn đề chiến sách mới\" (10/1936) do BCH Trung ương Đảng ban hành; Tác phẩm \"Tờrốtxky và phản cách mạng\" (5/1937) do đồng chí Hà Huy Tập viết."
+    },
+    {
+        "id": 41,
+        "type": "single",
+        "question": "Câu 41: Lựa chọn và điền cụm từ thích hợp vào chỗ trống để hoàn thiện nội dung phương hướng chiến lược của cách mạng được Đảng xác định trong Luận cương chính trị (tháng 10/1930): \"Tính chất của cách mạng Đông Dương lúc đầu là một cuộc _____ có tính chất _____. Sau đó sẽ tiếp tục phát triển, bỏ qua thời kỳ tư bổn mà tranh đấu thẳng lên con đường xã hội chủ nghĩa\"",
+        "options": [
+            "A. Cách mạng dân tộc dân chủ nhân dân – thổ địa và phản đế",
+            "B. Cách mạng tư sản dân quyền – độc lập dân tộc và phản đế",
+            "C. Cách mạng dân tộc dân chủ nhân dân – độc lập dân tộc và phản đế",
+            "D. Cách mạng tư sản dân quyền – thổ địa và phản đế"
+        ],
+        "correctAnswers": [
+            3
+        ],
+        "explanation": "Luận cương chính trị (10/1930) xác định: Tính chất của cách mạng Đông Dương lúc đầu là một cuộc cách mạng tư sản dân quyền có tính chất thổ địa và phản đế, sau đó tiến thẳng lên con đường XHCN."
+    },
+    {
+        "id": 42,
+        "type": "drag_drop",
+        "question": "Câu 42: Sắp xếp các mốc thời gian tương ứng với các sự kiện đã diễn ra:",
+        "pairs": [
+            {
+                "dropZone": "Tháng 7/1935",
+                "dragItem": "Quốc tế Cộng sản họp Đại hội VII tại Mátxcơva (Liên Xô)"
+            },
+            {
+                "dropZone": "Từ năm 1929 đến năm 1933",
+                "dragItem": "Khủng hoảng kinh tế thế giới"
+            },
+            {
+                "dropZone": "Năm 1936",
+                "dragItem": "Chính phủ Mặt trận nhân dân Pháp được thành lập"
+            },
+            {
+                "dropZone": "Tháng 5/1935",
+                "dragItem": "Mặt trận nhân dân Pháp được thành lập"
+            }
+        ],
+        "explanation": "Khủng hoảng kinh tế thế giới diễn ra từ 1929 đến 1933; Mặt trận nhân dân Pháp thành lập tháng 5/1935; Đại hội VII Quốc tế Cộng sản họp tháng 7/1935; Chính phủ Mặt trận nhân dân Pháp thành lập năm 1936."
+    },
+    {
+        "id": 43,
+        "type": "drag_drop",
+        "question": "Câu 43: Kéo thả các cụm từ thích hợp vào các vị trí trống (1), (2), (3), (4) trong nhận định của Hội nghị Trung ương 8 (tháng 5/1941): “Tháng 5/1941, Nguyễn Ái Quốc chủ trì Hội nghị lần thứ tám Ban Chấp hành Trung ương Đảng. Hội nghị khẳng định: ‘Vấn đề chính là nhận định cuộc cách mạng trước mắt của Việt Nam là ___(1)___, lập ___(2)___, khẩu hiệu chính là ___(3)___, chống Nhật, chống Pháp, tranh lại độc lập; ___(4)___.’”",
+        "pairs": [
+            {
+                "dropZone": "Một cuộc cách mạng giải phóng dân tộc",
+                "dragItem": "Vị trí (1): Nhận định cuộc cách mạng trước mắt là"
+            },
+            {
+                "dropZone": "Mặt trận Việt Minh",
+                "dragItem": "Vị trí (2): Thành lập"
+            },
+            {
+                "dropZone": "Đoàn kết toàn dân",
+                "dragItem": "Vị trí (3): Khẩu hiệu chính là"
+            },
+            {
+                "dropZone": "Hoãn cách mạng ruộng đất",
+                "dragItem": "Vị trí (4): Chủ trương về ruộng đất"
+            }
+        ],
+        "explanation": "Tại Hội nghị lần thứ tám BCH Trung ương Đảng (5/1941), Đảng khẳng định cuộc cách mạng trước mắt của Việt Nam là (1) Một cuộc cách mạng giải phóng dân tộc; lập (2) Mặt trận Việt Minh; khẩu hiệu chính là (3) Đoàn kết toàn dân; (4) Hoãn cách mạng ruộng đất."
+    },
+    {
+        "id": 44,
+        "type": "drag_drop",
+        "question": "Câu 44: Kéo thả thời gian tương ứng với từng sự kiện dưới đây:",
+        "pairs": [
+            {
+                "dropZone": "Ngày 6/8/1945",
+                "dragItem": "Mỹ ném bom nguyên tử xuống thành phố Hiroshima."
+            },
+            {
+                "dropZone": "Ngày 9/8/1945",
+                "dragItem": "Mỹ ném bom nguyên tử xuống thành phố Nagasaki."
+            },
+            {
+                "dropZone": "Ngày 15/8/1945",
+                "dragItem": "Chính phủ Nhật tuyên bố đầu hàng Đồng minh không điều kiện."
+            },
+            {
+                "dropZone": "Ngày 13/8/1945",
+                "dragItem": "Ủy ban Khởi nghĩa toàn quốc ban bố “Quân lệnh số 1”, phát đi lệnh tổng khởi nghĩa trong cả nước."
+            }
+        ],
+        "explanation": "Mỹ ném bom nguyên tử xuống Hiroshima ngày 6/8/1945 và Nagasaki ngày 9/8/1945; Quân lệnh số 1 được ban bố ngày 13/8/1945; Chính phủ Nhật tuyên bố đầu hàng không điều kiện ngày 15/8/1945."
     }
 ]

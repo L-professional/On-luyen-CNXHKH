@@ -23,15 +23,47 @@ let adminUsersList = [];
 let adminFeedbacksList = [];
 let isFirebaseListenersAttached = false;
 
+// Cập nhật tiêu đề môn học trên header trang Admin
+function updateAdminHeaderSubjectInfo(subjectId) {
+    const sub = subjectId || (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh'));
+    const cfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+    const subName = cfg ? cfg.name : (sub === 'lsd' ? 'Lịch sử Đảng' : 'Chủ nghĩa xã hội khoa học');
+    const subtitleEl = document.getElementById('admin-header-subtitle');
+    if (subtitleEl) subtitleEl.textContent = subName;
+}
+window.updateAdminHeaderSubjectInfo = updateAdminHeaderSubjectInfo;
+
 // Khởi tạo và bảo vệ route khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Đọc URL để lấy currentSubject và khởi tạo State ngay lập tức
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentSubject = urlParams.get('subject') || localStorage.getItem('currentSubject') || 'cnxhkh';
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(currentSubject);
+    } else {
+        localStorage.setItem('currentSubject', currentSubject);
+    }
+
+    if (!urlParams.has('subject')) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('subject', currentSubject);
+        window.history.replaceState({ subject: currentSubject, tab: urlParams.get('tab') || 'users' }, '', newUrl.toString());
+    }
+
+    // Render Dropdown và danh sách chủ đề trên Sidebar ngay lập tức
+    if (typeof renderMainSidebar === 'function') {
+        renderMainSidebar(currentSubject);
+    }
+    updateAdminHeaderSubjectInfo(currentSubject);
+
     // 1. Bảo vệ Route: Chỉ cho phép admin truy cập và phiên phải hợp lệ
     if (!protectAdminRoute()) return;
 
     // 2. Thiết lập theo dõi hiện diện (Presence Tracking) cho tài khoản Admin
     const currAdmin = getAdminCurrentUser();
-    if (currAdmin && currAdmin.userId && window.FirebaseService) {
-        FirebaseService.setupPresence(currAdmin.userId);
+    if (currAdmin && window.FirebaseService) {
+        const uid = currAdmin.userId || ('u_' + (currAdmin.username || '').toLowerCase());
+        FirebaseService.setupPresence(uid);
     }
 
     // 3. Khởi tạo dữ liệu người dùng từ Firebase
@@ -47,7 +79,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAdminStatsBadges();
 
     // 7. Khởi tạo tab theo URL query parameter (?tab=users|feedbacks)
-    const urlParams = new URLSearchParams(window.location.search);
     const initialTab = urlParams.get('tab') === 'feedbacks' ? 'feedbacks' : 'users';
     switchAdminMainTab(initialTab, false);
 });
@@ -56,6 +87,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.addEventListener('popstate', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab') === 'feedbacks' ? 'feedbacks' : 'users';
+    const sub = urlParams.get('subject') || localStorage.getItem('currentSubject') || 'cnxhkh';
+    if (typeof renderMainSidebar === 'function') {
+        renderMainSidebar(sub);
+    }
+    updateAdminHeaderSubjectInfo(sub);
     switchAdminMainTab(tab, false);
 });
 
@@ -464,22 +500,27 @@ function getUserHistoryList(u) {
 
 /**
  * Tính toán tiến độ học tập: đếm tổng số lượt ôn tập và số lần thi mô phỏng
+ * Đọc trực tiếp từ u.totalPractice và u.totalMockExams trên Firebase
  */
 function getUserProgressSummary(u) {
-    const history = getUserHistoryList(u);
-    let mockCount = 0;
-    let practiceCount = 0;
+    let practiceCount = (u.totalPractice !== undefined && u.totalPractice !== null) ? Number(u.totalPractice) : 0;
+    let mockCount = (u.totalMockExams !== undefined && u.totalMockExams !== null) ? Number(u.totalMockExams) : 0;
 
-    history.forEach(item => {
-        const tId = (item.topicId !== undefined && item.topicId !== null) ? String(item.topicId).toLowerCase() : '';
-        const tName = (item.topicName || '').toLowerCase();
-        const isMock = tId === 'mock' || tName.includes('mô phỏng') || item.isMockExam;
-        if (isMock) {
-            mockCount++;
-        } else {
-            practiceCount++;
-        }
-    });
+    const history = getUserHistoryList(u);
+
+    // Nếu user chưa có trường totalPractice / totalMockExams hoặc đang là 0, đếm bổ sung từ lịch sử học tập
+    if (practiceCount === 0 && mockCount === 0 && history.length > 0) {
+        history.forEach(item => {
+            const tId = (item.topicId !== undefined && item.topicId !== null) ? String(item.topicId).toLowerCase() : '';
+            const tName = (item.topicName || '').toLowerCase();
+            const isMock = tId === 'mock' || tName.includes('mô phỏng') || item.isMockExam;
+            if (isMock) {
+                mockCount++;
+            } else {
+                practiceCount++;
+            }
+        });
+    }
 
     // Nếu user chưa có lịch sử làm bài dạng bản ghi nhưng có progress ở các chủ đề
     if (practiceCount === 0 && u.progress && typeof u.progress === 'object') {
@@ -718,46 +759,46 @@ function renderUserTable(searchKeyword = '') {
         if (u.status === 'online') {
             statusHtml = `
                 <div class="user-activity-status" title="Đang trực tuyến">
-                    <div class="flex items-center gap-1.5 font-semibold text-xs" style="color: #15803d;">
-                        <span style="font-size: 13px; line-height: 1;">🟢</span>
+                    <div class="flex items-center gap-1.5 font-semibold text-xs text-green-700">
                         <span class="status-indicator-dot online"></span>
                         <span class="status-indicator-text online">Online</span>
                     </div>
-                    ${currentAct 
-                        ? `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #64748b; font-size: 12px; font-style: italic; white-space: normal; line-height: 1.35;">${escapeHtml(currentAct)}</div>` 
-                        : `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #94a3b8; font-size: 12px; font-style: italic;">Đang dạo bước Tông Môn</div>`
-                    }
+                    <div class="text-xs text-slate-500 italic mt-0.5" style="white-space: normal; line-height: 1.35;">
+                        ${escapeHtml(currentAct || 'Đang dạo bước Tông Môn')}
+                    </div>
                 </div>
             `;
         } else if (u.status === 'idle') {
             statusHtml = `
                 <div class="user-activity-status" title="Treo máy (Thần du thái hư)">
-                    <div class="flex items-center gap-1.5 font-semibold text-xs" style="color: #d97706;">
-                        <span style="font-size: 13px; line-height: 1;">🟡</span>
+                    <div class="flex items-center gap-1.5 font-semibold text-xs text-amber-600">
                         <span class="status-indicator-dot idle"></span>
                         <span class="status-indicator-text idle">Treo máy</span>
                     </div>
-                    ${currentAct 
-                        ? `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #64748b; font-size: 12px; font-style: italic; white-space: normal; line-height: 1.35;">${escapeHtml(currentAct)} <span style="color: #d97706;">(Thần du thái hư)</span></div>` 
-                        : `<div class="text-sm text-slate-400 italic mt-0.5" style="color: #d97706; font-size: 12px; font-style: italic;">Thần du thái hư</div>`
-                    }
+                    <div class="text-xs text-amber-600/80 italic mt-0.5" style="white-space: normal; line-height: 1.35;">
+                        ${escapeHtml(currentAct ? `${currentAct} (Treo máy)` : 'Thần du thái hư (Treo máy)')}
+                    </div>
                 </div>
             `;
         } else {
             statusHtml = `
                 <div class="user-activity-status" title="${u.lastActive ? new Date(u.lastActive).toLocaleString('vi-VN') : 'Chưa có hoạt động'}">
-                    <div class="flex items-center gap-1.5 font-medium text-xs" style="color: #64748b;">
-                        <span style="font-size: 13px; line-height: 1;">⚪</span>
+                    <div class="flex items-center gap-1.5 font-medium text-xs text-slate-500">
                         <span class="status-indicator-dot offline"></span>
                         <span class="status-indicator-text offline">${formatLastActiveTime(u.lastActive)}</span>
                     </div>
+                    ${currentAct ? `
+                        <div class="text-xs text-slate-400 italic mt-0.5" style="white-space: normal; line-height: 1.35;">
+                            ${escapeHtml(currentAct)}
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
 
         const isUserAdmin = (u.role && u.role.toLowerCase() === 'admin') || (u.username && u.username.toLowerCase() === 'admin') || isRootAdmin;
 
-        // Tính toán Tiến độ: Nếu là Admin, ghi đè thành chuỗi "Vạn Kiếp Luân Hồi", ngược lại đếm "Số lượt ôn tập" và "Số lần thi mô phỏng"
+        // Tính toán Tiến độ: Đọc trực tiếp u.totalPractice || 0 và u.totalMockExams || 0
         let progressCellHtml = '';
         if (isUserAdmin) {
             progressCellHtml = `
@@ -767,9 +808,12 @@ function renderUserTable(searchKeyword = '') {
                 </div>
             `;
         } else {
-            const { practiceCount, mockCount } = getUserProgressSummary(u);
+            const summary = getUserProgressSummary(u);
+            const practiceCount = (u.totalPractice !== undefined && u.totalPractice !== null) ? Number(u.totalPractice) : summary.practiceCount;
+            const mockCount = (u.totalMockExams !== undefined && u.totalMockExams !== null) ? Number(u.totalMockExams) : summary.mockCount;
+
             progressCellHtml = `
-                <button type="button" class="btn-progress-detail" onclick="openStatsDetailModal('${escapeHtml(userId)}')" title="Bấm để xem chi tiết 6 chủ đề của ${escapeHtml(u.username)}">
+                <button type="button" class="btn-progress-detail" onclick="openStatsDetailModal('${escapeHtml(userId)}')" title="Bấm để xem chi tiết tiến độ của ${escapeHtml(u.username)}">
                     <i class="fa-solid fa-chart-line" style="font-size: 11px;"></i>
                     <span>Ôn tập: ${practiceCount} | Thi: ${mockCount}</span>
                 </button>
@@ -814,7 +858,7 @@ function renderUserTable(searchKeyword = '') {
                             <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
                             <span>Ban Tặng Đạo Hiệu</span>
                         </button>
-                        <button type="button" class="btn-action btn-delete px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="handleDeleteUser('${escapeHtml(userId)}')" title="Trục xuất ${escapeHtml(u.displayName || u.username)} khỏi tông môn" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
+                        <button type="button" class="btn-action btn-delete px-2 py-1 text-xs whitespace-nowrap font-medium" onclick="deleteUserAccount('${escapeHtml(userId)}')" title="Trục xuất ${escapeHtml(u.displayName || u.username)} khỏi tông môn" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px;">
                             <i class="fa-solid fa-trash-can text-[10px]"></i>
                             <span>Trục Xuất Tông Môn</span>
                         </button>
@@ -857,9 +901,9 @@ function renderUserTable(searchKeyword = '') {
                                 <span>✨ Ban Tặng Đạo Hiệu</span>
                             </button>
                             <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
-                            <button type="button" class="admin-dropdown-item" onclick="handleDeleteUser('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #ef4444;">
+                            <button type="button" class="admin-dropdown-item" onclick="deleteUserAccount('${escapeHtml(userId)}'); closeAllAdminDropdowns();" style="color: #ef4444;">
                                 <i class="fa-solid fa-trash-can" style="width: 14px; color: #ef4444;"></i>
-                                <span>🗑️ Trục Xuất Tông Môn</span>
+                                <span>🗑️ Trục Xuất (Xóa tài khoản)</span>
                             </button>
                         </div>
                     </div>
@@ -918,122 +962,324 @@ function renderUserTable(searchKeyword = '') {
     }).join('');
 }
 
+// ==========================================
+// QUẢN LÝ TIẾN ĐỘ HỌC TẬP ĐA MÔN PHÁI (MODAL)
+// ==========================================
+let currentViewingUid = null;
+let currentViewingSubject = 'cnxhkh';
+
 /**
- * Mở Modal chi tiết tiến độ 6 chủ đề của học viên (statsDetailModal)
+ * Chuyển đổi môn học đang xem trong Modal Tiến độ học tập
+ * @param {string} subjectId - 'cnxhkh' hoặc 'lsd'
+ */
+async function switchModalProgressSubject(subjectId) {
+    currentViewingSubject = (subjectId === 'lsd') ? 'lsd' : 'cnxhkh';
+    
+    // Cập nhật hiệu ứng Active UI giữa 2 Tab
+    const btnCnxhkh = document.getElementById('modal-tab-cnxhkh');
+    const btnLsd = document.getElementById('modal-tab-lsd');
+    const activeClasses = ['bg-blue-600', 'text-white', 'shadow-sm'];
+    const inactiveClasses = ['bg-slate-100', 'text-slate-600', 'hover:bg-slate-200', 'hover:text-slate-800'];
+
+    if (btnCnxhkh && btnLsd) {
+        if (currentViewingSubject === 'cnxhkh') {
+            btnCnxhkh.classList.remove(...inactiveClasses);
+            btnCnxhkh.classList.add(...activeClasses);
+            btnLsd.classList.remove(...activeClasses);
+            btnLsd.classList.add(...inactiveClasses);
+        } else {
+            btnLsd.classList.remove(...inactiveClasses);
+            btnLsd.classList.add(...activeClasses);
+            btnCnxhkh.classList.remove(...activeClasses);
+            btnCnxhkh.classList.add(...inactiveClasses);
+        }
+    }
+
+    if (currentViewingUid) {
+        await renderProgressData(currentViewingUid, currentViewingSubject);
+    }
+}
+window.switchModalProgressSubject = switchModalProgressSubject;
+
+/**
+ * Mở Modal chi tiết tiến độ học tập của học viên (hỗ trợ Đa môn phái)
  * @param {string} userIdOrName UID hoặc username
  */
-function openStatsDetailModal(userIdOrName) {
+async function openProgressModal(userIdOrName) {
+    if (!userIdOrName) return;
     const modal = document.getElementById('statsDetailModal');
     if (!modal) return;
 
+    // 1. Xác định User từ danh sách đã nạp
     const users = getUserList();
-    const user = users.find(u => 
+    let user = users.find(u => 
         u.userId === userIdOrName || 
         ('u_' + (u.username || '').toLowerCase()) === userIdOrName || 
         (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
     );
 
     if (!user) {
-        showToast('Không tìm thấy tài khoản người dùng!', 'error');
-        return;
+        user = adminUsersList.find(u => 
+            u.userId === userIdOrName || 
+            (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+        );
     }
 
+    const targetUid = user ? (user.userId || userIdOrName) : userIdOrName;
+    currentViewingUid = targetUid;
+
+    // 2. Cập nhật Tiêu đề Modal
     const modalTitle = document.getElementById('statsDetailModalTitle');
-    const modalSubtitle = document.getElementById('statsDetailModalSubtitle');
-    const modalBody = document.getElementById('statsDetailModalBody');
-
-    const userRank = getResolvedUserRank(user);
-    const { practiceCount, mockCount, history } = getUserProgressSummary(user);
-
     if (modalTitle) {
-        modalTitle.textContent = `Tiến độ học tập: ${user.username}`;
+        modalTitle.textContent = `Tiến độ học tập: ${user ? (user.displayName || user.username) : userIdOrName}`;
     }
+
+    // 3. Hiển thị Modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    // 4. Mặc định kích hoạt tab CNXHKH đầu tiên và gọi hàm render
+    await switchModalProgressSubject('cnxhkh');
+}
+window.openProgressModal = openProgressModal;
+window.openStatsDetailModal = openProgressModal;
+window.showUserProgress = openProgressModal;
+
+/**
+ * Render dữ liệu tiến độ 6 chủ đề của học viên theo môn học tương ứng
+ * @param {string} uid - User ID
+ * @param {string} subjectId - 'cnxhkh' hoặc 'lsd'
+ */
+async function renderProgressData(uid, subjectId) {
+    const container = document.getElementById('modal-progress-content') || 
+                      document.getElementById('progress-topics-container') || 
+                      document.getElementById('statsDetailModalBody');
+    if (!container) return;
+
+    const sub = (subjectId === 'lsd') ? 'lsd' : 'cnxhkh';
+    const cfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+    const subjectName = cfg ? cfg.name : (sub === 'lsd' ? 'Lịch sử Đảng' : 'Chủ nghĩa Xã hội Khoa học');
+
+    // Cập nhật Badge tên môn học trên Header
+    const subjectBadge = document.getElementById('statsDetailModalSubjectBadge');
+    if (subjectBadge) {
+        subjectBadge.textContent = subjectName;
+        subjectBadge.className = (sub === 'lsd')
+            ? 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200'
+            : 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200';
+    }
+
+    // Hiển thị trạng thái Loading
+    container.innerHTML = `
+        <div class="py-12 text-center text-slate-500">
+            <i class="fa-solid fa-spinner fa-spin text-2xl text-blue-600 mb-2"></i>
+            <p class="text-xs font-medium">Đang truy vấn dữ liệu tiến độ môn ${escapeHtml(subjectName)} từ Firebase...</p>
+        </div>
+    `;
+
+    // Truy vấn dữ liệu người dùng từ Firebase Realtime Database
+    let userData = null;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            const snap = await firebase.database().ref('users/' + uid).once('value');
+            if (snap && snap.exists()) {
+                userData = snap.val();
+                if (userData) userData.userId = uid;
+            }
+        }
+    } catch (e) {
+        console.warn('[Admin] Lỗi query dữ liệu tiến độ từ Firebase:', e);
+    }
+
+    if (!userData) {
+        const users = getUserList();
+        userData = users.find(u => u.userId === uid || u.username === uid) || 
+                   adminUsersList.find(u => u.userId === uid || u.username === uid) || 
+                   { userId: uid };
+    }
+
+    // Cập nhật Cảnh giới & Tổng tiến độ
+    const userRank = getResolvedUserRank(userData);
+    const summary = getUserProgressSummary(userData);
+    const practiceCount = (userData.totalPractice !== undefined && userData.totalPractice !== null) ? Number(userData.totalPractice) : summary.practiceCount;
+    const mockCount = (userData.totalMockExams !== undefined && userData.totalMockExams !== null) ? Number(userData.totalMockExams) : summary.mockCount;
+    const modalSubtitle = document.getElementById('statsDetailModalSubtitle');
     if (modalSubtitle) {
-        modalSubtitle.innerHTML = `Cấp độ: <span style="color: ${userRank.color}; font-weight: 700;">${userRank.displayName || userRank.name}</span> | Ôn tập: <strong>${practiceCount}</strong> lượt | Thi mô phỏng: <strong>${mockCount}</strong> lần`;
+        modalSubtitle.innerHTML = `Cảnh giới: <span style="color: ${userRank.color}; font-weight: 700;">${userRank.displayName || userRank.name}</span> | Ôn tập: <strong>${practiceCount}</strong> lượt | Thi: <strong>${mockCount}</strong> lần`;
     }
 
-    // 6 Chủ đề chuẩn của học phần
-    const topics = [
-        { id: 1, title: "Chủ đề 1", name: "Đối tượng, chức năng, phương pháp nghiên cứu của CNXH khoa học" },
-        { id: 2, title: "Chủ đề 2", name: "Sự ra đời và phát triển của CNXH khoa học" },
-        { id: 3, title: "Chủ đề 3", name: "Sứ mệnh lịch sử của giai cấp công nhân" },
-        { id: 4, title: "Chủ đề 4", name: "Những đặc trưng cơ bản của CNXH và con đường đi lên CNXH ở Việt Nam" },
-        { id: 5, title: "Chủ đề 5", name: "Các hình thái kinh tế - xã hội" },
-        { id: 6, title: "Chủ đề 6", name: "Thời kỳ quá độ lên CNXH" }
-    ];
+    // Lấy cấu trúc 6 chủ đề của môn học từ subjects-config.js
+    const subjectTopics = (typeof getSubjectTopics === 'function') ? getSubjectTopics(sub) : null;
+    const historyList = getUserHistoryList(userData);
 
-    if (modalBody) {
-        modalBody.innerHTML = topics.map(t => {
-            const topicHistory = history.filter(h => {
-                const hId = String(h.topicId !== undefined && h.topicId !== null ? h.topicId : '').toLowerCase();
-                const hName = (h.topicName || '').toLowerCase();
-                return hId === String(t.id) || 
-                       hId === ('topic_' + t.id) || 
-                       hId === ('topic' + t.id) || 
-                       hName.includes('chủ đề ' + t.id) || 
-                       hName.includes('chu de ' + t.id);
-            });
+    let hasAnyData = false;
+    const topicsData = [];
 
-            const topicAttempts = topicHistory.length;
-            let totalCorrect = 0;
-            let totalQuestions = 0;
-            let bestScore = 0;
+    // Duyệt vòng lặp từ 1 đến 6 cho 6 chủ đề
+    for (let i = 1; i <= 6; i++) {
+        const topicId = i;
+        const topicMeta = (subjectTopics && subjectTopics[i - 1]) ? subjectTopics[i - 1] : {
+            id: topicId,
+            title: `Chủ đề ${topicId}`,
+            name: `Chủ đề ${topicId}: ${subjectName}`
+        };
 
+        // 1. Kiểm tra tiến trình lưu trong userData.progress (Firebase & Cache)
+        let topicProg = null;
+        if (userData.progress && typeof userData.progress === 'object') {
+            if (userData.progress[sub]) {
+                const subProg = userData.progress[sub];
+                if (subProg.topics && subProg.topics[topicId]) {
+                    topicProg = subProg.topics[topicId];
+                } else if (subProg[topicId]) {
+                    topicProg = subProg[topicId];
+                }
+            } else if (sub === 'cnxhkh') {
+                topicProg = userData.progress[topicId] || userData.progress['topic_' + topicId] || userData.progress['chude' + topicId];
+            }
+        }
+
+        // Kiểm tra fallback từ localStorage nếu có
+        if (!topicProg) {
+            try {
+                const localKey = sub === 'lsd' ? `progress_${uid}_lsd_topic_${topicId}` : `progress_${uid}_topic_${topicId}`;
+                const rawLocal = localStorage.getItem(localKey);
+                if (rawLocal) topicProg = JSON.parse(rawLocal);
+            } catch (e) {}
+        }
+
+        // 2. Lấy dữ liệu từ lịch sử làm bài/thi của chủ đề đó
+        const topicHistory = historyList.filter(h => {
+            const matchTopic = (Number(h.topicId) === topicId) || 
+                               (Number(h.topic) === topicId) ||
+                               (String(h.topicId) === String(topicId)) || 
+                               (String(h.topicId).toLowerCase() === `topic_${topicId}`);
+            const itemSub = String(h.subject || h.subjectId || 'cnxhkh').toLowerCase();
+            const matchSubject = (itemSub === sub);
+            return matchTopic && matchSubject;
+        });
+
+        let attempts = topicHistory.length;
+        let totalCorrect = 0;
+        let totalIncorrect = 0;
+        let bestScore = 0;
+
+        if (topicHistory.length > 0) {
+            hasAnyData = true;
             topicHistory.forEach(h => {
                 const c = parseInt(h.correctCount, 10) || 0;
                 const tot = parseInt(h.totalQuestions, 10) || 0;
                 const sc = parseFloat(h.score) || 0;
                 totalCorrect += c;
-                totalQuestions += tot;
+                totalIncorrect += Math.max(0, tot - c);
                 if (sc > bestScore) bestScore = sc;
             });
+        }
 
-            let directProgress = 0;
-            if (user.progress && typeof user.progress === 'object') {
-                const pVal = user.progress[t.id] || user.progress['topic' + t.id] || user.progress['topic_' + t.id];
-                if (pVal !== undefined && pVal !== null) {
-                    directProgress = parseInt(pVal, 10) || 0;
-                }
+        // Bổ sung dữ liệu câu hỏi từ questionResults nếu có
+        if (topicProg && typeof topicProg === 'object') {
+            const results = topicProg.questionResults || topicProg.answeredQuestions || {};
+            let progCorrect = 0;
+            let progWrong = 0;
+            if (typeof results === 'object') {
+                Object.values(results).forEach(val => {
+                    if (val === true || (typeof val === 'object' && val.isCorrect === true)) {
+                        progCorrect++;
+                    } else if (val === false || (typeof val === 'object' && val.isCorrect === false)) {
+                        progWrong++;
+                    }
+                });
             }
+            if (progCorrect > 0 || progWrong > 0) {
+                hasAnyData = true;
+                if (attempts === 0) attempts = 1;
+                if (totalCorrect === 0 && totalIncorrect === 0) {
+                    totalCorrect = progCorrect;
+                    totalIncorrect = progWrong;
+                }
+            } else if (topicProg.currentIndex > 0) {
+                hasAnyData = true;
+                if (attempts === 0) attempts = 1;
+            }
+        }
 
-            const totalIncorrect = Math.max(0, totalQuestions - totalCorrect);
-            const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+        const totalQ = totalCorrect + totalIncorrect;
+        const accuracy = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0;
 
-            return `
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition-all" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;">
-                    <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-                            <span class="px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-full" style="padding: 2px 10px; font-size: 11px; font-weight: 700; background: #dbeafe; color: #1d4ed8; border-radius: 9999px;">
-                                ${t.title}
-                            </span>
-                            <span class="text-sm font-semibold text-slate-800" style="font-size: 13.5px; font-weight: 600; color: #1e293b;">
-                                ${t.name}
-                            </span>
-                        </div>
-                        <span class="text-xs font-bold px-2 py-0.5 rounded" style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; ${topicAttempts > 0 ? 'background: #dcfce7; color: #15803d;' : 'background: #f1f5f9; color: #64748b;'}">
-                            ${topicAttempts} lượt làm
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-xs" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 12px;">
-                        <div style="color: #16a34a; font-weight: 600;">
-                            <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Số câu đúng: <strong>${totalCorrect}</strong>
-                        </div>
-                        <div style="color: #dc2626; font-weight: 600;">
-                            <i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Số câu sai: <strong>${totalIncorrect}</strong>
-                        </div>
-                        <div style="color: #2563eb; font-weight: 600; text-align: right;">
-                            <i class="fa-solid fa-bullseye" style="margin-right: 4px;"></i> Tỉ lệ đúng: <strong>${accuracy}%</strong> ${topicAttempts > 0 ? `(Cao nhất: ${bestScore}/10)` : (directProgress > 0 ? `(${directProgress} câu)` : '')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        topicsData.push({
+            topicId,
+            topicMeta,
+            attempts,
+            totalCorrect,
+            totalIncorrect,
+            accuracy,
+            bestScore
+        });
     }
 
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
+    // Kiểm tra xem có bất kỳ lịch sử thi thử nào của môn này không
+    if (!hasAnyData) {
+        const hasAnySubjectHistory = historyList.some(h => {
+            const itemSub = String(h.subject || h.subjectId || 'cnxhkh').toLowerCase();
+            return itemSub === sub;
+        });
+        if (hasAnySubjectHistory) hasAnyData = true;
+    }
+
+    // Nếu KHÔNG có dữ liệu: Render Empty State Card
+    if (!hasAnyData) {
+        container.innerHTML = `
+            <div class="py-12 px-4 text-center" style="padding: 44px 16px; text-align: center;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 14px;">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                </div>
+                <h4 class="text-base font-bold text-slate-700 mb-1" style="font-size: 15px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                    Đạo hữu này chưa từng ôn luyện môn ${escapeHtml(subjectName)}!
+                </h4>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto" style="font-size: 12.5px; color: #94a3b8; max-width: 380px; margin: 0 auto;">
+                    Chưa ghi nhận bất kỳ tiến trình tu luyện hay chiến tích luân hồi nào của môn học này trên thiên đạo.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    // Nếu CÓ dữ liệu: Render danh sách 6 chủ đề
+    const themeColor = sub === 'lsd' ? '#dc2626' : '#2563eb';
+    const themeBadgeBg = sub === 'lsd' ? '#ffe4e6' : '#dbeafe';
+    const themeBadgeText = sub === 'lsd' ? '#be123c' : '#1d4ed8';
+
+    container.innerHTML = topicsData.map(t => `
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition-all" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+            <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="px-2.5 py-0.5 text-xs font-bold rounded-full" style="padding: 2px 10px; font-size: 11px; font-weight: 700; border-radius: 9999px; background: ${themeBadgeBg}; color: ${themeBadgeText};">
+                        ${escapeHtml(t.topicMeta.title || `Chủ đề ${t.topicId}`)}
+                    </span>
+                    <span class="text-sm font-semibold text-slate-800" style="font-size: 13.5px; font-weight: 600; color: #1e293b;">
+                        ${escapeHtml(t.topicMeta.name || t.topicMeta.title || `Chủ đề ${t.topicId}`)}
+                    </span>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded" style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; ${t.attempts > 0 ? 'background: #dcfce7; color: #15803d;' : 'background: #f1f5f9; color: #64748b;'}">
+                    ${t.attempts} lượt làm
+                </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-xs" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 12px;">
+                <div style="color: #16a34a; font-weight: 600;">
+                    <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Số câu đúng: <strong>${t.totalCorrect}</strong>
+                </div>
+                <div style="color: #dc2626; font-weight: 600;">
+                    <i class="fa-solid fa-circle-xmark" style="margin-right: 4px;"></i> Số câu sai: <strong>${t.totalIncorrect}</strong>
+                </div>
+                <div style="color: ${themeColor}; font-weight: 600; text-align: right;">
+                    <i class="fa-solid fa-bullseye" style="margin-right: 4px;"></i> Tỉ lệ: <strong>${t.accuracy}%</strong> ${t.bestScore > 0 ? `(Max: ${t.bestScore}/10)` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
 }
+window.renderProgressData = renderProgressData;
 
 /**
  * Đóng Modal chi tiết thống kê 6 chủ đề
@@ -1045,7 +1291,6 @@ function closeStatsDetailModal() {
         modal.style.display = 'none';
     }
 }
-window.openStatsDetailModal = openStatsDetailModal;
 window.closeStatsDetailModal = closeStatsDetailModal;
 
 let currentBuffTargetUser = null;
@@ -1792,44 +2037,57 @@ async function handleCreateUser(e) {
 }
 
 /**
- * Xử lý tính năng Xóa tài khoản - Tích hợp Firebase
+ * Thần Thông: Trục Xuất Tông Môn (Xóa tài khoản người dùng vĩnh viễn)
+ * Xóa trực tiếp khỏi Firebase Realtime Database: firebase.database().ref('users/' + uid).remove()
+ * @param {string} uid - userId hoặc username cần xóa
  */
-async function handleDeleteUser(userIdOrName) {
-    if (!userIdOrName) return;
+async function deleteUserAccount(uid) {
+    if (!uid) return;
 
     const users = getUserList();
     const userToDelete = users.find(u => 
-        u.userId === userIdOrName || 
-        (u.username && u.username.toLowerCase() === userIdOrName.toLowerCase())
+        u.userId === uid || 
+        (u.username && u.username.toLowerCase() === uid.toLowerCase())
+    ) || adminUsersList.find(u => 
+        u.userId === uid || 
+        (u.username && u.username.toLowerCase() === uid.toLowerCase())
     );
 
-    if (!userToDelete) {
-        showToast('Không tìm thấy tài khoản cần xóa!', 'error');
-        return;
-    }
-
-    if (userToDelete.isRoot || (userToDelete.username && userToDelete.username.toLowerCase() === 'admin')) {
+    if (userToDelete && (userToDelete.isRoot || (userToDelete.username && userToDelete.username.toLowerCase() === 'admin'))) {
         alert('TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP XÓA TÀI KHOẢN ADMIN GỐC MẶC ĐỊNH!');
         return;
     }
 
-    const isConfirmed = confirm(`Bạn có chắc chắn muốn xóa tài khoản "${userToDelete.username}" không?\nHành động này không thể hoàn tác!`);
+    const userNameDisplay = userToDelete ? (userToDelete.displayName || userToDelete.username) : uid;
+    const isConfirmed = confirm(`Đạo hữu có chắc chắn muốn trục xuất tài khoản "${userNameDisplay}" khỏi Tông môn?`);
     if (!isConfirmed) return;
 
     try {
-        if (window.FirebaseService) {
-            await FirebaseService.deleteUser(userToDelete.userId);
-        } else {
-            const updatedUsers = users.filter(u => u.userId !== userToDelete.userId);
-            await saveUserList(updatedUsers);
+        const targetUid = (userToDelete && userToDelete.userId) ? userToDelete.userId : uid;
+
+        // 1. Gọi lệnh xóa user khỏi Firebase Realtime Database
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref('users/' + targetUid).remove();
+        } else if (window.FirebaseService) {
+            await FirebaseService.deleteUser(targetUid);
         }
 
+        // 2. Cập nhật mảng cache trong bộ nhớ và localStorage
+        adminUsersList = adminUsersList.filter(u => u.userId !== targetUid && u.username !== targetUid);
+        const updatedUsers = users.filter(u => u.userId !== targetUid && u.username !== targetUid);
+        await saveUserList(updatedUsers);
+
+        // 3. Re-render lại bảng danh sách để tài khoản đó biến mất ngay lập tức
         renderUserTable();
-        showToast(`Đã xóa tài khoản "${userToDelete.username}" thành công!`, 'success');
+        updateAdminStatsBadges();
+        showToast(`Đã trục xuất tài khoản "${userNameDisplay}" khỏi Tông môn thành công!`, 'success');
     } catch (err) {
-        showToast(err.message || 'Lỗi khi xóa tài khoản!', 'error');
+        console.error('Lỗi khi trục xuất tài khoản:', err);
+        showToast(err.message || 'Lỗi khi xóa tài khoản khỏi Firebase!', 'error');
     }
 }
+window.deleteUserAccount = deleteUserAccount;
+window.handleDeleteUser = deleteUserAccount; // Alias tương thích ngược
 
 /**
  * Tính năng Sửa mật khẩu (Modal Popup) - Tích hợp Firebase
@@ -2155,11 +2413,30 @@ function switchAdminMainTab(tabName, updateUrl = true) {
 
     closeMobileSidebar();
 
-    // 1. Cập nhật Tab Buttons
+    // 1. Cập nhật Tab Buttons theo UI chuẩn hóa
     const btnUsers = document.getElementById('btn-admin-tab-users');
     const btnFeedbacks = document.getElementById('btn-admin-tab-feedbacks');
-    if (btnUsers) btnUsers.classList.toggle('active', tabName === 'users');
-    if (btnFeedbacks) btnFeedbacks.classList.toggle('active', tabName === 'feedbacks');
+    const activeClasses = ['bg-blue-600', 'text-white', 'shadow-md', 'active'];
+    const inactiveClasses = ['text-gray-500', 'hover:text-gray-800', 'hover:bg-gray-100'];
+
+    if (btnUsers) {
+        if (tabName === 'users') {
+            btnUsers.classList.remove(...inactiveClasses);
+            btnUsers.classList.add(...activeClasses);
+        } else {
+            btnUsers.classList.remove(...activeClasses);
+            btnUsers.classList.add(...inactiveClasses);
+        }
+    }
+    if (btnFeedbacks) {
+        if (tabName === 'feedbacks') {
+            btnFeedbacks.classList.remove(...inactiveClasses);
+            btnFeedbacks.classList.add(...activeClasses);
+        } else {
+            btnFeedbacks.classList.remove(...activeClasses);
+            btnFeedbacks.classList.add(...inactiveClasses);
+        }
+    }
 
     // 2. Cập nhật Mobile Bottom Nav Buttons
     const mbBtnUsers = document.getElementById('mb-nav-btn-users');
@@ -2204,10 +2481,14 @@ function switchAdminMainTab(tabName, updateUrl = true) {
     // 5. Cập nhật Tiêu đề Header & Badge
     updateAdminHeaderForTab(tabName);
 
-    // 6. Cập nhật URL mà không reload
+    // 6. Cập nhật URL mà không reload (bảo tồn tham số subject)
     if (updateUrl && window.history && window.history.pushState) {
-        const newUrl = window.location.pathname + `?tab=${tabName}`;
-        window.history.pushState({ tab: tabName }, '', newUrl);
+        const urlParams = new URLSearchParams(window.location.search);
+        let curSub = urlParams.get('subject') || localStorage.getItem('currentSubject') || 'cnxhkh';
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('subject', curSub);
+        currentUrl.searchParams.set('tab', tabName);
+        window.history.pushState({ tab: tabName, subject: curSub }, '', currentUrl.toString());
     }
 
     // 7. Render dữ liệu tương ứng

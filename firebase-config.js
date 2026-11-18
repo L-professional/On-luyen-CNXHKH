@@ -344,6 +344,36 @@ const FirebaseService = {
     },
 
     /**
+     * Tăng số lần Ôn tập (totalPractice) của người dùng
+     * @param {string} userId
+     */
+    async incrementUserPracticeCount(userId) {
+        if (!userId) return;
+        try {
+            if (fbDb && typeof fbDb.ref === 'function') {
+                await fbDb.ref(`users/${userId}/totalPractice`).transaction(c => (c || 0) + 1);
+            }
+        } catch (e) {
+            console.warn('[Firebase] incrementUserPracticeCount error:', e);
+        }
+    },
+
+    /**
+     * Tăng số lần Thi mô phỏng (totalMockExams) của người dùng
+     * @param {string} userId
+     */
+    async incrementUserMockCount(userId) {
+        if (!userId) return;
+        try {
+            if (fbDb && typeof fbDb.ref === 'function') {
+                await fbDb.ref(`users/${userId}/totalMockExams`).transaction(c => (c || 0) + 1);
+            }
+        } catch (e) {
+            console.warn('[Firebase] incrementUserMockCount error:', e);
+        }
+    },
+
+    /**
      * Đổi tên người dùng (Task 3: Giữ nguyên UID và toàn bộ dữ liệu lịch sử/điểm số)
      * @param {string} userId UID của người dùng
      * @param {string} newUsername Tên mới cần đổi
@@ -544,12 +574,6 @@ const FirebaseService = {
             this.updateUserStatus(userId, 'online');
         }
 
-        // 3. Bắt sự kiện beforeunload và pagehide khi tắt tab / trình duyệt
-        const handleUnload = () => {
-            this.updateUserStatus(userId, 'offline', true);
-        };
-        window.addEventListener('beforeunload', handleUnload);
-        window.addEventListener('pagehide', handleUnload);
     },
 
     /**

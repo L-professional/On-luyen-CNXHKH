@@ -53,8 +53,65 @@ const TOPICS_METADATA = [
     }
 ];
 
+// Lấy môn học hiện tại trong utilities (?subject= hoặc localStorage)
+function getUtilitiesCurrentSubject() {
+    if (typeof getCurrentSubject === 'function') {
+        return getCurrentSubject(true);
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const subFromUrl = urlParams.get('subject');
+    if (subFromUrl && (subFromUrl === 'cnxhkh' || subFromUrl === 'lsd')) {
+        return subFromUrl;
+    }
+    return localStorage.getItem('currentSubject') || 'cnxhkh';
+}
+window.getUtilitiesCurrentSubject = getUtilitiesCurrentSubject;
+
+// Cập nhật tiêu đề phụ môn học trên Header
+function updateHeaderSubjectInfo(subjectId) {
+    const sub = subjectId || getUtilitiesCurrentSubject();
+    const cfg = (typeof getSubjectConfig === 'function') ? getSubjectConfig(sub) : null;
+    const subName = cfg ? cfg.name : (sub === 'lsd' ? 'Lịch sử Đảng' : 'Chủ nghĩa xã hội khoa học');
+    const subtitleEl = document.getElementById('header-subject-subtitle');
+    if (subtitleEl) subtitleEl.textContent = subName;
+}
+window.updateHeaderSubjectInfo = updateHeaderSubjectInfo;
+
+// Xử lý khi user đổi môn phái ngay tại utilities.html
+function onSubjectSwitchedInUtilities(newSubject) {
+    const sub = newSubject || getUtilitiesCurrentSubject();
+    updateHeaderSubjectInfo(sub);
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'stats';
+    if (activeTab === 'stats') {
+        renderStatsTab();
+    }
+}
+window.onSubjectSwitchedInUtilities = onSubjectSwitchedInUtilities;
+
 // Khởi chạy khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Đọc URL để lấy currentSubject và khởi tạo State ngay lập tức
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentSubject = urlParams.get('subject') || localStorage.getItem('currentSubject') || 'cnxhkh';
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(currentSubject);
+    } else {
+        localStorage.setItem('currentSubject', currentSubject);
+    }
+
+    if (!urlParams.has('subject')) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('subject', currentSubject);
+        window.history.replaceState({ subject: currentSubject, tab: urlParams.get('tab') || 'stats' }, '', newUrl.toString());
+    }
+
+    // Render Dropdown và danh sách chủ đề trên Sidebar ngay lập tức
+    if (typeof renderMainSidebar === 'function') {
+        renderMainSidebar(currentSubject);
+    }
+    updateHeaderSubjectInfo(currentSubject);
+
     // 1. Kiểm tra xác thực người dùng qua Firebase (Auth Guard & Auto-clear Session)
     const isAuthValid = await checkAuthentication();
     if (!isAuthValid) {
@@ -63,8 +120,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const user = getCurrentUser();
     // Thiết lập Presence Tracking cho người dùng trên Firebase
-    if (user && user.userId && window.FirebaseService) {
-        FirebaseService.setupPresence(user.userId);
+    if (user && window.FirebaseService) {
+        const uid = user.userId || ('u_' + (user.username || '').toLowerCase());
+        FirebaseService.setupPresence(uid);
     }
 
     // 2. Cập nhật thông tin Header
@@ -80,7 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     checkFirstTimeFoundationSetup();
 
     // 6. Khởi tạo Tab theo URL query parameter (?tab=stats|history|guide|feedback)
-    const urlParams = new URLSearchParams(window.location.search);
     const initialTab = urlParams.get('tab') || 'stats';
     switchUtilityTab(initialTab, false);
 });
@@ -1190,12 +1247,26 @@ function switchUtilityTab(tabName, updateUrl = true) {
 
     closeMobileSidebar();
 
-    // 1. Cập nhật thanh Tab Pills
-    document.querySelectorAll('.util-tab-btn').forEach(btn => {
-        btn.classList.remove('active');
+    // 1. Cập nhật thanh Tab Pills theo UI chuẩn hóa
+    const tabButtons = [
+        { id: 'stats', el: document.getElementById('tab-btn-stats') },
+        { id: 'history', el: document.getElementById('tab-btn-history') },
+        { id: 'guide', el: document.getElementById('tab-btn-guide') },
+        { id: 'feedback', el: document.getElementById('tab-btn-feedback') }
+    ];
+    const activeClasses = ['bg-blue-600', 'text-white', 'shadow-md', 'active'];
+    const inactiveClasses = ['text-gray-500', 'hover:text-gray-800', 'hover:bg-gray-100'];
+
+    tabButtons.forEach(({ id, el }) => {
+        if (!el) return;
+        if (id === tabName) {
+            el.classList.remove(...inactiveClasses);
+            el.classList.add(...activeClasses);
+        } else {
+            el.classList.remove(...activeClasses);
+            el.classList.add(...inactiveClasses);
+        }
     });
-    const activeTabBtn = document.getElementById(`tab-btn-${tabName}`);
-    if (activeTabBtn) activeTabBtn.classList.add('active');
 
     // 2. Cập nhật Menu Sidebar
     document.querySelectorAll('.utility-item').forEach(item => {
@@ -1214,10 +1285,13 @@ function switchUtilityTab(tabName, updateUrl = true) {
     // 4. Cập nhật Header Tiêu đề & Icon
     updateHeaderCardInfo(tabName);
 
-    // 5. Cập nhật URL mà không reload trang
+    // 5. Cập nhật URL mà không reload trang (bảo tồn tham số subject)
     if (updateUrl && window.history && window.history.pushState) {
-        const newUrl = window.location.pathname + `?tab=${tabName}`;
-        window.history.pushState({ tab: tabName }, '', newUrl);
+        const curSub = getUtilitiesCurrentSubject();
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('subject', curSub);
+        currentUrl.searchParams.set('tab', tabName);
+        window.history.pushState({ tab: tabName, subject: curSub }, '', currentUrl.toString());
     }
 
     // 6. Thực thi render dữ liệu tương ứng
@@ -1236,6 +1310,11 @@ function switchUtilityTab(tabName, updateUrl = true) {
 window.addEventListener('popstate', (e) => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab') || 'stats';
+    const sub = urlParams.get('subject');
+    if (sub && typeof renderMainSidebar === 'function') {
+        renderMainSidebar(sub);
+        updateHeaderSubjectInfo(sub);
+    }
     switchUtilityTab(tab, false);
 });
 
@@ -1386,6 +1465,10 @@ function renderStatsTab() {
     if (maxScoreEl) maxScoreEl.textContent = `${maxScoreVal} / 10`;
 
     // 3. RENDER LỤC ĐẠO LUÂN HỒI TRẬN (CHART.JS RADAR CHART):
+    const curSub = getUtilitiesCurrentSubject();
+    const rawTopics = (typeof getSubjectTopics === 'function') ? getSubjectTopics(curSub) : TOPICS_METADATA.filter(t => t.id !== 'mock');
+    const topics = (Array.isArray(rawTopics) && rawTopics.length > 0) ? rawTopics : TOPICS_METADATA.filter(t => t.id !== 'mock');
+
     const radarCanvas = document.getElementById('luc-dao-radar-chart');
     if (radarCanvas && typeof Chart !== 'undefined') {
         if (lucDaoRadarChartInstance) {
@@ -1393,17 +1476,17 @@ function renderStatsTab() {
             lucDaoRadarChartInstance = null;
         }
 
-        const radarLabels = [
-            'CĐ 1: Đối tượng & PP',
-            'CĐ 2: Sự ra đời',
-            'CĐ 3: Sứ mệnh lịch sử',
-            'CĐ 4: Đặc trưng CNXH',
-            'CĐ 5: Hình thái KT-XH',
-            'CĐ 6: Quá độ lên CNXH'
-        ];
+        const radarLabels = topics.map(t => {
+            const short = t.shortTitle || t.name || ('CĐ ' + t.id);
+            return short.length > 22 ? (short.substring(0, 20) + '...') : short;
+        });
 
-        const radarScores = [1, 2, 3, 4, 5, 6].map(id => {
-            const topicHistory = history.filter(h => String(h.topicId) === String(id));
+        const radarScores = topics.map(t => {
+            const topicHistory = history.filter(h => {
+                const matchTopic = String(h.topicId) === String(t.id);
+                const matchSubject = !h.subject || h.subject === curSub;
+                return matchTopic && matchSubject;
+            });
             if (topicHistory.length === 0) return 0;
             return parseFloat(Math.max(...topicHistory.map(h => Number(h.score) || 0)).toFixed(1));
         });
@@ -1414,7 +1497,7 @@ function renderStatsTab() {
             data: {
                 labels: radarLabels,
                 datasets: [{
-                    label: 'Linh lực cao nhất (Thang 10)',
+                    label: `Linh lực cao nhất - ${curSub === 'lsd' ? 'Lịch sử Đảng' : 'CNXHKH'} (Thang 10)`,
                     data: radarScores,
                     backgroundColor: 'rgba(245, 158, 11, 0.28)',
                     borderColor: '#d97706',
@@ -1466,11 +1549,22 @@ function renderStatsTab() {
         });
     }
 
-    // 4. RENDER DANH SÁCH CHI TIẾT 6 CHỦ ĐỀ:
+    // 4. RENDER DANH SÁCH CHI TIẾT CÁC CHỦ ĐỀ CỦA MÔN HỌC HIỆN TẠI:
     if (!topicListEl) return;
 
-    topicListEl.innerHTML = TOPICS_METADATA.map(t => {
-        const topicHistory = history.filter(h => String(h.topicId) === String(t.id));
+    const topicsToDisplay = [...topics, {
+        id: 'mock',
+        title: "Thi mô phỏng",
+        name: `Bài thi mô phỏng tổng hợp (${curSub === 'lsd' ? 'Lịch sử Đảng' : 'CNXHKH'})`,
+        icon: "fa-solid fa-bullseye"
+    }];
+
+    topicListEl.innerHTML = topicsToDisplay.map(t => {
+        const topicHistory = history.filter(h => {
+            const matchTopic = String(h.topicId) === String(t.id);
+            const matchSubject = !h.subject || h.subject === curSub;
+            return matchTopic && matchSubject;
+        });
         const attempts = topicHistory.length;
 
         let bestScore = 0;
@@ -1488,7 +1582,7 @@ function renderStatsTab() {
         }
 
         const isMock = t.id === 'mock';
-        const targetHref = `practice.html?topic=${t.id}&mode=test`;
+        const targetHref = `practice.html?subject=${encodeURIComponent(curSub)}&topic=${t.id}&mode=test`;
 
         return `
             <div class="topic-stat-item">
@@ -1616,7 +1710,8 @@ async function executeTramTamMa() {
             actionText: 'Vào Bí Cảnh Thi Thử',
             actionCallback: () => {
                 closeModal();
-                window.location.href = 'practice.html?topic=mock&mode=test';
+                const curSub = getUtilitiesCurrentSubject();
+                window.location.href = `practice.html?subject=${encodeURIComponent(curSub)}&topic=mock&mode=test`;
             }
         });
         return;
@@ -1626,9 +1721,10 @@ async function executeTramTamMa() {
     sessionStorage.setItem('tam_ma_questions', JSON.stringify(wrongQuestions));
     localStorage.setItem('tam_ma_questions_' + uid, JSON.stringify(wrongQuestions));
 
+    const curSub = getUtilitiesCurrentSubject();
     showToast(`Đã phong ấn ${wrongQuestions.length} tâm ma! Đang chuyển hướng vào Bí Cảnh Trảm Tâm Ma...`, 'success');
     setTimeout(() => {
-        window.location.href = 'practice.html?topic=tam-ma&mode=test';
+        window.location.href = `practice.html?subject=${encodeURIComponent(curSub)}&topic=tam-ma&mode=test`;
     }, 700);
 }
 window.executeTramTamMa = executeTramTamMa;
@@ -1640,6 +1736,7 @@ function renderHistoryTab() {
     if (!container) return;
 
     if (history.length === 0) {
+        const curSub = getUtilitiesCurrentSubject();
         container.innerHTML = `
             <div class="empty-state-box" style="background: rgba(255,255,255,0.7); border: 2px dashed #b45309; border-radius: 12px; padding: 36px 20px;">
                 <div class="empty-state-icon" style="background: rgba(180, 83, 9, 0.15); color: #78350f;">
@@ -1649,7 +1746,7 @@ function renderHistoryTab() {
                 <p class="empty-state-desc" style="color: #92400e;">
                     Thạch bia luân hồi vẫn còn để trống. Hãy nhập trận Bí Cảnh để thiên đạo ghi danh chiến tích của đạo hữu vào sử sách.
                 </p>
-                <a href="practice.html?topic=mock&mode=test" class="btn-action btn-tram-tam-ma" style="padding: 10px 22px; font-size: 14px; text-decoration: none;">
+                <a href="practice.html?subject=${encodeURIComponent(curSub)}&topic=mock&mode=test" class="btn-action btn-tram-tam-ma" style="padding: 10px 22px; font-size: 14px; text-decoration: none;">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                     <span>Vào Bí Cảnh Khảo Hạch Ngay</span>
                 </a>

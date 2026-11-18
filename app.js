@@ -427,6 +427,9 @@ function saveCurrentLearnProgress() {
  * Đảm bảo trạng thái hiện tại đã được ghi vào localStorage và chuyển hướng về index.html
  */
 function pauseLearnMode() {
+    if (typeof updateUserActivity === 'function') {
+        updateUserActivity("Đang dạo bước Tông Môn");
+    }
     if (appState.mode === 'learn' && appState.topicId && appState.topicId !== 'mock') {
         saveCurrentLearnProgress();
     }
@@ -2519,6 +2522,18 @@ setInterval(() => {
 // KHỞI ĐỘNG ỨNG DỤNG
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Đọc URL để lấy currentSubject và khởi tạo State ngay lập tức
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentSubject = urlParams.get('subject') || localStorage.getItem('currentSubject') || 'cnxhkh';
+    if (typeof setCurrentSubject === 'function') {
+        setCurrentSubject(currentSubject);
+    } else {
+        localStorage.setItem('currentSubject', currentSubject);
+    }
+    if (typeof appState !== 'undefined') {
+        appState.currentSubject = currentSubject;
+    }
+
     initUserStorage();
     initExp();
     cleanupLegacySharedProgress();
@@ -2529,10 +2544,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Thiết lập Presence Tracking cho người dùng trên Firebase
+    // Thiết lập Presence Tracking & Anti-Fake Online cho người dùng trên Firebase
     const user = getCurrentUser();
-    if (user && user.userId && window.FirebaseService) {
-        FirebaseService.setupPresence(user.userId);
+    if (user) {
+        const uid = user.userId || ('u_' + (user.username || '').toLowerCase());
+        initAppPresenceSystem(uid);
     }
 
     checkAdminMenu();
@@ -2570,13 +2586,134 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ==========================================================================
-// THUẬT TOÁN TRUY VẾT: CẬP NHẬT HOẠT ĐỘNG THỜI GIAN THỰC (ACTIVITY BROADCASTER)
+// 1. HỆ THỐNG PRESENCE & THEO DÕI TRẠNG THÁI HIỆN DIỆN (ANTI-FAKE ONLINE & AFK IDLE)
+// ==========================================================================
+let _appPresenceInitializedUid = null;
+let _appIdleTimerInstance = null;
+let _appIsCurrentlyIdle = false;
+
+function initAppPresenceSystem(targetUid) {
+    const user = getCurrentUser();
+    const uid = targetUid || (user ? (user.userId || ('u_' + (user.username || '').toLowerCase())) : null);
+    if (!uid || uid === 'guest') return;
+
+    if (_appPresenceInitializedUid === uid) {
+        return;
+    }
+    _appPresenceInitializedUid = uid;
+
+    const IDLE_LIMIT_MS = 5 * 60 * 1000; // 5 phút không thao tác -> Treo máy (Idle)
+
+    const getServerTime = () => {
+        if (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue) {
+            return firebase.database.ServerValue.TIMESTAMP;
+        }
+        return Date.now();
+    };
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            const fbDb = firebase.database();
+            const connectedRef = fbDb.ref('.info/connected');
+            const userRef = fbDb.ref(`users/${uid}`);
+
+            // Lắng nghe Firebase connection state: .info/connected
+            connectedRef.on('value', (snap) => {
+                if (snap && snap.val() === true) {
+                    const serverTimestamp = getServerTime();
+
+                    // Sử dụng onDisconnect(): Khi user đóng tab, tắt trình duyệt hoặc mất mạng -> status: 'offline'
+                    userRef.onDisconnect().update({
+                        status: 'offline',
+                        lastActive: serverTimestamp
+                    });
+
+                    // Vừa kết nối -> cập nhật status online (hoặc idle nếu đang treo máy)
+                    userRef.update({
+                        status: _appIsCurrentlyIdle ? 'idle' : 'online',
+                        lastActive: serverTimestamp
+                    });
+                }
+            });
+
+            const updatePresenceStatus = (status) => {
+                userRef.update({
+                    status: status,
+                    lastActive: getServerTime()
+                }).catch(e => console.warn('[Presence] Cập nhật status thất bại:', e));
+            };
+
+            // Thiết lập Idle Timer: Sau 5 phút không thao tác -> status: 'idle'
+            const triggerIdleState = () => {
+                if (!_appIsCurrentlyIdle) {
+                    _appIsCurrentlyIdle = true;
+                    updatePresenceStatus('idle');
+                }
+            };
+
+            const resetIdleTimer = () => {
+                if (_appIdleTimerInstance) clearTimeout(_appIdleTimerInstance);
+                _appIdleTimerInstance = setTimeout(triggerIdleState, IDLE_LIMIT_MS);
+            };
+
+            let lastThrottleTime = 0;
+            const onUserInteraction = () => {
+                const now = Date.now();
+                if (_appIsCurrentlyIdle) {
+                    _appIsCurrentlyIdle = false;
+                    lastThrottleTime = now;
+                    updatePresenceStatus('online');
+                } else if (now - lastThrottleTime > 25000) {
+                    lastThrottleTime = now;
+                    updatePresenceStatus('online');
+                }
+                resetIdleTimer();
+            };
+
+            // Lắng nghe các sự kiện thao tác: mousemove, keydown, touchstart, click, scroll
+            const eventOpts = { passive: true };
+            window.addEventListener('mousemove', onUserInteraction, eventOpts);
+            window.addEventListener('keydown', onUserInteraction, eventOpts);
+            window.addEventListener('touchstart', onUserInteraction, eventOpts);
+            window.addEventListener('click', onUserInteraction, eventOpts);
+            window.addEventListener('scroll', onUserInteraction, eventOpts);
+
+            resetIdleTimer();
+        } else if (window.FirebaseService && typeof window.FirebaseService.setupPresence === 'function') {
+            window.FirebaseService.setupPresence(uid);
+        }
+    } catch (e) {
+        console.warn('[Presence] Lỗi khởi tạo presence:', e);
+    }
+}
+window.initAppPresenceSystem = initAppPresenceSystem;
+
+// ==========================================================================
+// 2. THUẬT TOÁN TRUY VẾT: CẬP NHẬT HOẠT ĐỘNG THỜI GIAN THỰC (ACTIVITY BROADCASTER)
 // ==========================================================================
 function updateUserActivity(activityString) {
-    if (window.FirebaseService && typeof window.FirebaseService.updateUserActivity === 'function') {
-        const user = getCurrentUser();
-        const uid = user ? (user.userId || ('u_' + (user.username || '').toLowerCase())) : null;
-        window.FirebaseService.updateUserActivity(activityString, uid);
+    const user = getCurrentUser();
+    if (!user) return;
+    const uid = user.userId || ('u_' + (user.username || '').toLowerCase());
+    if (!uid || uid === 'guest') return;
+
+    const activity = (activityString !== undefined && activityString !== null) ? String(activityString).trim() : '';
+
+    try {
+        const serverTimestamp = (typeof firebase !== 'undefined' && firebase.database && firebase.database.ServerValue)
+            ? firebase.database.ServerValue.TIMESTAMP
+            : Date.now();
+
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            firebase.database().ref(`users/${uid}`).update({
+                currentActivity: activity,
+                lastActive: serverTimestamp
+            });
+        } else if (window.FirebaseService && typeof window.FirebaseService.updateUserActivity === 'function') {
+            window.FirebaseService.updateUserActivity(activity, uid);
+        }
+    } catch (e) {
+        console.warn('[Activity] updateUserActivity error:', e);
     }
 }
 window.updateUserActivity = updateUserActivity;
@@ -2830,7 +2967,7 @@ function returnToHomeView() {
     if (typeof broadcastHomeActivity === 'function') {
         broadcastHomeActivity();
     } else if (typeof updateUserActivity === 'function') {
-        updateUserActivity("Đang dạo bước Đại Điện Tông Môn");
+        updateUserActivity("Đang dạo bước Tông Môn");
     }
 }
 window.returnToHomeView = returnToHomeView;
@@ -2929,7 +3066,7 @@ function renderTopicsList(subjectId) {
 
     // 8. Cập nhật hoạt động
     if (typeof updateUserActivity === 'function') {
-        updateUserActivity(`Đang dạo bước ${realmTitle}`);
+        updateUserActivity("Đang dạo bước Tông Môn");
     }
 }
 window.renderTopicsList = renderTopicsList;
@@ -3419,7 +3556,8 @@ async function loadTamMaExamData() {
 
     if (questions.length === 0) {
         alert('Không tìm thấy tâm ma nào để khảo hạch.');
-        window.location.href = 'utilities.html?tab=history';
+        const currentSub = (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : null) || (typeof appState !== 'undefined' && appState.currentSubject) || localStorage.getItem('currentSubject') || 'cnxhkh';
+        window.location.href = `utilities.html?subject=${encodeURIComponent(currentSub)}&tab=history`;
         return;
     }
 
@@ -3671,9 +3809,10 @@ function renderLearnCurrentQuestionDetail() {
 
     // Phát sóng thông tin hoạt động thời gian thực (Activity Broadcaster)
     if (typeof broadcastPracticeActivity === 'function') {
-        broadcastPracticeActivity(appState.topicId, appState.currentIndex, total);
+        broadcastPracticeActivity(appState.topicId, appState.currentIndex, total, appState.currentSubject);
     } else if (typeof updateUserActivity === 'function') {
-        updateUserActivity(`Đang luyện khí: Chủ đề ${appState.topicId} (Câu ${appState.currentIndex + 1}/${total})`);
+        const subName = (appState.currentSubject === 'lsd') ? 'Lịch sử Đảng' : 'CNXHKH';
+        updateUserActivity(`Đang ôn ${subName} - CĐ ${appState.topicId} - Câu ${appState.currentIndex + 1}/${total}`);
     }
 
     // Badge loại câu hỏi
@@ -4558,6 +4697,18 @@ function finishLearnTopic() {
         showFloatingExpBadge(30);
         showToast('Bế quan viên mãn! Đạo hữu hoàn thành trọn vẹn chủ đề, thu hoạch +30 EXP tu vi.', 'success');
 
+        const curUser = getCurrentUser();
+        if (curUser) {
+            const uid = getCurrentUserUID();
+            if (uid !== 'guest') {
+                if (window.FirebaseService && typeof FirebaseService.incrementUserPracticeCount === 'function') {
+                    FirebaseService.incrementUserPracticeCount(uid);
+                } else if (typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref(`users/${uid}/totalPractice`).transaction(c => (c || 0) + 1);
+                }
+            }
+        }
+
         showModal({
             title: '🧘 BẾ QUAN VIÊN MÃN 🧘',
             icon: 'fa-solid fa-mountain-sun',
@@ -4580,7 +4731,7 @@ function finishLearnTopic() {
                 if (typeof resetPracticeActivity === 'function') {
                     resetPracticeActivity();
                 } else if (typeof updateUserActivity === 'function') {
-                    updateUserActivity("Trạng thái chờ");
+                    updateUserActivity("Đang dạo bước Tông Môn");
                 }
                 if (expResult.leveledUp) {
                     showLevelUpModal(expResult.newRank, expResult.oldRank, () => {
@@ -4627,7 +4778,7 @@ function finishLearnTopic() {
                 if (typeof resetPracticeActivity === 'function') {
                     resetPracticeActivity();
                 } else if (typeof updateUserActivity === 'function') {
-                    updateUserActivity("Trạng thái chờ");
+                    updateUserActivity("Đang dạo bước Tông Môn");
                 }
                 window.location.href = 'index.html';
             }
@@ -4787,13 +4938,14 @@ function renderTestQuestionCard() {
 
     // Phát sóng thông tin hoạt động thời gian thực (Activity Broadcaster)
     const total = appState.allQuestions ? appState.allQuestions.length : 0;
+    const subName = (appState.currentSubject === 'lsd') ? 'Lịch sử Đảng' : 'CNXHKH';
     if (typeof broadcastMockActivity === 'function') {
-        broadcastMockActivity(appState.currentIndex, total, appState.topicId);
+        broadcastMockActivity(appState.currentIndex, total, appState.topicId, appState.currentSubject);
     } else if (typeof updateUserActivity === 'function') {
         if (appState.topicId === 'mock') {
-            updateUserActivity(`Đang vượt Bí Cảnh (Câu ${appState.currentIndex + 1}/${total})`);
+            updateUserActivity(`Đang thi Mô phỏng ${subName} - Câu ${appState.currentIndex + 1}/${total}`);
         } else {
-            updateUserActivity(`Đang vượt Bí Cảnh: Chủ đề ${appState.topicId} (Câu ${appState.currentIndex + 1}/${total})`);
+            updateUserActivity(`Đang thi Mô phỏng ${subName} - CĐ ${appState.topicId} - Câu ${appState.currentIndex + 1}/${total}`);
         }
     }
 
@@ -5391,10 +5543,21 @@ function submitTest() {
 
         // Lưu trực tiếp lên Firebase Realtime Database
         if (uid !== 'guest') {
+            const isMockExam = (appState.topicId === 'mock' || appState.isMockExam);
             if (window.FirebaseService) {
                 FirebaseService.addHistory(uid, historyItem);
+                if (isMockExam && typeof FirebaseService.incrementUserMockCount === 'function') {
+                    FirebaseService.incrementUserMockCount(uid);
+                } else if (!isMockExam && typeof FirebaseService.incrementUserPracticeCount === 'function') {
+                    FirebaseService.incrementUserPracticeCount(uid);
+                }
             } else if (window.ref && window.set && window.db) {
                 set(ref(db, `users/${uid}/history`), historyList);
+            }
+
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                const targetField = isMockExam ? 'totalMockExams' : 'totalPractice';
+                firebase.database().ref(`users/${uid}/${targetField}`).transaction(c => (c || 0) + 1);
             }
         }
     }
@@ -5478,7 +5641,7 @@ function submitTest() {
             if (typeof resetMockActivity === 'function') {
                 resetMockActivity();
             } else if (typeof updateUserActivity === 'function') {
-                updateUserActivity("Trạng thái chờ");
+                updateUserActivity("Đang dạo bước Tông Môn");
             }
             if (expResult.leveledUp) {
                 showLevelUpModal(expResult.newRank, expResult.oldRank, () => {
@@ -5540,7 +5703,7 @@ function confirmExit() {
             } else if (typeof resetMockActivity === 'function') {
                 resetMockActivity();
             } else if (typeof updateUserActivity === 'function') {
-                updateUserActivity("Trạng thái chờ");
+                updateUserActivity("Đang dạo bước Tông Môn");
             }
 
             if (appState.pendingLevelUp) {
@@ -5823,8 +5986,32 @@ function openUtilityModal(type) {
         'feedback': 'feedback'
     };
     const tab = tabMap[type] || 'stats';
-    window.location.href = `utilities.html?tab=${tab}`;
+    const currentSubject = (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : null) || (typeof appState !== 'undefined' && appState.currentSubject) || localStorage.getItem('currentSubject') || 'cnxhkh';
+    window.location.href = `utilities.html?subject=${encodeURIComponent(currentSubject)}&tab=${encodeURIComponent(tab)}`;
 }
+
+function navigateToUtility(type, e) {
+    if (e && e.preventDefault) e.preventDefault();
+    openUtilityModal(type);
+}
+window.navigateToUtility = navigateToUtility;
+
+function navigateToHome() {
+    if (typeof updateUserActivity === 'function') {
+        updateUserActivity("Đang dạo bước Tông Môn");
+    }
+    const sub = (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : null) || (typeof appState !== 'undefined' && appState.currentSubject) || localStorage.getItem('currentSubject') || 'cnxhkh';
+    window.location.href = `index.html?subject=${encodeURIComponent(sub)}`;
+}
+window.navigateToHome = navigateToHome;
+
+function navigateToAdmin(tab, e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const currentSubject = (typeof getCurrentSubject === 'function' ? getCurrentSubject(true) : null) || (typeof appState !== 'undefined' && appState.currentSubject) || localStorage.getItem('currentSubject') || 'cnxhkh';
+    const targetTab = (tab === 'feedbacks') ? 'feedbacks' : 'users';
+    window.location.href = `admin.html?subject=${encodeURIComponent(currentSubject)}&tab=${encodeURIComponent(targetTab)}`;
+}
+window.navigateToAdmin = navigateToAdmin;
 
 // Modal Cửa sổ
 function showModal({ title, icon, content, actionText = 'Đóng', actionCallback = null, showCancel = false, cancelText = 'Hủy', cancelCallback = null }) {

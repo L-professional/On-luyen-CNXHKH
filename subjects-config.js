@@ -313,6 +313,38 @@ function onSidebarSubjectChange(newSubject) {
         return;
     }
 
+    // Nếu đang ở trang utilities.html
+    if (window.location.pathname.includes('utilities.html') || document.getElementById('tab-pane-stats')) {
+        try {
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('subject', sub);
+            window.history.pushState({ subject: sub }, '', newUrl.toString());
+        } catch (e) {}
+        if (typeof renderMainSidebar === 'function') {
+            renderMainSidebar(sub);
+        }
+        if (typeof onSubjectSwitchedInUtilities === 'function') {
+            onSubjectSwitchedInUtilities(sub);
+        }
+        return;
+    }
+
+    // Nếu đang ở trang admin.html
+    if (window.location.pathname.includes('admin.html') || document.getElementById('admin-pane-users')) {
+        try {
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('subject', sub);
+            window.history.pushState({ subject: sub }, '', newUrl.toString());
+        } catch (e) {}
+        if (typeof renderMainSidebar === 'function') {
+            renderMainSidebar(sub);
+        }
+        if (typeof updateAdminHeaderSubjectInfo === 'function') {
+            updateAdminHeaderSubjectInfo(sub);
+        }
+        return;
+    }
+
     const homeView = document.getElementById('home-view') || document.getElementById('realm-selection-view');
     const subjectView = document.getElementById('subject-view') || document.getElementById('subject-detail-view');
     if (homeView) {
@@ -431,7 +463,7 @@ function renderTopicsList(subjectId) {
 
     if (typeof updateUserActivity === 'function') {
         try {
-            updateUserActivity(`Đang dạo bước ${realmTitle}`);
+            updateUserActivity("Đang dạo bước Tông Môn");
         } catch (e) {}
     }
 }
@@ -460,16 +492,86 @@ function renderMainSidebar(activeSubjectId) {
 
     const topics = getSubjectTopics(sub);
     if (topics) {
-        navMenu.innerHTML = topics.map(t => `
-            <button type="button" class="nav-topic-item" onclick="openModeSelectModal(${t.id})" title="${t.name}">
-                <i class="${t.icon}"></i>
-                <span>${t.name}</span>
-            </button>
-        `).join('');
+        navMenu.innerHTML = topics.map(t => {
+            if (typeof openModeSelectModal === 'function') {
+                return `
+                    <button type="button" class="nav-topic-item" onclick="openModeSelectModal(${t.id})" title="${t.name}">
+                        <i class="${t.icon}"></i>
+                        <span>${t.name}</span>
+                    </button>
+                `;
+            } else {
+                return `
+                    <button type="button" class="nav-topic-item" onclick="window.location.href='practice.html?subject=${encodeURIComponent(sub)}&topic=${t.id}&mode=learn'" title="${t.name}">
+                        <i class="${t.icon}"></i>
+                        <span>${t.name}</span>
+                    </button>
+                `;
+            }
+        }).join('');
     }
 }
 
 // Xuất các hàm và đối tượng toàn cục
+/**
+ * Điều hướng về trang chủ bảo tồn tham số subject
+ */
+function navigateToHome() {
+    const sub = (typeof getCurrentSubject === 'function') ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh');
+    window.location.href = `index.html?subject=${encodeURIComponent(sub)}`;
+}
+
+/**
+ * Điều hướng tới Bí Cảnh Thi Mô Phỏng bảo tồn tham số subject
+ */
+function navigateToMockExam() {
+    const sub = (typeof getCurrentSubject === 'function') ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh');
+    window.location.href = `practice.html?subject=${encodeURIComponent(sub)}&topic=mock&mode=test`;
+}
+
+/**
+ * Điều hướng tới Bảng Xếp Hạng bảo tồn tham số subject
+ */
+function navigateToLeaderboard() {
+    const sub = (typeof getCurrentSubject === 'function') ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh');
+    window.location.href = `index.html?subject=${encodeURIComponent(sub)}&openLeaderboard=1`;
+}
+
+/**
+ * Điều hướng sang phân hệ Tiện Ích bảo tồn tham số subject
+ */
+function navigateToUtility(tab, e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const sub = (typeof getCurrentSubject === 'function') ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh');
+    const validTabs = ['stats', 'history', 'guide', 'feedback'];
+    const targetTab = validTabs.includes(tab) ? tab : (tab === 'contact' ? 'feedback' : 'stats');
+    
+    if (window.location.pathname.includes('utilities.html') || document.getElementById('tab-pane-stats')) {
+        if (typeof switchUtilityTab === 'function') {
+            switchUtilityTab(targetTab);
+            return;
+        }
+    }
+    window.location.href = `utilities.html?subject=${encodeURIComponent(sub)}&tab=${encodeURIComponent(targetTab)}`;
+}
+
+/**
+ * Điều hướng sang phân hệ Quản Trị (admin.html) bảo tồn tham số subject
+ */
+function navigateToAdmin(tab, e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const sub = (typeof getCurrentSubject === 'function') ? getCurrentSubject(true) : (localStorage.getItem('currentSubject') || 'cnxhkh');
+    const targetTab = (tab === 'feedbacks') ? 'feedbacks' : 'users';
+    
+    if (window.location.pathname.includes('admin.html')) {
+        if (typeof switchAdminMainTab === 'function') {
+            switchAdminMainTab(targetTab);
+            return;
+        }
+    }
+    window.location.href = `admin.html?subject=${encodeURIComponent(sub)}&tab=${encodeURIComponent(targetTab)}`;
+}
+
 if (typeof window !== 'undefined') {
     window.SUBJECTS = SUBJECTS;
     window.SUBJECTS_CONFIG = SUBJECTS_CONFIG;
@@ -489,6 +591,11 @@ if (typeof window !== 'undefined') {
     window.renderTopicsList = renderTopicsList;
     window.renderSubjectTopicCards = renderTopicsList;
     window.renderMainSidebar = renderMainSidebar;
+    window.navigateToHome = navigateToHome;
+    window.navigateToMockExam = navigateToMockExam;
+    window.navigateToLeaderboard = navigateToLeaderboard;
+    window.navigateToUtility = navigateToUtility;
+    window.navigateToAdmin = navigateToAdmin;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -504,6 +611,11 @@ if (typeof module !== 'undefined' && module.exports) {
         onSidebarSubjectChange,
         returnToHomeView,
         renderTopicsList,
-        renderMainSidebar
+        renderMainSidebar,
+        navigateToHome,
+        navigateToMockExam,
+        navigateToLeaderboard,
+        navigateToUtility,
+        navigateToAdmin
     };
 }
