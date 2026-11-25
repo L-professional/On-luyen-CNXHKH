@@ -1362,51 +1362,886 @@ window.DATA_LSD = {
     ],
     "3": [
         {
-            "id": 301,
-            "type": "single",
-            "question": "Câu 1: Chiến thắng lịch sử nào năm 1954 đã 'lừng lẫy năm châu, chấn động địa cầu', đập tan tập đoàn cứ điểm của thực dân Pháp?",
-            "options": [
-                "A. Chiến thắng Điện Biên Phủ",
-                "B. Chiến dịch Biên giới Thu Đông 1950",
-                "C. Chiến dịch Việt Bắc Thu Đông 1947",
-                "D. Chiến thắng Ấp Bắc"
-            ],
-            "correctAnswers": [
-                0
-            ],
-            "explanation": "Chiến thắng Điện Biên Phủ ngày 07/05/1954 đã đập tan tập đoàn cứ điểm mạnh nhất Đông Dương của Pháp, buộc Pháp phải ký Hiệp định Genève."
+                "id": 1,
+                "type": "single",
+                "question": "Câu 1: Tình hình nước Việt Nam Dân chủ Cộng hòa sau Cách mạng tháng Tám năm 1945 được ví như:",
+                "options": [
+                        "A. Trứng nước",
+                        "B. Nước sôi lửa nóng",
+                        "C. Ngàn cân treo sợi tóc",
+                        "D. Nước sôi lửa bỏng"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Sau Cách mạng Tháng Tám năm 1945, nước Việt Nam Dân chủ Cộng hòa đứng trước muôn vàn khó khăn, thử thách nghiêm trọng (giặc đói, giặc dốt, giặc ngoại xâm), vận mệnh đất nước được ví như 'ngàn cân treo sợi tóc'."
         },
         {
-            "id": 302,
-            "type": "single",
-            "question": "Câu 2: Đại hội đại biểu toàn quốc lần thứ III của Đảng (9/1960) đã xác định đường lối chiến lược cách mạng chung của cả nước là:",
-            "options": [
-                "A. Tiến hành đồng thời hai chiến lược cách mạng: CM XHCN ở miền Bắc và CM dân tộc dân chủ nhân dân ở miền Nam",
-                "B. Chỉ tập trung xây dựng kinh tế ở miền Bắc",
-                "C. Chỉ tập trung quân sự giải phóng miền Nam",
-                "D. Hòa hoãn và chờ đợi viện trợ quốc tế"
-            ],
-            "correctAnswers": [
-                0
-            ],
-            "explanation": "Đại hội III (9/1960) xác định tiến hành đồng thời cách mạng XHCN ở miền Bắc (hậu phương lớn) và cách mạng dân tộc dân chủ nhân dân ở miền Nam (tiền tuyến lớn)."
+                "id": 2,
+                "type": "single",
+                "question": "Câu 2: Chọn câu trả lời đúng và đầy đủ nhất: Năm 1945, Chính phủ lâm thời họp phiên đầu tiên dưới sự chủ trì của chủ tịch Hồ Chí Minh xác định nhiệm vụ trước mắt là:",
+                "options": [
+                        "A. Diệt giặc dốt",
+                        "B. Diệt giặc đói, diệt giặc dốt, diệt giặc ngoại xâm",
+                        "C. Diệt giặc đói",
+                        "D. Diệt giặc ngoại xâm"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Ngày 3/9/1945, trong phiên họp đầu tiên của Chính phủ lâm thời, Chủ tịch Hồ Chí Minh xác định ba nhiệm vụ lớn trước mắt là diệt giặc đói, diệt giặc dốt và diệt giặc ngoại xâm."
         },
         {
-            "id": 303,
-            "type": "single",
-            "question": "Câu 3: Chiến dịch Hồ Chí Minh lịch sử kết thúc thắng lợi trọn vẹn vào thời khắc lịch sử nào?",
-            "options": [
-                "A. 11 giờ 30 phút ngày 30/4/1975",
-                "B. Ngày 19/8/1975",
-                "C. Ngày 02/9/1975",
-                "D. Ngày 26/3/1975"
-            ],
-            "correctAnswers": [
-                0
-            ],
-            "explanation": "Vào hồi 11 giờ 30 phút ngày 30/4/1975, lá cờ cách mạng tung bay trên nóc Dinh Độc Lập, Chiến dịch Hồ Chí Minh toàn thắng, giải phóng hoàn toàn miền Nam, thống nhất đất nước."
+                "id": 3,
+                "type": "single",
+                "question": "Câu 3: Chỉ thị Kháng chiến kiến quốc của Ban chấp hành Trung ương Đảng ra đời năm nào?",
+                "options": [
+                        "A. 1947",
+                        "B. 1946",
+                        "C. 1945",
+                        "D. 1948"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Ngày 25/11/1945, Ban Thường vụ Trung ương Đảng ra Chỉ thị Kháng chiến kiến quốc, vạch ra đường lối chiến lược và sách lược của cách mạng Việt Nam sau ngày độc lập."
+        },
+        {
+                "id": 4,
+                "type": "single",
+                "question": "Câu 4: Để củng cố chính quyền, Nhà nước Việt Nam tổ chức cuộc bầu cử toàn quốc lần đầu tiên vào năm nào?",
+                "options": [
+                        "A. 1954",
+                        "B. 1946",
+                        "C. 1945",
+                        "D. 1975"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Ngày 06/01/1946, cuộc Tổng tuyển cử bầu Quốc hội khóa I - cuộc bầu cử toàn quốc đầu tiên trong lịch sử dân tộc Việt Nam đã diễn ra thắng lợi vẻ vang."
+        },
+        {
+                "id": 5,
+                "type": "single",
+                "question": "Câu 5: Những nhiệm vụ trước mắt được Đảng xác định trong bản Chỉ thị kháng chiến kiến quốc ngày 25/11/1945 là:",
+                "options": [
+                        "A. Củng cố chính quyền, chống thực dân Pháp, bài trừ nội phản, cải thiện đời sống của nhân dân",
+                        "B. Mở lớp học các cấp",
+                        "C. Đánh đuổi quân Tưởng",
+                        "D. Hòa hoãn với thực dân Pháp"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Chỉ thị Kháng chiến kiến quốc xác định 4 nhiệm vụ trước mắt: củng cố chính quyền cách mạng, chống thực dân Pháp xâm lược, bài trừ nội phản và cải thiện đời sống cho nhân dân."
+        },
+        {
+                "id": 6,
+                "type": "single",
+                "question": "Câu 6: Chọn câu trả lời đúng và đầy đủ nhất: Cách mạng Việt Nam giai đoạn từ 1945 -1947 với nội dung cơ bản của đường lối kháng chiến là:",
+                "options": [
+                        "A. Dựa trên sức mạnh toàn dân, toàn diện, lâu dài và dựa vào sức mình là chính",
+                        "B. Kháng chiến trường kỳ",
+                        "C. Lâu dài, toàn diện",
+                        "D. Kháng chiến toàn dân"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Nội dung cơ bản cốt lõi của đường lối kháng chiến chống thực dân Pháp xâm lược là: toàn dân, toàn diện, lâu dài và dựa vào sức mình là chính."
+        },
+        {
+                "id": 7,
+                "type": "single",
+                "question": "Câu 7: Ai đã được cử làm Tư lệnh kiêm Bí thư Đảng ủy chiến dịch Điện Biên Phủ?",
+                "options": [
+                        "A. Võ Nguyên Giáp",
+                        "B. Phạm Văn Đồng",
+                        "C. Nguyễn Chí Thanh",
+                        "D. Văn Tiến Dũng"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đại tướng Võ Nguyên Giáp được Bộ Chính trị và Chủ tịch Hồ Chí Minh giao trọng trách làm Tổng Tư lệnh kiêm Bí thư Đảng ủy mặt trận Điện Biên Phủ."
+        },
+        {
+                "id": 8,
+                "type": "single",
+                "question": "Câu 8: Chính cương của Đảng Lao động Việt Nam được thông qua tại Đại hội II (2/1951) đã xác định xã hội Việt Nam gồm 3 tính chất, đó là:",
+                "options": [
+                        "A. Phong kiến, dân tộc, dân chủ",
+                        "B. Dân tộc, dân chủ, xã hội chủ nghĩa",
+                        "C. Dân chủ nhân dân, một phần thuộc địa và nửa phong kiến",
+                        "D. Thuộc địa, dân chủ, xã hội chủ nghĩa"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Chính cương Đảng Lao động Việt Nam (Đại hội II, 2/1951) xác định xã hội Việt Nam lúc bấy giờ có ba tính chất: dân chủ nhân dân, một phần thuộc địa và nửa phong kiến."
+        },
+        {
+                "id": 9,
+                "type": "single",
+                "question": "Câu 9: Cuộc chiến đấu mở đầu cho cuộc kháng chiến chống Pháp của quân và dân ta tại Hà Nội diễn ra trong bao nhiêu ngày?",
+                "options": [
+                        "A. 90 ngày đêm",
+                        "B. 12 ngày đêm",
+                        "C. 30 ngày đêm",
+                        "D. 60 ngày đêm"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Cuộc chiến đấu mở đầu toàn quốc kháng chiến ở Thủ đô Hà Nội diễn ra trong 60 ngày đêm (từ 19/12/1946 đến 17/02/1947), hoàn thành xuất sắc nhiệm vụ giam chân địch trong thành phố."
+        },
+        {
+                "id": 10,
+                "type": "single",
+                "question": "Câu 10: Đại hội đại biểu toàn toàn quốc lần thứ II (2/1951), đã thông qua bản Chính cương của Đảng lao động Việt Nam do ai soạn thảo:",
+                "options": [
+                        "A. Trường Chinh",
+                        "B. Võ Nguyên Giáp",
+                        "C. Lê Duẩn",
+                        "D. Chủ tịch Hồ Chí Minh"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Bản Chính cương của Đảng Lao động Việt Nam do Tổng Bí thư Trường Chinh soạn thảo và trình bày tại Đại hội đại biểu toàn quốc lần thứ II (tháng 2/1951)."
+        },
+        {
+                "id": 11,
+                "type": "single",
+                "question": "Câu 11: Cuộc kháng chiến chống Pháp giai đoạn 1951 -1954 nhằm giải quyết mâu thuẫn:",
+                "options": [
+                        "A. Nhân dân Việt Nam với chủ nghĩa đế quốc xâm lược",
+                        "B. Giai cấp công nhân với giai cấp nông dân",
+                        "C. Giai cấp công nhân với giai cấp tư sản",
+                        "D. Nhân dân Việt Nam với giai cấp tư sản"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Mâu thuẫn chủ yếu của xã hội Việt Nam lúc bấy giờ là mâu thuẫn giữa toàn thể nhân dân Việt Nam với chủ nghĩa đế quốc xâm lược và tay sai phản động."
+        },
+        {
+                "id": 12,
+                "type": "single",
+                "question": "Câu 12: Chính cương của Đảng Lao động Việt Nam được thông qua tại Đại hội II (2/1951) đã xác định động lực của cách mạng gồm 4 giai cấp, tầng lớp đó là:",
+                "options": [
+                        "A. Nông dân, tư sản, tiểu tư sản, địa chủ phong kiến",
+                        "B. Công nhân, nông dân, trí thức, địa chủ phong kiến",
+                        "C. Công nhân, trí thức, địa chủ phong kiến, tư sản",
+                        "D. Công nhân, nông dân, tiểu tư sản, tư sản dân tộc"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Chính cương năm 1951 xác định động lực của cách mạng Việt Nam gồm 4 giai cấp, tầng lớp: công nhân, nông dân, tiểu tư sản và tư sản dân tộc."
+        },
+        {
+                "id": 13,
+                "type": "single",
+                "question": "Câu 13: Miền Bắc bắt đầu tiến lên chủ nghĩa xã hội từ năm bao nhiêu?",
+                "options": [
+                        "A. 1945",
+                        "B. 1986",
+                        "C. 1954",
+                        "D. 1975"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Năm 1954, sau khi cuộc kháng chiến chống Pháp kết thúc thắng lợi với Hiệp định Genève, miền Bắc hoàn toàn giải phóng và bắt đầu bước vào thời kỳ quá độ tiến lên chủ nghĩa xã hội."
+        },
+        {
+                "id": 14,
+                "type": "single",
+                "question": "Câu 14: Trong giai đoạn hiện nay, để bảo vệ thành quả của các cuộc cách mạng, đất nước ta cần đặt dưới sự lãnh đạo của:",
+                "options": [
+                        "A. Nhà nước xã hội chủ nghĩa",
+                        "B. Giai cấp nông dân",
+                        "C. Giai cấp công nhân",
+                        "D. Đảng Cộng sản"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Sự lãnh đạo đúng đắn của Đảng Cộng sản Việt Nam là nhân tố quyết định mọi thắng lợi của cách mạng và giữ gìn vững chắc thành quả cách mạng của đất nước."
+        },
+        {
+                "id": 15,
+                "type": "single",
+                "question": "Câu 15: Bài học kinh nghiệm nào của Đảng trong lãnh đạo kháng chiến chống thực dân Pháp xâm lược có thể được áp dụng cho cách mạng Việt Nam trong giai đoạn hiện nay?",
+                "options": [
+                        "A. Cần có tầng lớp trí thức lãnh đạo cách mạng",
+                        "B. Phải luôn thực hiện kháng chiến trường kỳ",
+                        "C. Đề ra đường lối đúng đắn, sáng tạo, phù hợp với thực tiễn lịch sử của cuộc kháng chiến ngay từ những ngày đầu",
+                        "D. Cần có giai cấp nông dân lên lãnh đạo"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Đề ra đường lối đúng đắn, sáng tạo, xuất phát từ thực tiễn khách quan của đất nước là bài học có ý nghĩa lịch sử sâu sắc và giá trị hiện thực lâu bền."
+        },
+        {
+                "id": 16,
+                "type": "single",
+                "question": "Câu 16: Một trong những khó khăn, thách thức đối với nước Việt Nam Dân chủ Cộng Hòa sau Cách mạng tháng Tám năm 1945 là:",
+                "options": [
+                        "A. Khoảng 95% dân số mù chữ",
+                        "B. Tình trạng vi phạm pháp luật, vượt biên trái phép diễn ra phổ biến",
+                        "C. Thực dân Pháp quay trở lại xâm lược miền Bắc Việt Nam",
+                        "D. Chủ nghĩa xã hội rơi vào khủng hoảng ở nhiều nước xã hội chủ nghĩa"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Hậu quả của chính sách ngu dân dưới thời thực dân phong kiến đã khiến khoảng 95% dân số Việt Nam mù chữ, làm nảy sinh nạn 'giặc dốt' đe dọa sự phát triển của quốc gia."
+        },
+        {
+                "id": 17,
+                "type": "multiple",
+                "question": "Câu 17: Sau 2/9/1945, nhiệm vụ lớn, quan trọng, cấp bách mà Đảng, Chính phủ và chủ tịch Hồ Chí Minh chỉ ra là: (Chọn 2 đáp án đúng)",
+                "options": [
+                        "A. Chống lại phong kiến, phản động",
+                        "B. Chống đế quốc Mỹ",
+                        "C. Chống giặc nội phản",
+                        "D. Chống giặc đói, đẩy lùi nạn đói"
+                ],
+                "correctAnswers": [
+                        2,
+                        3
+                ],
+                "explanation": "Sau ngày 2/9/1945, nhiệm vụ lớn, quan trọng, cấp bách được Đảng và Hồ Chủ tịch chỉ ra là chống giặc đói, đẩy lùi nạn đói và chống/bài trừ giặc nội phản bảo vệ chính quyền cách mạng non trẻ."
+        },
+        {
+                "id": 18,
+                "type": "single",
+                "question": "Câu 18: Kẻ thù chính của Cách mạng Việt Nam được xác định trong Chỉ thị Kháng chiến kiến quốc ngày 25/11/1945 là:",
+                "options": [
+                        "A. Thực dân Anh xâm lược",
+                        "B. Giặc đói và giặc dốt",
+                        "C. Thực dân Pháp xâm lược",
+                        "D. Tưởng giới thạch và tay sai"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Chỉ thị Kháng chiến kiến quốc ngày 25/11/1945 nêu rõ: Kẻ thù chính của ta lúc này là thực dân Pháp xâm lược, phải tập trung ngọn lửa đấu tranh vào chúng."
+        },
+        {
+                "id": 19,
+                "type": "single",
+                "question": "Câu 19: Tại Đại hội đại biểu toàn quốc lần thứ II (2/1951), Đảng ra hoạt động công khai và quyết định đổi tên thành:",
+                "options": [
+                        "A. Hội nghiên cứu Chủ nghĩa Mác- Lê nin",
+                        "B. Đảng Cộng sản Việt Nam",
+                        "C. Đảng Cộng sản Đông Dương",
+                        "D. Đảng Lao động Việt Nam"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Đại hội II (2/1951) đã quyết định đưa Đảng ra hoạt động công khai với tên gọi Đảng Lao động Việt Nam."
+        },
+        {
+                "id": 20,
+                "type": "single",
+                "question": "Câu 20: Phương châm “Đánh chắc, tiến chắc” và “đánh chắc thắng” xuất hiện trong chiến dịch nào sau đây:",
+                "options": [
+                        "A. Chiến dịch Điện Biên Phủ",
+                        "B. Chiến dịch Hồ Chí Minh",
+                        "C. Chiến dịch Biên giới",
+                        "D. Chiến dịch Việt Bắc"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Trong chiến dịch Điện Biên Phủ (1954), phương châm tác chiến đã được thay đổi từ 'đánh nhanh, thắng nhanh' sang 'đánh chắc, tiến chắc' (đánh chắc thắng)."
+        },
+        {
+                "id": 21,
+                "type": "single",
+                "question": "Câu 21: Chính cương của Đảng Lao động Việt Nam được thông qua tại Đại hội II (2/1951) đã xác định nền tảng của cách mạng là:",
+                "options": [
+                        "A. Giai cấp nông dân, phong kiến và lao động trí óc",
+                        "B. Giai cấp công nhân, giai cấp nông dân, lao động trí óc",
+                        "C. Giai cấp công nhân, tầng lớp trí thức và phong kiến",
+                        "D. Giai cấp nông dân, giai cấp tư sản, lao động trí óc"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Chính cương năm 1951 xác định nền tảng của cách mạng gồm công nhân, nông dân và lao động trí óc."
+        },
+        {
+                "id": 22,
+                "type": "single",
+                "question": "Câu 22: Mục tiêu của cuộc cách mạng Đông Dương năm 1945 là:",
+                "options": [
+                        "A. Dân tộc giải phóng",
+                        "B. Giải phóng dân cày",
+                        "C. Giải phóng giai cấp nông dân",
+                        "D. Xây dựng chủ nghĩa xã hội"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Mục tiêu trực tiếp, cấp bách hàng đầu của cách mạng Đông Dương năm 1945 là giải phóng dân tộc, giành độc lập tự do cho Tổ quốc."
+        },
+        {
+                "id": 23,
+                "type": "single",
+                "question": "Câu 23: Kết quả của cuộc kháng chiến chống thực dân Pháp và can thiệp Mỹ là:",
+                "options": [
+                        "A. Thành lập nhà nước Việt Nam dân chủ cộng hòa",
+                        "B. Thành lập Đảng Cộng sản Việt Nam",
+                        "C. Giải phóng hoàn toàn miền Nam",
+                        "D. Giải phóng hoàn toàn miền Bắc"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Thắng lợi của cuộc kháng chiến chống thực dân Pháp và can thiệp Mỹ (1945 - 1954) đã giải phóng hoàn toàn miền Bắc, chấm dứt ách thống trị của thực dân Pháp tại miền Bắc."
+        },
+        {
+                "id": 24,
+                "type": "single",
+                "question": "Câu 24: Nhiệm vụ chính của cách mạng Việt Nam giai đoạn 1951-1954 là đánh đuổi:",
+                "options": [
+                        "A. Giai cấp tư sản",
+                        "B. Bọn phong kiến phản động",
+                        "C. Giai cấp công nhân",
+                        "D. Đế quốc Pháp xâm lược"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Nhiệm vụ trọng tâm hàng đầu của cách mạng giai đoạn 1951 - 1954 là đánh đuổi đế quốc Pháp xâm lược và bọn can thiệp Mỹ, giải phóng dân tộc."
+        },
+        {
+                "id": 25,
+                "type": "single",
+                "question": "Câu 25: Những thuận lợi cơ bản của nước Việt Nam Dân chủ Cộng hòa sau Cách mạng tháng Tám năm 1945 là:",
+                "options": [
+                        "A. Kinh tế ổn định",
+                        "B. Phong trào cách mạng trong nước phát triển mạnh mẽ",
+                        "C. Việt Nam trở thành quốc gia độc lập tự do",
+                        "D. Hệ thống chính quyền dày dặn kinh nghiệm quản lý"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Thuận lợi cơ bản nhất là Việt Nam đã trở thành quốc gia độc lập, tự do; nhân dân giành được quyền làm chủ đất nước, quyết tâm bảo vệ thành quả cách mạng."
+        },
+        {
+                "id": 26,
+                "type": "single",
+                "question": "Câu 26: Ngay sau khi chiến dịch Điện Biên Phủ kết thúc, Hội nghị quốc tế về chấm dứt chiến tranh ở Đông Dương đã diễn ra tại đâu:",
+                "options": [
+                        "A. Giơnevơ",
+                        "B. New York",
+                        "C. Postdam",
+                        "D. Pari"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Hội nghị Giơnevơ (Genève, Thụy Sĩ) năm 1954 đã khai mạc và ký kết Hiệp định về chấm dứt chiến tranh, lập lại hòa bình ở Đông Dương."
+        },
+        {
+                "id": 27,
+                "type": "single",
+                "question": "Câu 27: Bài học kinh nghiệm nào của Đảng trong lãnh đạo khánh chiến chống thực dân Pháp xâm lược có thể được áp dụng cho cách mạng Việt Nam trong giai đoạn hiện nay",
+                "options": [
+                        "A. Luôn đề cao vai trò lãnh đạo của Nhà nước",
+                        "B. Luôn phát triển giai cấp nông dân đông đảo nhất trong xã hội",
+                        "C. Luôn coi trọng công tác xây dựng, chỉnh đốn Đảng",
+                        "D. Luôn đề cao vai trò lãnh đạo của giai cấp công nhân"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Công tác xây dựng, chỉnh đốn Đảng, nâng cao phẩm chất và năng lực của đội ngũ cán bộ, đảng viên là bài học kinh nghiệm then chốt áp dụng xuyên suốt đến ngày nay."
+        },
+        {
+                "id": 28,
+                "type": "single",
+                "question": "Câu 28: Cuộc cách mạng nào đã đưa Việt Nam bước sang kỷ nguyên mới – Kỷ nguyên độc lập dân tộc gắn liền với chủ nghĩa xã hội?",
+                "options": [
+                        "A. Cách mạng Xô viết Nghệ Tĩnh",
+                        "B. Cách mạng giải phóng miền Nam",
+                        "C. Cách mạng tháng Tám",
+                        "D. Chiến dịch Điện Biên Phủ"
+                ],
+                "correctAnswers": [
+                        2
+                ],
+                "explanation": "Cách mạng Tháng Tám năm 1945 đã mở ra kỷ nguyên mới trong lịch sử dân tộc: kỷ nguyên độc lập dân tộc gắn liền với chủ nghĩa xã hội."
+        },
+        {
+                "id": 29,
+                "type": "single",
+                "question": "Câu 29: Vận dụng kiến thức đã được học, em hãy cho biết chiến dịch nào đã đưa cuộc kháng chiến chống thực dân Pháp của nhân dân ta từ thế bị động chuyển sang thế chủ động trên chiến trường:",
+                "options": [
+                        "A. Chiến dịch Việt Bắc",
+                        "B. Chiến dịch Điện Biên Phủ",
+                        "C. Chiến dịch Quang Trung",
+                        "D. Chiến dịch Biên Giới"
+                ],
+                "correctAnswers": [
+                        3
+                ],
+                "explanation": "Chiến dịch Biên giới Thu Đông 1950 thắng lợi đã đưa cuộc kháng chiến của ta chuyển từ thế bị động sang thế chủ động tiến công trên chiến trường chính Bắc Bộ."
+        },
+        {
+                "id": 30,
+                "type": "single",
+                "question": "Câu 30: Hiệp ước Trùng Khánh (Hiệp ước Hoa – Pháp) ký ngày 28/2/1946 có nội dung gì tác động đến cách mạng Việt Nam?",
+                "options": [
+                        "A. Quân Pháp đưa quân đội ra Bắc vĩ tuyến 16 thay thế cho quân Tưởng làm nhiệm vụ giải giáp quân đội Nhật",
+                        "B. Quân Tưởng cho 20.000 quân vào giải giáp quân đội Nhật từ vĩ tuyến 16 trở vào Nam",
+                        "C. Đưa quân đội Pháp vào xâm chiếm Việt Nam",
+                        "D. Quân Tưởng và quân Pháp cùng thực hiện nhiệm vụ giải giáp quân đội Nhật"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Hiệp ước Hoa - Pháp (28/2/1946) cho phép quân Pháp ra miền Bắc thay thế quân Tưởng giải giáp quân đội Nhật, nhằm câu kết cùng bóp chết chính quyền cách mạng Việt Nam."
+        },
+        {
+                "id": 31,
+                "type": "multiple",
+                "question": "Câu 31: Những thuận lợi của Việt Nam sau Cách mạng Tháng Tám năm 1945 là (chọn 2 phương án đúng nhất):",
+                "options": [
+                        "A. Đảng Cộng sản Việt Nam trở thành Đảng lãnh đạo cách mạng trên cả nước",
+                        "B. Nền kinh tế Việt Nam phát triển mạnh mẽ",
+                        "C. Việt Nam trở thành quốc gia độc lập, tự do",
+                        "D. Việt Nam đối diện với các giặc đói, giặc dốt và giặc ngoại xâm"
+                ],
+                "correctAnswers": [
+                        0,
+                        2
+                ],
+                "explanation": "Thuận lợi của Việt Nam sau Cách mạng Tháng Tám: Đảng ta trở thành Đảng cầm quyền lãnh đạo cách mạng trên phạm vi cả nước; Việt Nam trở thành một quốc gia độc lập, tự do."
+        },
+        {
+                "id": 32,
+                "type": "multiple",
+                "question": "Câu 32: Mục tiêu của đường lối kháng chiến chống thực dân Pháp xâm lược từ 1945 – 1946 là (chọn 3 phương án đúng nhất):",
+                "options": [
+                        "A. Kháng chiến lâu dài",
+                        "B. Kháng chiến toàn dân",
+                        "C. Kháng chiến kiên chớp nhoáng",
+                        "D. Kháng chiến toàn diện"
+                ],
+                "correctAnswers": [
+                        0,
+                        1,
+                        3
+                ],
+                "explanation": "Đường lối kháng chiến của Đảng xác định phương châm: Kháng chiến toàn dân, Kháng chiến toàn diện, Kháng chiến lâu dài (trường kỳ) và Dựa vào sức mình là chính."
+        },
+        {
+                "id": 33,
+                "type": "multiple",
+                "question": "Câu 33: Những khó khăn của Việt Nam sau Cách mạng Tháng Tám năm 1945 là (chọn 2 phương án đúng nhất):",
+                "options": [
+                        "A. Hệ thống chính quyền mới được thiết lập, còn rất non trẻ, thiếu thốn, yếu kém về nhiều mặt",
+                        "B. Các nước trên thế giới hầu hết công nhận sự tồn tại của Nhà nước Việt Nam dân chủ cộng hòa",
+                        "C. Việt Nam nhận được sự viện trợ và giúp đỡ của bạn bè trên thế giới",
+                        "D. Không có nước nào ủng hộ lập trường độc lập và công nhận pháp lý của Nhà nước Việt Nam dân chủ cộng hòa"
+                ],
+                "correctAnswers": [
+                        0,
+                        3
+                ],
+                "explanation": "Sau Cách mạng Tháng Tám, hệ thống chính quyền cách mạng còn rất non trẻ, thiếu kinh nghiệm, đồng thời chưa có nước nào công nhận địa vị pháp lý hay đặt quan hệ ngoại giao với Nhà nước ta."
+        },
+        {
+                "id": 34,
+                "type": "multiple",
+                "question": "Câu 34: Hãy chọn 02 đáp án đúng về kinh nghiệm nổi bật của Đảng trong lãnh đạo hai năm 1945 – 1946 (chọn 2 phương án đúng nhất):",
+                "options": [
+                        "A. Tăng cường đại đoàn kết dân tộc, dựa vào sự ủng hộ vật chất là chính trị, tinh thần đoàn kết toàn dân",
+                        "B. Ổn định nền văn hóa xã hội chủ nghĩa",
+                        "C. Xây dựng nền kinh tế xã hội chủ nghĩa",
+                        "D. Phát triển thực lực cách mạng"
+                ],
+                "correctAnswers": [
+                        0,
+                        3
+                ],
+                "explanation": "Hai năm 1945 - 1946, kinh nghiệm nổi bật của Đảng là phát huy đại đoàn kết toàn dân tộc và tranh thủ từng ngày hòa hoãn để phát triển thực lực cách mạng về mọi mặt."
+        },
+        {
+                "id": 35,
+                "type": "multiple",
+                "question": "Câu 35: Tình hình Việt Nam sau Cách mạng Tháng Tám năm 1945 là (chọn 2 phương án đúng nhất):",
+                "options": [
+                        "A. Việt Nam trở thành quốc gia độc lập, tự do",
+                        "B. Hệ thống chính quyền mới được thiết lập, còn rất non trẻ, thiếu thốn, yếu kém về nhiều mặt",
+                        "C. Kinh tế phát triển về mọi mặt",
+                        "D. Nền văn hóa xã hội ngày càng ổn định và phát triển"
+                ],
+                "correctAnswers": [
+                        0,
+                        1
+                ],
+                "explanation": "Sau Cách mạng Tháng Tám năm 1945, Việt Nam đã trở thành quốc gia độc lập, tự do nhưng chính quyền cách mạng mới thiết lập còn rất non trẻ, thiếu thốn về nhiều mặt."
+        },
+        {
+                "id": 36,
+                "type": "multiple",
+                "question": "Câu 36: Trong đường lối kháng chiến của Đảng ta, kháng chiến toàn diện là (chọn 2 phương án đúng nhất):",
+                "options": [
+                        "A. Đánh địch trên mọi mặt trận",
+                        "B. Động viên và phát huy mọi tiềm năng, sức mạnh của dân tộc, mọi nguồn lực vật chất, tinh thần trong nhân dân phục vụ kháng chiến",
+                        "C. Tập trung đánh địch trên mặt trận chính trị",
+                        "D. Động viên và đánh địch trên mặt trận ngoại giao"
+                ],
+                "correctAnswers": [
+                        0,
+                        1
+                ],
+                "explanation": "Kháng chiến toàn diện là đánh địch trên tất cả các mặt trận (quân sự, chính trị, kinh tế, văn hóa, ngoại giao) và động viên, phát huy mọi tiềm năng, sức mạnh của toàn dân tộc."
+        },
+        {
+                "id": 371,
+                "type": "true_false",
+                "question": "Câu 37.1: Năm 1945, Chính phủ lâm thời họp phiên đầu tiên dưới sự chủ trì của Chủ tịch Hồ Chí Minh đã xác định nhiệm vụ trước mắt là: Khẩn trương xây dựng một xã hội dân giàu nước mạnh, dân chủ, công bằng, văn minh.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Nhiệm vụ trước mắt năm 1945 là diệt giặc đói, diệt giặc dốt và diệt giặc ngoại xâm."
+        },
+        {
+                "id": 372,
+                "type": "true_false",
+                "question": "Câu 37.2: Năm 1945, Chính phủ lâm thời họp phiên đầu tiên dưới sự chủ trì của Chủ tịch Hồ Chí Minh đã xác định nhiệm vụ trước mắt là: Diệt giặc đói, diệt giặc dốt và diệt giặc ngoại xâm.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Đây là ba nhiệm vụ lớn, cấp bách hàng đầu được Hồ Chủ tịch nêu ra trong phiên họp đầu tiên ngày 3/9/1945."
+        },
+        {
+                "id": 373,
+                "type": "true_false",
+                "question": "Câu 37.3: Năm 1945, Chính phủ lâm thời họp phiên đầu tiên dưới sự chủ trì của Chủ tịch Hồ Chí Minh đã xác định nhiệm vụ trước mắt là: Thực hiện xây dựng đất nước theo chủ nghĩa tư bản.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Nước ta đi theo con đường độc lập dân tộc gắn liền với chủ nghĩa xã hội, không theo chủ nghĩa tư bản."
+        },
+        {
+                "id": 374,
+                "type": "true_false",
+                "question": "Câu 37.4: Năm 1945, Chính phủ lâm thời họp phiên đầu tiên dưới sự chủ trì của Chủ tịch Hồ Chí Minh đã xác định nhiệm vụ trước mắt là: Tiêu diệt đế quốc Mỹ xâm lược.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Năm 1945 kẻ thù chính xâm lược là thực dân Pháp, chưa phải đế quốc Mỹ."
+        },
+        {
+                "id": 381,
+                "type": "true_false",
+                "question": "Câu 38.1: Về những thuận lợi của Việt Nam sau Cách mạng Tháng Tám năm 1945: Đảng Cộng sản trở thành Đảng cầm quyền lãnh đạo cách mạng trong cả nước.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Cách mạng Tháng Tám thành công đưa Đảng trở thành Đảng cầm quyền lãnh đạo toàn dân."
+        },
+        {
+                "id": 382,
+                "type": "true_false",
+                "question": "Câu 38.2: Về những thuận lợi của Việt Nam sau Cách mạng Tháng Tám năm 1945: Các hủ tục lạc hậu, thói hư, tật xấu, tệ nạn xã hội chưa được khắc phục.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Tồn tại hủ tục lạc hậu, thói hư tật xấu là tàn dư cũ và là khó khăn, không phải thuận lợi."
+        },
+        {
+                "id": 383,
+                "type": "true_false",
+                "question": "Câu 38.3: Về những thuận lợi của Việt Nam sau Cách mạng Tháng Tám năm 1945: Hình thành hệ thống chính quyền cách mạng với bộ máy thống nhất từ cấp trung ương đến cơ sở, ra sức phục vụ lợi ích của Tổ quốc, nhân dân.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Hệ thống chính quyền cách mạng được thành lập thống nhất từ trung ương đến địa phương phục vụ nhân dân."
+        },
+        {
+                "id": 384,
+                "type": "true_false",
+                "question": "Câu 38.4: Về những thuận lợi của Việt Nam sau Cách mạng Tháng Tám năm 1945: Hệ thống chính quyền cách mạng mới được thiết lập, còn rất non trẻ, thiếu thốn, yếu kém về nhiều mặt.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Chính quyền non trẻ, thiếu thốn, yếu kém là khó khăn, không phải thuận lợi."
+        },
+        {
+                "id": 391,
+                "type": "true_false",
+                "question": "Câu 39.1: Nội dung đường lối kháng chiến chống thực dân Pháp: Kháng chiến dựa vào sức mình là chính.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Dựa vào sức mình là chính là một trong những nguyên tắc cốt lõi của đường lối kháng chiến."
+        },
+        {
+                "id": 392,
+                "type": "true_false",
+                "question": "Câu 39.2: Nội dung đường lối kháng chiến chống thực dân Pháp: Chỉ tiến hành kháng chiến trên lĩnh vực văn hóa.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Kháng chiến phải tiến hành toàn diện trên tất cả các lĩnh vực: quân sự, chính trị, kinh tế, văn hóa, ngoại giao."
+        },
+        {
+                "id": 393,
+                "type": "true_false",
+                "question": "Câu 39.3: Nội dung đường lối kháng chiến chống thực dân Pháp: Kêu gọi tất cả các giai cấp tham gia vào cuộc kháng chiến.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Thực hiện kháng chiến toàn dân, hiệu triệu mọi giai tầng, 'bất kỳ đàn ông, đàn bà, bất kỳ người già, người trẻ'."
+        },
+        {
+                "id": 394,
+                "type": "true_false",
+                "question": "Câu 39.4: Nội dung đường lối kháng chiến chống thực dân Pháp: Tiến hành kháng chiến toàn dân, toàn diện lâu dài.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Đường lối kháng chiến xác định: toàn dân, toàn diện, trường kỳ (lâu dài) và tự lực cánh sinh."
+        },
+        {
+                "id": 401,
+                "type": "true_false",
+                "question": "Câu 40.1: Nội dung Chỉ thị Kháng chiến kiến quốc năm 1945 của Ban chấp hành trung ương Đảng: Xóa bỏ cơ chế tập trung quan liêu, bao cấp.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Xóa bỏ cơ chế tập trung quan liêu bao cấp là chủ trương trong công cuộc Đổi mới từ năm 1986."
+        },
+        {
+                "id": 402,
+                "type": "true_false",
+                "question": "Câu 40.2: Nội dung Chỉ thị Kháng chiến kiến quốc năm 1945 của Ban chấp hành trung ương Đảng: Khẩn trương xây dựng, củng cố chính quyền cách mạng.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Củng cố chính quyền cách mạng là nhiệm vụ hàng đầu trong 4 nhiệm vụ trước mắt của Chỉ thị."
+        },
+        {
+                "id": 403,
+                "type": "true_false",
+                "question": "Câu 40.3: Nội dung Chỉ thị Kháng chiến kiến quốc năm 1945 của Ban chấp hành trung ương Đảng: Chống giặc đói, đẩy lùi nạn đói là nhiệm vụ lớn, quan trọng, cấp bách lúc bấy giờ.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Giải quyết nạn đói, cải thiện đời sống nhân dân là nhiệm vụ cấp bách sống còn lúc bấy giờ."
+        },
+        {
+                "id": 404,
+                "type": "true_false",
+                "question": "Câu 40.4: Nội dung Chỉ thị Kháng chiến kiến quốc năm 1945 của Ban chấp hành trung ương Đảng: Củng cố và xây dựng Nhà nước phong kiến.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Cách mạng đã xóa bỏ chế độ phong kiến, xây dựng Nhà nước Việt Nam Dân chủ Cộng hòa."
+        },
+        {
+                "id": 411,
+                "type": "true_false",
+                "question": "Câu 41.1: Mục tiêu của cuộc kháng chiến giai đoạn 1945-1946 mà Đảng ta xác định: Đánh đổ thực dân Pháp xâm lược, giành nền độc lập, tự do, thống nhất hoàn toàn.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Mục tiêu hàng đầu là đánh đổ thực dân Pháp xâm lược, bảo vệ nền độc lập, tự do, thống nhất đất nước."
+        },
+        {
+                "id": 412,
+                "type": "true_false",
+                "question": "Câu 41.2: Mục tiêu của cuộc kháng chiến giai đoạn 1945-1946 mà Đảng ta xác định: Vì nền tự do dân chủ và góp phần bảo vệ hòa bình thế giới.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        0
+                ],
+                "explanation": "Đúng. Cuộc kháng chiến chính nghĩa của nhân dân ta vì độc lập tự do dân chủ và đóng góp vào hòa bình thế giới."
+        },
+        {
+                "id": 413,
+                "type": "true_false",
+                "question": "Câu 41.3: Mục tiêu của cuộc kháng chiến giai đoạn 1945-1946 mà Đảng ta xác định: Xây dựng chế độ Tư bản chủ nghĩa.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Mục tiêu của cách mạng Việt Nam không phải là xây dựng chế độ tư bản chủ nghĩa."
+        },
+        {
+                "id": 414,
+                "type": "true_false",
+                "question": "Câu 41.4: Mục tiêu của cuộc kháng chiến giai đoạn 1945-1946 mà Đảng ta xác định: Xây dựng nền kinh tế xã hội chủ nghĩa.",
+                "options": [
+                        "Đúng",
+                        "Sai"
+                ],
+                "correctAnswers": [
+                        1
+                ],
+                "explanation": "Sai. Giai đoạn 1945-1946 tập trung kháng chiến kiến quốc, giữ vững chính quyền, chưa đặt ra xây dựng nền kinh tế XHCN."
+        },
+        {
+                "id": 42,
+                "type": "drag_drop",
+                "question": "Câu 42: Kéo thả các nội dung sau đây vào cột phương châm kháng chiến tương ứng:",
+                "pairs": [
+                        {
+                                "dropZone": "Kháng chiến lâu dài",
+                                "dragItem": "Tranh thủ chớp thời cơ thúc đẩy cuộc kháng chiến có bước nhảy vọt về chất"
+                        },
+                        {
+                                "dropZone": "Kháng chiến lâu dài",
+                                "dragItem": "Lấy thời gian là lực lượng vật chất chuyển hóa yếu thành mạnh"
+                        },
+                        {
+                                "dropZone": "Kháng chiến toàn dân",
+                                "dragItem": "Động viên toàn dân tích cực tham gia kháng chiến"
+                        },
+                        {
+                                "dropZone": "Kháng chiến toàn dân",
+                                "dragItem": "Đem toàn bộ sức dân, tài dân, lực dân"
+                        }
+                ],
+                "explanation": "Kháng chiến lâu dài là lấy thời gian để chuyển hóa lực lượng từ yếu thành mạnh, chớp thời cơ tạo bước nhảy vọt về chất. Kháng chiến toàn dân là đem toàn bộ sức dân, tài dân, lực dân và động viên toàn dân tích cực tham gia kháng chiến."
+        },
+        {
+                "id": 43,
+                "type": "drag_drop",
+                "question": "Câu 43: Kéo thả các nội dung sau đây vào cột phương châm kháng chiến tương ứng:",
+                "pairs": [
+                        {
+                                "dropZone": "Kháng chiến toàn dân",
+                                "dragItem": "Đem toàn bộ sức dân, tài dân, lực dân"
+                        },
+                        {
+                                "dropZone": "Kháng chiến toàn dân",
+                                "dragItem": "Động viên toàn dân tích cực tham gia kháng chiến"
+                        },
+                        {
+                                "dropZone": "Kháng chiến toàn diện",
+                                "dragItem": "Động viên và phát huy mọi tiềm năng, sức mạnh của dân tộc, mọi nguồn lực vật chất và tinh thần"
+                        },
+                        {
+                                "dropZone": "Kháng chiến toàn diện",
+                                "dragItem": "Đánh địch trên mọi lĩnh vực không chỉ bằng quân sự mà cả chính trị, kinh tế, văn hóa, tư tưởng, ngoại giao"
+                        }
+                ],
+                "explanation": "Kháng chiến toàn dân là đem toàn bộ sức dân, tài dân, lực dân và động viên toàn dân tích cực tham gia kháng chiến. Kháng chiến toàn diện là đánh địch trên mọi lĩnh vực (quân sự, chính trị, kinh tế, văn hóa, ngoại giao...) và huy động mọi tiềm năng, sức mạnh, nguồn lực vật chất, tinh thần của toàn thể dân tộc."
+        },
+        {
+                "id": 44,
+                "type": "drag_drop",
+                "question": "Câu 44: Kéo thả các biện pháp sau đây vào cột nhiệm vụ tương ứng:",
+                "pairs": [
+                        {
+                                "dropZone": "Chống giặc đói, đẩy lùi nạn đói",
+                                "dragItem": "Lập hũ gạo tiết kiệm"
+                        },
+                        {
+                                "dropZone": "Chống giặc đói, đẩy lùi nạn đói",
+                                "dragItem": "Tăng gia sản xuất ngay"
+                        },
+                        {
+                                "dropZone": "Chống giặc dốt, xóa nạn mù chữ",
+                                "dragItem": "Toàn dân xây dựng nếp sống mới, đời sống văn hóa mới để đẩy lùi các tệ nạn hủ tục, thói quen cũ"
+                        },
+                        {
+                                "dropZone": "Chống giặc dốt, xóa nạn mù chữ",
+                                "dragItem": "Phát động phong trào bình dân học vụ"
+                        }
+                ],
+                "explanation": "Để chống giặc đói, Đảng và Hồ Chủ tịch phát động: 'Tăng gia sản xuất ngay', lập 'Hũ gạo tiết kiệm'. Để chống giặc dốt: phát động phong trào bình dân học vụ, toàn dân xây dựng nếp sống mới, đời sống văn hóa mới đẩy lùi tệ nạn hủ tục."
         }
-    ],
+],
     "4": [
         {
             "id": 401,
